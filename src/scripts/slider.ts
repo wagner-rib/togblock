@@ -21,6 +21,18 @@ export function initHeroSlideshow(): void {
   function start(): void { timer = setInterval(next, 4500); }
   function stop():  void { clearInterval(timer); }
 
+  // Arrow buttons
+  document.querySelector('[data-hero-prev]')?.addEventListener('click', () => {
+    stop();
+    goTo((current - 1 + slides.length) % slides.length);
+    start();
+  });
+  document.querySelector('[data-hero-next]')?.addEventListener('click', () => {
+    stop();
+    goTo((current + 1) % slides.length);
+    start();
+  });
+
   // Dot click — jump to slide + restart timer
   dots.forEach((dot) => {
     dot.addEventListener('click', () => {
@@ -30,7 +42,7 @@ export function initHeroSlideshow(): void {
     });
   });
 
-  // Pause on hover / touch
+  // Pause on hover
   const hero = document.querySelector<HTMLElement>('.home-hero');
   hero?.addEventListener('mouseenter', stop);
   hero?.addEventListener('mouseleave', start);

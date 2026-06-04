@@ -6,11 +6,11 @@
 /* ── HERO BACKGROUND SLIDESHOW ──────────────────────────────── */
 .home-hero {
   position: relative;
-  height: clamp(480px, 80vh, 800px);
+  height: clamp(360px, 58vh, 580px);
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  padding-bottom: clamp(48px, 8vh, 88px);
+  padding-bottom: clamp(36px, 5vh, 60px);
 }
 
 /* Slide images stacked, fade in/out */
@@ -80,10 +80,39 @@
   gap: 12px;
 }
 
+/* Arrow navigation */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255,255,255,.35);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background .2s, transform .2s var(--ease-pop);
+}
+.hero-arrow:hover  { background: rgba(255,255,255,.32); transform: translateY(-50%) scale(1.08); }
+.hero-arrow:active { transform: translateY(-50%) scale(.95); }
+.hero-arrow:focus-visible { box-shadow: var(--focus-ring-on-dark); }
+.hero-arrow--prev { left: 16px; }
+.hero-arrow--next { right: 16px; }
+@media (max-width: 520px) {
+  .hero-arrow { width: 38px; height: 38px; }
+  .hero-arrow--prev { left: 10px; }
+  .hero-arrow--next { right: 10px; }
+}
+
 /* Dot navigation */
 .hero-dots {
   position: absolute;
-  bottom: 22px;
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;

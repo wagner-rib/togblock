@@ -41,6 +41,18 @@ const allCards = [...sliderCards, ...sliderCards];
     </div>
     <div class="home-hero__overlay" aria-hidden="true"></div>
 
+    <!-- Arrow navigation -->
+    <button class="hero-arrow hero-arrow--prev" data-hero-prev aria-label="Previous photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="hero-arrow hero-arrow--next" data-hero-next aria-label="Next photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
     <!-- Dot indicators -->
     <div class="hero-dots" aria-hidden="true" data-hero-dots>
       <button class="hero-dot is-active" data-index="0"></button>
