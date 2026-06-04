@@ -79,42 +79,28 @@ const navItems = [
   <header class="site-header">
     <div class="wrap nav">
       <a class="brand" href="/" aria-label="TógBlocks home">
-        <!--
-          Stud-dot T — 11 stud circles forming the letter T,
-          viewed from above like looking straight down at the product.
-          5 studs across (top bar) + 6 studs down (stem). Step=10.
-        -->
-        <svg class="brand-icon" viewBox="-1 -1 46 66" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Original stud mark — green gradient square, 2×2 studs -->
+        <svg class="brand-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
-            <radialGradient id="sg" cx="38%" cy="32%" r="60%">
-              <stop offset="0"   stop-color="white" stop-opacity=".55"/>
-              <stop offset="100%" stop-color="black" stop-opacity=".0"/>
-            </radialGradient>
+            <linearGradient id="bgl" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1FB374"/>
+              <stop offset="1" stop-color="#0E6B43"/>
+            </linearGradient>
           </defs>
-          <!-- top bar studs (row 0, cols 0–4) -->
-          <circle cx="2"  cy="2"  r="4.5" fill="var(--green)"/>
-          <circle cx="2"  cy="2"  r="4.5" fill="url(#sg)"/>
-          <circle cx="12" cy="2"  r="4.5" fill="var(--green)"/>
-          <circle cx="12" cy="2"  r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="2"  r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="2"  r="4.5" fill="url(#sg)"/>
-          <circle cx="32" cy="2"  r="4.5" fill="var(--green)"/>
-          <circle cx="32" cy="2"  r="4.5" fill="url(#sg)"/>
-          <circle cx="42" cy="2"  r="4.5" fill="var(--green)"/>
-          <circle cx="42" cy="2"  r="4.5" fill="url(#sg)"/>
-          <!-- stem studs (col 2, rows 1–6) -->
-          <circle cx="22" cy="12" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="12" r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="22" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="22" r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="32" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="32" r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="42" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="42" r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="52" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="52" r="4.5" fill="url(#sg)"/>
-          <circle cx="22" cy="62" r="4.5" fill="var(--orange)"/>
-          <circle cx="22" cy="62" r="4.5" fill="url(#sg)"/>
+          <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#bgl)"/>
+          <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".10"/>
+          <g fill="#0E6B43" opacity=".18">
+            <circle cx="17" cy="18.4" r="5.4"/>
+            <circle cx="31" cy="18.4" r="5.4"/>
+            <circle cx="17" cy="32.4" r="5.4"/>
+            <circle cx="31" cy="32.4" r="5.4"/>
+          </g>
+          <g fill="#FBF8F0">
+            <circle cx="17" cy="17" r="5.4"/>
+            <circle cx="31" cy="17" r="5.4"/>
+            <circle cx="17" cy="31" r="5.4"/>
+            <circle cx="31" cy="31" r="5.4"/>
+          </g>
         </svg>
         <span class="brand-word">Tóg<em>Blocks</em></span>
       </a>
@@ -182,35 +168,27 @@ const navItems = [
       <div class="footer-grid">
         <div>
           <a class="brand brand--footer" href="/" aria-label="TógBlocks home" style="margin-bottom:14px">
-            <svg class="brand-icon" viewBox="-1 -1 46 66" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg class="brand-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <defs>
-                <radialGradient id="sgf" cx="38%" cy="32%" r="60%">
-                  <stop offset="0"    stop-color="white" stop-opacity=".5"/>
-                  <stop offset="100%" stop-color="black" stop-opacity=".0"/>
-                </radialGradient>
+                <linearGradient id="bgf" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="rgba(255,255,255,.25)"/>
+                  <stop offset="1" stop-color="rgba(255,255,255,.10)"/>
+                </linearGradient>
               </defs>
-              <circle cx="2"  cy="2"  r="4.5" fill="white" opacity=".7"/>
-              <circle cx="2"  cy="2"  r="4.5" fill="url(#sgf)"/>
-              <circle cx="12" cy="2"  r="4.5" fill="white" opacity=".7"/>
-              <circle cx="12" cy="2"  r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="2"  r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="2"  r="4.5" fill="url(#sgf)"/>
-              <circle cx="32" cy="2"  r="4.5" fill="white" opacity=".7"/>
-              <circle cx="32" cy="2"  r="4.5" fill="url(#sgf)"/>
-              <circle cx="42" cy="2"  r="4.5" fill="white" opacity=".7"/>
-              <circle cx="42" cy="2"  r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="12" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="12" r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="22" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="22" r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="32" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="32" r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="42" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="42" r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="52" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="52" r="4.5" fill="url(#sgf)"/>
-              <circle cx="22" cy="62" r="4.5" fill="var(--orange)"/>
-              <circle cx="22" cy="62" r="4.5" fill="url(#sgf)"/>
+              <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#bgf)"/>
+              <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".08"/>
+              <g fill="white" opacity=".25">
+                <circle cx="17" cy="18.4" r="5.4"/>
+                <circle cx="31" cy="18.4" r="5.4"/>
+                <circle cx="17" cy="32.4" r="5.4"/>
+                <circle cx="31" cy="32.4" r="5.4"/>
+              </g>
+              <g fill="white" opacity=".80">
+                <circle cx="17" cy="17" r="5.4"/>
+                <circle cx="31" cy="17" r="5.4"/>
+                <circle cx="17" cy="31" r="5.4"/>
+                <circle cx="31" cy="31" r="5.4"/>
+              </g>
             </svg>
             <span class="brand-word" style="color:#fff">Tóg<em style="color:var(--orange)">Blocks</em></span>
           </a>

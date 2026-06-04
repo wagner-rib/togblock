@@ -5,14 +5,18 @@
       <stop offset="1" stop-color="#0E6B43"/>
     </linearGradient>
   </defs>
+  <!-- Rounded square body -->
   <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#g)"/>
+  <!-- Top highlight -->
   <rect x="3" y="3" width="42" height="20" rx="13" fill="#ffffff" opacity="0.10"/>
+  <!-- Stud shadows (depth) -->
   <g fill="#0E6B43" opacity="0.18">
     <circle cx="17" cy="18.4" r="5.4"/>
     <circle cx="31" cy="18.4" r="5.4"/>
     <circle cx="17" cy="32.4" r="5.4"/>
     <circle cx="31" cy="32.4" r="5.4"/>
   </g>
+  <!-- Studs -->
   <g fill="#FBF8F0">
     <circle cx="17" cy="17" r="5.4"/>
     <circle cx="31" cy="17" r="5.4"/>
