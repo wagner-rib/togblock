@@ -15,7 +15,7 @@
   background:
     radial-gradient(circle at 1px 1px, rgba(14,107,67,.10) 1.4px, transparent 1.6px) 0 0 / 26px 26px,
     linear-gradient(180deg, var(--offwhite), #fff);
-  min-height: clamp(220px, 34vw, 340px);
+  min-height: clamp(180px, 26vw, 280px);
   display: grid; place-items: center;
   padding: clamp(20px, 4vw, 40px);
   overflow-x: auto; overflow-y: hidden;
