@@ -135,34 +135,6 @@ const allCards = [...sliderCards, ...sliderCards];
     </div>
   </section>
 
-  <!-- ═══════════════════════════════ PRODUCT CAROUSEL ═══ -->
-  <section class="products-carousel" aria-labelledby="carousel-heading">
-    <div class="wrap carousel-head" data-reveal>
-      <h2 id="carousel-heading">Our builds</h2>
-      <p class="muted">Tap any card to personalise it.</p>
-    </div>
-    <div class="slider-viewport" aria-label="Product categories">
-      <div class="slider-track" data-slider role="list">
-        {allCards.map((card) => (
-          <a href={card.href} class="slider-card" role="listitem" aria-label={`${card.name} — ${card.price}`}>
-            {card.badge && <span class="slider-card__sticker">{card.badge}</span>}
-            <div class="slider-card__media">
-              <img src={card.img} alt={card.alt} loading="lazy" decoding="async" />
-              <div class="slider-card__overlay" aria-hidden="true">
-                <span class="btn btn--cta slider-card__cta">Personalise it →</span>
-              </div>
-            </div>
-            <div class="slider-card__body">
-              <span class="slider-card__cat">{card.cat}</span>
-              <p class="slider-card__name">{card.name}</p>
-              <span class="slider-card__price">{card.price}</span>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
-
   <!-- ═══════════════════════════ FEATURE SPLIT — SIGN ═══ -->
   <section class="feature-split" style="background:#f7f9fc" aria-labelledby="feat2">
     <div class="wrap">
@@ -222,6 +194,34 @@ const allCards = [...sliderCards, ...sliderCards];
             <h3>{step.title}</h3>
             <p>{step.body}</p>
           </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ PRODUCT CAROUSEL ═══ -->
+  <section class="products-carousel" aria-labelledby="carousel-heading">
+    <div class="wrap carousel-head" data-reveal>
+      <h2 id="carousel-heading">Our builds</h2>
+      <p class="muted">Tap any card to personalise it.</p>
+    </div>
+    <div class="slider-viewport" aria-label="Product categories">
+      <div class="slider-track" data-slider role="list">
+        {allCards.map((card) => (
+          <a href={card.href} class="slider-card" role="listitem" aria-label={`${card.name} — ${card.price}`}>
+            {card.badge && <span class="slider-card__sticker">{card.badge}</span>}
+            <div class="slider-card__media">
+              <img src={card.img} alt={card.alt} loading="lazy" decoding="async" />
+              <div class="slider-card__overlay" aria-hidden="true">
+                <span class="btn btn--cta slider-card__cta">Personalise it →</span>
+              </div>
+            </div>
+            <div class="slider-card__body">
+              <span class="slider-card__cat">{card.cat}</span>
+              <p class="slider-card__name">{card.name}</p>
+              <span class="slider-card__price">{card.price}</span>
+            </div>
+          </a>
         ))}
       </div>
     </div>
