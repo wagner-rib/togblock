@@ -11,7 +11,7 @@ body {
   font-size: var(--fs-base);
   line-height: var(--lh-normal);
   color: var(--ink);
-  background: var(--cream);
+  background: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
@@ -255,9 +255,8 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
 
 .site-header {
   position: sticky; top: 0; z-index: 100;
-  background: color-mix(in srgb, var(--cream) 88%, transparent);
-  backdrop-filter: blur(10px) saturate(1.2);
-  border-bottom: 1.5px solid var(--cream-deep);
+  background: #FFFFFF;
+  border-bottom: 1.5px solid rgba(0,0,0,.08);
 }
 .nav         { display: flex; align-items: center; justify-content: space-between; height: var(--header-h); gap: 16px; }
 .nav-links   { display: flex; align-items: center; gap: 4px; list-style: none; padding: 0; }
@@ -298,7 +297,7 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
   .menu-toggle { display: inline-flex; }
   .mobile-menu {
     display: block; position: fixed; inset: var(--header-h) 0 0 0; z-index: 99;
-    background: var(--cream); padding: 24px var(--gutter);
+    background: #FFFFFF; padding: 24px var(--gutter);
     transform: translateY(-12px); opacity: 0; visibility: hidden;
     transition: opacity .2s var(--ease-out), transform .2s var(--ease-out), visibility .2s;
     overflow-y: auto;

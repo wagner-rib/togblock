@@ -1,7 +1,7 @@
 /* TógBlocks — Name Builder styles */
 
 .builder {
-  --cell: 22px;
+  --cell: 28px;
   --cell-gap: calc(var(--cell) * 0.09);
   background: var(--white);
   border-radius: var(--radius-xl);
@@ -10,16 +10,30 @@
   overflow: hidden;
 }
 
+/* ---- Builder stage: photography-style 3D presentation ---- */
 .builder-stage {
   position: relative;
   background:
-    radial-gradient(circle at 1px 1px, rgba(14,107,67,.10) 1.4px, transparent 1.6px) 0 0 / 26px 26px,
-    linear-gradient(180deg, var(--offwhite), #fff);
-  min-height: clamp(180px, 26vw, 280px);
+    linear-gradient(180deg,
+      #e8e8e8 0%,
+      #d8d8d8 62%,
+      #c0c0c0 63%,
+      #b0b0b0 100%);
+  min-height: clamp(200px, 30vw, 340px);
   display: grid; place-items: center;
-  padding: clamp(20px, 4vw, 40px);
+  padding: clamp(24px, 4vw, 48px);
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: thin;
+}
+/* Simulated shelf line */
+.builder-stage::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 37%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,.18) 20%, rgba(0,0,0,.22) 80%, transparent);
+  pointer-events: none;
 }
 .builder-stage::-webkit-scrollbar        { height: 8px; }
 .builder-stage::-webkit-scrollbar-thumb  { background: var(--sage); border-radius: 999px; }
@@ -29,10 +43,15 @@
   overflow: visible;
 }
 
+/* ---- The 3D perspective name stage ---- */
 .brick-name {
-  display: flex; align-items: flex-start; gap: var(--cell);
+  display: flex; align-items: flex-end; gap: var(--cell);
   width: max-content; max-width: none;
-  transform-origin: top left; will-change: transform;
+  transform-origin: bottom center; will-change: transform;
+  /* 3D perspective tilt — letters standing on a surface */
+  transform: perspective(1200px) rotateX(14deg);
+  /* Photography drop shadow across the whole name */
+  filter: drop-shadow(0 24px 32px rgba(0,0,0,.40));
 }
 
 .brick-letter {
@@ -44,47 +63,55 @@
   padding: 6px; margin: -6px;
   border: none; background: none; cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: transform .14s var(--ease-pop), box-shadow .14s;
+  transition: transform .14s var(--ease-pop), box-shadow .14s, filter .14s;
 }
-.brick-letter:hover         { transform: translateY(-3px) rotate(-.6deg); }
+.brick-letter:hover         { transform: translateY(-4px) rotate(-.4deg); filter: brightness(1.06); }
 .brick-letter:focus-visible { box-shadow: var(--focus-ring); }
 .brick-letter.is-active     { box-shadow: 0 0 0 3px var(--cream), 0 0 0 6px var(--orange); }
 
+/* ---- 3D extruded brick cell ---- */
 .brick-cell       { width: var(--cell); height: var(--cell); border-radius: 2px; }
 .brick-cell.is-on {
   background: var(--bc);
   border-radius: var(--radius-brick);
+  /* Stacked offset box-shadows simulate depth/extrusion */
   box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.45),
-    inset 0 calc(var(--cell) * -0.13) 0 rgba(0,0,0,.20),
-    0 1px 1px rgba(0,0,0,.16);
+    inset 0 3px 0 rgba(255,255,255,.50),
+    inset 0 -5px 0 rgba(0,0,0,.30),
+    4px 4px 0 color-mix(in srgb, var(--bc) 60%, #000),
+    8px 8px 0 color-mix(in srgb, var(--bc) 40%, #000);
   position: relative;
 }
+/* Stud on top of each brick */
 .brick-cell.is-on::after {
   content: ""; position: absolute; inset: 0; margin: auto;
   width: 54%; height: 54%; border-radius: 50%;
   background: radial-gradient(circle at 38% 30%,
-    color-mix(in srgb, #fff 55%, var(--bc)),
+    color-mix(in srgb, #fff 60%, var(--bc)),
     color-mix(in srgb, #000 8%, var(--bc)) 72%);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.55),
-              inset 0 -1px 2px rgba(0,0,0,.28),
-              0 1px 1px rgba(0,0,0,.12);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.60),
+    inset 0 -1px 2px rgba(0,0,0,.32),
+    0 1px 1px rgba(0,0,0,.16);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .brick-cell.is-on.pop { animation: brickPop .34s var(--ease-pop) backwards; animation-delay: var(--d, 0ms); }
 }
 @keyframes brickPop {
-  0%   { transform: scale(0) translateY(-8px); opacity: 0; }
-  70%  { transform: scale(1.08); }
+  0%   { transform: scale(0) translateY(-10px); opacity: 0; }
+  70%  { transform: scale(1.10); }
   100% { transform: scale(1); opacity: 1; }
 }
 
 .builder-empty     { text-align: center; color: var(--ink-40); display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .builder-empty .ge-bricks { display: flex; gap: 10px; opacity: .5; }
 .builder-empty .ge-bricks i {
-  width: 30px; height: 30px; border-radius: var(--radius-brick); position: relative;
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.5), inset 0 -4px 0 rgba(0,0,0,.18);
+  width: 34px; height: 34px; border-radius: var(--radius-brick); position: relative;
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.5),
+    inset 0 -5px 0 rgba(0,0,0,.18),
+    4px 4px 0 rgba(0,0,0,.12);
   animation: ghostBob 2.4s var(--ease-out) infinite;
 }
 .builder-empty .ge-bricks i::after { content:""; position:absolute; inset:0; margin:auto; width:54%; height:54%; border-radius:50%; background: rgba(255,255,255,.4); }
@@ -93,7 +120,10 @@
 .builder-empty .ge-bricks i:nth-child(3) { background: var(--green);  animation-delay: .3s; }
 .builder-empty .ge-text { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--ink-60); }
 @keyframes ghostBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@media (prefers-reduced-motion: reduce) { .builder-empty .ge-bricks i { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .builder-empty .ge-bricks i { animation: none; }
+  .brick-name { transform: none; filter: none; }
+}
 
 .builder-controls { padding: clamp(18px, 3vw, 28px); border-top: 1.5px solid var(--line); display: flex; flex-direction: column; gap: var(--space-5); background: var(--white); }
 .control-group    { display: flex; flex-direction: column; gap: 10px; }
@@ -130,4 +160,58 @@
   .builder-checkout .btn { width: 100%; }
   .builder-checkout { flex-direction: column; align-items: stretch; }
   .price-block { align-items: center; text-align: center; }
+}
+
+/* ---- Door Sign Builder ---- */
+.sign-builder {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.sign-stage {
+  min-height: clamp(200px, 28vw, 300px);
+  display: grid; place-items: center;
+  padding: clamp(24px, 4vw, 52px);
+  background: linear-gradient(180deg, #1a3a5c 0%, #0f2640 100%);
+}
+
+.sign-perspective-wrap {
+  transform: perspective(1000px) rotateX(8deg);
+  filter: drop-shadow(0 20px 28px rgba(0,0,0,.55));
+  max-width: 100%;
+}
+
+.sign-plate {
+  position: relative;
+  width: min(640px, 90vw);
+  aspect-ratio: 32/12;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.20),
+    inset 0 -6px 0 rgba(0,0,0,.28),
+    6px 6px 0 rgba(0,0,0,.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sign-text-row {
+  position: relative; z-index: 2;
+  display: flex; align-items: flex-start; justify-content: center; gap: 12px;
+}
+
+.sign-decos {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+}
+
+/* Sign text cells override */
+.sign-text-cell {
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.55),
+    inset 0 -4px 0 rgba(0,0,0,.28),
+    2px 3px 0 rgba(0,0,0,.30) !important;
 }

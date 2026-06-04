@@ -3,26 +3,37 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base
-  title="TógBlocks — build any name in bricks"
-  description="Custom names built in studded bricks, made in Ireland. Type a name, watch it build, add to basket. Works with LEGO® and other standard building bricks."
+  title="TógBlocks — Build names they'll love forever"
+  description="Handmade personalised LEGO-compatible brick name letters and door signs, made in Ireland. Type a name, pick colours, we build and post it."
   currentPage="/"
+  ogImage="/products/luca-letters.jpg"
 >
-  <!-- ============ HERO + BUILDER ============ -->
-  <section class="hero">
-    <span class="float-brick" style="width:46px;height:46px;background:var(--orange);left:6%;top:24%;--rot:-8deg" aria-hidden="true"></span>
-    <span class="float-brick" style="width:38px;height:38px;background:var(--sage);right:7%;top:16%;--rot:10deg;animation-delay:.8s" aria-hidden="true"></span>
-    <span class="float-brick" style="width:54px;height:54px;background:var(--green);right:12%;bottom:8%;--rot:-5deg;animation-delay:1.4s" aria-hidden="true"></span>
-    <div class="wrap">
-      <div class="hero-head">
-        <span class="eyebrow">
-          <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
-          Made in Ireland · custom brick names
-        </span>
-        <h1>Build any name <span class="hl">in bricks</span></h1>
-        <p class="lead">Pick your colours, add to basket — we build &amp; post it.</p>
-      </div>
-      <div class="hero-builder">
-        <div data-name-builder data-initial="ADA"></div>
+
+  <!-- ============ HERO ============ -->
+  <section class="home-hero">
+    <div class="home-hero__media">
+      <img
+        src="/products/luca-letters.jpg"
+        alt="Rainbow 3D brick letters L U C A on a wooden surface with LEGO minifigures"
+        class="home-hero__photo"
+        loading="eager"
+        decoding="async"
+      />
+      <div class="home-hero__overlay"></div>
+    </div>
+    <div class="home-hero__content wrap">
+      <span class="eyebrow" style="color:#fff;opacity:.9">
+        <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+        Handmade in Ireland · ships in 3 days
+      </span>
+      <h1 class="home-hero__heading">Build names they'll<br>love forever</h1>
+      <p class="home-hero__sub">
+        Personalised brick name letters &amp; door signs, compatible with LEGO®.
+        Pick your name, choose your colours — we build and post it.
+      </p>
+      <div class="home-hero__ctas">
+        <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
+        <a class="btn btn--secondary home-hero__secondary btn--lg" href="/builder">Start building</a>
       </div>
     </div>
   </section>
@@ -40,7 +51,7 @@ import Base from '../layouts/Base.astro';
       <span class="trust-divider" aria-hidden="true"></span>
       <div class="trust-item">
         <span class="stars" aria-label="5 stars" aria-hidden="true">★★★★★</span>
-        <span>4.9 from 600+ wee builders</span>
+        <span>4.9 from 600+ happy customers</span>
       </div>
       <span class="trust-divider" aria-hidden="true"></span>
       <div class="trust-item">
@@ -53,8 +64,61 @@ import Base from '../layouts/Base.astro';
     </div>
   </section>
 
+  <!-- ============ PRODUCTS GRID ============ -->
+  <section class="section" aria-labelledby="products-heading">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Our products</span>
+        <h2 id="products-heading">Choose your build</h2>
+        <p>Two ways to celebrate a name — both built by hand in Ireland.</p>
+      </div>
+      <div class="home-products-grid">
+
+        <article class="home-product-card">
+          <a href="/products/brick-letters" class="hpc-media" aria-label="Brick Name Letters product page">
+            <img
+              src="/products/luca-letters.jpg"
+              alt="3D rainbow brick letters spelling LUCA with minifigures"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="hpc-badge">Most popular</span>
+          </a>
+          <div class="hpc-body">
+            <h3 class="hpc-title">Brick Name Letters</h3>
+            <p class="hpc-desc">Chunky 3D brick letters in any colour combo — perfect for shelves, nurseries and desks.</p>
+            <div class="hpc-foot">
+              <span class="price-tag">from €7</span>
+              <a class="btn btn--primary btn--sm" href="/builder?product=letters">Personalise It <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </article>
+
+        <article class="home-product-card">
+          <a href="/products/door-sign" class="hpc-media" aria-label="Door / Room Sign product page">
+            <img
+              src="/products/charlie-sign.jpg"
+              alt="Red LEGO baseplate door sign with Charlie in yellow raised letters"
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+          <div class="hpc-body">
+            <h3 class="hpc-title">Door / Room Sign</h3>
+            <p class="hpc-desc">A rectangular LEGO baseplate with your name raised in contrasting colour — the ultimate door sign.</p>
+            <div class="hpc-foot">
+              <span class="price-tag">from €12</span>
+              <a class="btn btn--primary btn--sm" href="/builder?product=sign">Personalise It <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ============ HOW IT WORKS ============ -->
-  <section class="section" aria-labelledby="how">
+  <section class="section" style="background:var(--offwhite)" aria-labelledby="how">
     <div class="wrap">
       <div class="sec-head">
         <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> How it works</span>
@@ -64,119 +128,44 @@ import Base from '../layouts/Base.astro';
       <div class="grid grid-3 steps">
         <div class="step">
           <div class="step-num" aria-hidden="true">1</div>
-          <h3>Type the name</h3>
-          <p class="muted">Up to 14 letters. A nickname, a baby's name, "gaffer", whatever you fancy.</p>
+          <h3>Choose a product</h3>
+          <p class="muted">Pick brick letters for a shelf display or a baseplate sign for the door.</p>
         </div>
         <div class="step">
           <div class="step-num" aria-hidden="true">2</div>
-          <h3>Pick your colours</h3>
-          <p class="muted">Choose a theme or tap any single letter to recolour just that one.</p>
+          <h3>Type &amp; customise</h3>
+          <p class="muted">Enter the name, pick your colours. The live preview shows exactly what you'll get.</p>
         </div>
         <div class="step">
           <div class="step-num" aria-hidden="true">3</div>
           <h3>We build &amp; post it</h3>
-          <p class="muted">Hand-assembled in Ireland from genuine compatible bricks, boxed and sent.</p>
+          <p class="muted">Hand-assembled in Ireland from genuine compatible bricks, boxed and sent in 3 days.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ PRODUCT PHOTO GALLERY ============ -->
-  <section class="section" style="background:var(--offwhite)" aria-labelledby="uses">
+  <!-- ============ GALLERY ============ -->
+  <section class="section" aria-labelledby="gallery-heading">
     <div class="wrap">
       <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Where they live</span>
-        <h2 id="uses">One build, a hundred homes</h2>
-        <p>Nursery shelves, birthday cakes, desks that needed a bit of joy.</p>
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> In the wild</span>
+        <h2 id="gallery-heading">One build, a hundred homes</h2>
+        <p>Nursery shelves, bedroom doors, desks that needed a bit of joy.</p>
       </div>
-      <div class="grid grid-3">
-
-        <article class="wild-card">
-          <div class="wild-photo pcp-photo" aria-label="Pastel brick letters spelling MILA on a shelf">
-            <div class="wild-letters" data-brick-scene="nursery"></div>
-          </div>
-          <div class="wc-body">
-            <span class="wc-label">Nursery wall</span>
-            <h3 class="wc-title">Name above the cot</h3>
-            <p class="wc-desc">Soft pastel sets that match the room. The first thing they'll read is their own name.</p>
-          </div>
-        </article>
-
-        <article class="wild-card">
-          <div class="wild-photo pcp-photo" aria-label="Bold rainbow brick number on a surface">
-            <div class="wild-letters" data-brick-scene="cake"></div>
-          </div>
-          <div class="wc-body">
-            <span class="wc-label">Cake topper</span>
-            <h3 class="wc-title">Birthday cake topper</h3>
-            <p class="wc-desc">Age and name in bold brights. Wipe clean, keep forever, reuse next year.</p>
-          </div>
-        </article>
-
-        <article class="wild-card">
-          <div class="wild-photo pcp-photo" aria-label="Green brick letters spelling BOSS on a desk surface">
-            <div class="wild-letters" data-brick-scene="desk"></div>
-          </div>
-          <div class="wc-body">
-            <span class="wc-label">Desk sign</span>
-            <h3 class="wc-title">Desk &amp; door sign</h3>
-            <p class="wc-desc">Claim the home office or the bedroom door. Clicks onto any baseplate you like.</p>
-          </div>
-        </article>
-
-      </div>
-
-      <!-- Real photo CTA -->
-      <div style="margin-top:clamp(28px,4vw,44px);text-align:center">
-        <p class="muted" style="margin-bottom:14px;font-size:var(--fs-sm)">
-          📷 &nbsp;Have yours already? Tag us <strong>@togblocks</strong> — we'd love to see it.
-        </p>
-        <a class="btn btn--secondary" href="/shop">See all finishes &amp; sizes <span aria-hidden="true">→</span></a>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ============ SIZES / PRICING ============ -->
-  <section class="section" aria-labelledby="sizes">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Sizes &amp; pricing</span>
-        <h2 id="sizes">Simple, honest pricing</h2>
-        <p>€7 for the first letter, €5 for every letter after. The size you pick changes the brick, not the price.</p>
-      </div>
-      <div class="grid grid-3">
-        <div class="card size-card">
-          <div class="sc-vis" aria-hidden="true">
-            <span class="sc-brick" style="height:46px"></span>
-            <span class="sc-brick" style="height:58px"></span>
-            <span class="sc-brick" style="height:46px"></span>
-          </div>
-          <h3>Small</h3>
-          <p class="muted">Pocket-sized · ~14mm studs. Shelf trinkets &amp; cake toppers.</p>
+      <div class="home-gallery">
+        <div class="home-gallery__item home-gallery__item--tall">
+          <img src="/products/luca-letters.jpg" alt="Rainbow brick letters LUCA on wooden surface with Batman and Harry Potter minifigures" loading="lazy" decoding="async" />
         </div>
-        <div class="card size-card" style="border:2px solid var(--green)">
-          <span class="badge" style="margin-bottom:8px">Most popular</span>
-          <div class="sc-vis" aria-hidden="true">
-            <span class="sc-brick" style="height:62px;background:var(--orange)"></span>
-            <span class="sc-brick" style="height:78px;background:var(--orange)"></span>
-            <span class="sc-brick" style="height:62px;background:var(--orange)"></span>
-          </div>
-          <h3>Medium</h3>
-          <p class="muted">The classic · ~22mm studs. Nursery names &amp; desk signs.</p>
+        <div class="home-gallery__item">
+          <img src="/products/finn-letters.jpg" alt="Blue toned brick letters FINN on a white kids room shelf" loading="lazy" decoding="async" />
         </div>
-        <div class="card size-card">
-          <div class="sc-vis" aria-hidden="true">
-            <span class="sc-brick" style="height:78px;background:var(--sage)"></span>
-            <span class="sc-brick" style="height:96px;background:var(--sage)"></span>
-            <span class="sc-brick" style="height:78px;background:var(--sage)"></span>
-          </div>
-          <h3>Large</h3>
-          <p class="muted">Statement · ~34mm studs. Wall words you can read across the room.</p>
+        <div class="home-gallery__item">
+          <img src="/products/charlie-sign.jpg" alt="Red LEGO baseplate door sign Charlie with yellow letters and decorative bricks" loading="lazy" decoding="async" />
         </div>
       </div>
-      <div class="center" style="margin-top:32px">
-        <a class="btn btn--secondary" href="/shop">See full options &amp; thickness <span aria-hidden="true">→</span></a>
+      <div style="text-align:center;margin-top:clamp(20px,3vw,36px)">
+        <a class="btn btn--secondary" href="/products">See all products <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
@@ -199,7 +188,7 @@ import Base from '../layouts/Base.astro';
         </div>
         <div class="card quote-card">
           <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
-          <blockquote>"Clicked straight onto our existing baseplate. The kids now spell out rude words with it, which is on them, not TógBlocks."</blockquote>
+          <blockquote>"The door sign for Charlie's room is unreal. The red plate with yellow letters looks exactly like the photo. Huge hit."</blockquote>
           <div class="qc-by">
             <span class="qc-avatar" style="background:var(--orange)" aria-hidden="true">DM</span>
             <div><strong>Dara Murphy</strong><div class="muted" style="font-size:var(--fs-sm)">Cork</div></div>
@@ -207,7 +196,7 @@ import Base from '../layouts/Base.astro';
         </div>
         <div class="card quote-card">
           <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
-          <blockquote>"Recoloured each letter to match her room. The little preview made it impossible to get wrong. Will be back at Christmas."</blockquote>
+          <blockquote>"Recoloured each letter to match her room. The live preview made it impossible to get wrong. Will be back at Christmas."</blockquote>
           <div class="qc-by">
             <span class="qc-avatar" style="background:var(--sage);color:var(--green-700)" aria-hidden="true">NK</span>
             <div><strong>Niamh Kelly</strong><div class="muted" style="font-size:var(--fs-sm)">Dublin</div></div>
@@ -254,14 +243,14 @@ import Base from '../layouts/Base.astro';
         <div class="acc-item">
           <h3>
             <button class="acc-trigger" aria-expanded="false" aria-controls="ft3">
-              Can the letters come apart?
+              What's the difference between letters and a door sign?
               <span class="acc-ico" aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
               </span>
             </button>
           </h3>
           <div class="acc-panel" id="ft3">
-            <div>They're built to hold together but they're still bricks — pull them apart and rebuild any time.</div>
+            <div>Brick Name Letters are individual 3D chunky letters that stand freely on a shelf or surface. Door Signs are a single wide LEGO baseplate with the name raised in the centre — designed to hang or lean on a door or wall.</div>
           </div>
         </div>
       </div>
@@ -296,7 +285,156 @@ import Base from '../layouts/Base.astro';
     </div>
   </section>
 
-  <script>
-    import '../builder/builder.ts';
-  </script>
 </Base>
+
+<style>
+/* ---- Home Hero ---- */
+.home-hero {
+  position: relative;
+  min-height: clamp(420px, 56vw, 680px);
+  display: flex; align-items: flex-end;
+  overflow: hidden;
+}
+.home-hero__media {
+  position: absolute; inset: 0;
+}
+.home-hero__photo {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 40%;
+  display: block;
+}
+.home-hero__overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,.78) 0%,
+    rgba(0,0,0,.45) 45%,
+    rgba(0,0,0,.12) 100%
+  );
+}
+.home-hero__content {
+  position: relative; z-index: 2;
+  padding-bottom: clamp(40px, 7vw, 88px);
+  padding-top: clamp(60px, 10vw, 120px);
+}
+.home-hero__heading {
+  font-size: clamp(2.4rem, 2rem + 2.5vw, 4.2rem);
+  color: #fff; line-height: 1.04;
+  margin-top: 10px; margin-bottom: 16px;
+  text-shadow: 0 2px 16px rgba(0,0,0,.4);
+}
+.home-hero__sub {
+  color: rgba(255,255,255,.88);
+  font-size: clamp(1rem, .9rem + .5vw, 1.2rem);
+  max-width: 540px;
+  margin-bottom: 28px;
+  line-height: 1.55;
+}
+.home-hero__ctas {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+}
+.home-hero__secondary {
+  --btn-bg: rgba(255,255,255,.15);
+  --btn-fg: #fff;
+  --btn-bd: rgba(255,255,255,.5);
+  backdrop-filter: blur(8px);
+}
+.home-hero__secondary:hover {
+  --btn-bg: rgba(255,255,255,.28);
+}
+
+/* ---- Products Grid ---- */
+.home-products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 3vw, 32px);
+}
+@media (max-width: 640px) {
+  .home-products-grid { grid-template-columns: 1fr; }
+}
+.home-product-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid rgba(0,0,0,.07);
+  box-shadow: 0 4px 24px -4px rgba(0,0,0,.10);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: transform .18s var(--ease-pop), box-shadow .18s var(--ease-out);
+}
+.home-product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 40px -8px rgba(0,0,0,.18);
+}
+.hpc-media {
+  display: block;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+}
+.hpc-media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .4s var(--ease-out);
+  display: block;
+}
+.home-product-card:hover .hpc-media img {
+  transform: scale(1.04);
+}
+.hpc-badge {
+  position: absolute; top: 14px; left: 14px;
+  background: var(--orange); color: #3a1d05;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: var(--fs-xs); padding: 5px 12px;
+  border-radius: var(--radius-pill);
+}
+.hpc-body {
+  padding: var(--space-5); flex: 1; display: flex; flex-direction: column; gap: 8px;
+}
+.hpc-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--fs-lg); color: var(--ink);
+  line-height: 1.15;
+}
+.hpc-desc {
+  color: #555; font-size: var(--fs-base); line-height: 1.5;
+  flex: 1;
+}
+.hpc-foot {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  margin-top: 8px; padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,.07);
+}
+.hpc-foot .price-tag {
+  font-size: var(--fs-md); color: var(--green-deep);
+}
+
+/* ---- Gallery ---- */
+.home-gallery {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: auto;
+  gap: clamp(8px, 1.5vw, 16px);
+}
+.home-gallery__item {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--offwhite);
+}
+.home-gallery__item--tall {
+  grid-row: span 2;
+}
+.home-gallery__item img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  transition: transform .4s var(--ease-out);
+}
+.home-gallery__item:hover img { transform: scale(1.04); }
+@media (max-width: 640px) {
+  .home-gallery {
+    grid-template-columns: 1fr 1fr;
+  }
+  .home-gallery__item--tall { grid-row: span 1; grid-column: span 2; }
+}
+</style>

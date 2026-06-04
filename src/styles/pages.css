@@ -100,6 +100,14 @@
 .news-card .studs-deco { position: absolute; right: -20px; top: -20px; width: 200px; height: 200px; opacity: .1; background-image: radial-gradient(circle, #fff 4px, transparent 5px); background-size: 28px 28px; }
 [data-newsletter-msg] { margin-top: 12px; font-weight: 700; color: var(--sage); }
 
+/* ---------- Breadcrumb ---------- */
+.breadcrumb { margin-bottom: clamp(12px, 2vw, 20px); }
+.breadcrumb ol { list-style: none; padding: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: var(--fs-sm); color: var(--ink-60); }
+.breadcrumb ol li + li::before { content: "/"; margin-right: 6px; opacity: .5; }
+.breadcrumb a { color: var(--green-deep); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb [aria-current="page"] { color: var(--ink); font-weight: 600; }
+
 /* ---------- Cart ---------- */
 .cart-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 28px; align-items: start; }
 @media (max-width: 880px) { .cart-layout { grid-template-columns: 1fr; } }

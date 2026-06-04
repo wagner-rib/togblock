@@ -1,0 +1,200 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base
+  title="Products — TógBlocks"
+  description="Browse TógBlocks personalised brick name letters and door signs. Handmade in Ireland, compatible with LEGO®."
+  currentPage="/products"
+>
+
+  <section class="page-hero">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-current="page">Products</li>
+        </ol>
+      </nav>
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Handmade in Ireland</span>
+      <h1>Our products</h1>
+      <p class="lead">Two ways to celebrate a name — both built brick by brick, shipped in 3 days.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="products-catalog">
+
+        <article class="product-catalog-card">
+          <a href="/products/brick-letters" class="pcc-media">
+            <img
+              src="/products/luca-letters.jpg"
+              alt="Rainbow 3D brick letters LUCA with LEGO minifigures on wooden surface"
+              loading="lazy" decoding="async"
+            />
+            <span class="pcc-badge">Most popular</span>
+          </a>
+          <div class="pcc-body">
+            <div>
+              <h2 class="pcc-title">Brick Name Letters</h2>
+              <p class="pcc-desc">
+                Chunky 3D letters built from genuine LEGO-compatible bricks. Each letter is a separate solid block,
+                standing upright on any surface. Pick any name up to 14 characters, choose individual letter colours
+                or a colour theme.
+              </p>
+              <ul class="pcc-features">
+                <li>Individual 3D letter blocks</li>
+                <li>Up to 14 letters per name</li>
+                <li>7 colour themes or custom per letter</li>
+                <li>3 sizes: Small · Medium · Large</li>
+                <li>Compatible with all standard LEGO® baseplates</li>
+              </ul>
+            </div>
+            <div class="pcc-foot">
+              <span class="price-tag" style="font-size:var(--fs-xl)">from €7</span>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <a class="btn btn--secondary" href="/products/brick-letters">View details</a>
+                <a class="btn btn--cta btn--lg" href="/builder?product=letters">Personalise It <span aria-hidden="true">→</span></a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-catalog-card">
+          <a href="/products/door-sign" class="pcc-media">
+            <img
+              src="/products/charlie-sign.jpg"
+              alt="Red LEGO baseplate door sign with Charlie in yellow raised letters and decorative bricks"
+              loading="lazy" decoding="async"
+            />
+          </a>
+          <div class="pcc-body">
+            <div>
+              <h2 class="pcc-title">Door / Room Sign</h2>
+              <p class="pcc-desc">
+                A wide rectangular LEGO baseplate with the name raised in the centre in contrasting letters.
+                Decorative 2×1 bricks dot the edges for that finishing touch. Perfect for bedroom doors, walls,
+                or desks.
+              </p>
+              <ul class="pcc-features">
+                <li>32×12 stud baseplate (landscape)</li>
+                <li>Name centered in raised 5×7 brick font</li>
+                <li>6 plate colours · 6 text colours</li>
+                <li>Decorative edge bricks included</li>
+                <li>Compatible with all standard LEGO® bricks</li>
+              </ul>
+            </div>
+            <div class="pcc-foot">
+              <span class="price-tag" style="font-size:var(--fs-xl)">from €12</span>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <a class="btn btn--secondary" href="/products/door-sign">View details</a>
+                <a class="btn btn--cta btn--lg" href="/builder?product=sign">Personalise It <span aria-hidden="true">→</span></a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Compatibility badge -->
+  <section class="section-tight" style="background:var(--offwhite)">
+    <div class="wrap-narrow center">
+      <div class="compat-badge">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="32" height="32" rx="8" fill="#E63946" stroke="none"/>
+          <rect x="2" y="2" width="32" height="14" rx="8" fill="rgba(255,255,255,.12)"/>
+          <circle cx="12" cy="12" r="4" fill="#FFD700"/>
+          <circle cx="24" cy="12" r="4" fill="#FFD700"/>
+          <circle cx="12" cy="24" r="4" fill="#FFD700"/>
+          <circle cx="24" cy="24" r="4" fill="#FFD700"/>
+        </svg>
+        <div>
+          <strong>100% LEGO® compatible</strong>
+          <p class="muted" style="font-size:var(--fs-sm);margin:0">
+            Standard stud spacing · clicks onto any baseplate · plays with your existing collection.
+            TógBlocks is independent and not affiliated with the LEGO Group.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</Base>
+
+<style>
+.products-catalog {
+  display: flex; flex-direction: column; gap: clamp(32px, 5vw, 60px);
+}
+.product-catalog-card {
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(24px, 4vw, 52px);
+  align-items: start;
+  background: #fff;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid rgba(0,0,0,.07);
+  box-shadow: 0 4px 24px -4px rgba(0,0,0,.09);
+  overflow: hidden;
+}
+.product-catalog-card:nth-child(even) { direction: rtl; }
+.product-catalog-card:nth-child(even) > * { direction: ltr; }
+.pcc-media {
+  display: block; aspect-ratio: 4/3;
+  overflow: hidden; position: relative; text-decoration: none;
+}
+.pcc-media img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .4s var(--ease-out);
+}
+.product-catalog-card:hover .pcc-media img { transform: scale(1.04); }
+.pcc-badge {
+  position: absolute; top: 14px; left: 14px;
+  background: var(--orange); color: #3a1d05;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xs);
+  padding: 5px 12px; border-radius: var(--radius-pill);
+}
+.pcc-body {
+  padding: clamp(20px, 3vw, 36px);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 20px;
+  min-height: 320px;
+}
+.pcc-title {
+  font-size: var(--fs-2xl); margin-bottom: 12px; color: var(--ink);
+}
+.pcc-desc {
+  color: #555; font-size: var(--fs-base); line-height: 1.6; margin-bottom: 16px;
+}
+.pcc-features {
+  list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 0;
+}
+.pcc-features li {
+  display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #444;
+}
+.pcc-features li::before {
+  content: "";
+  width: 18px; height: 18px; flex: none;
+  background: var(--green-soft); border-radius: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8l3 3 6-6' stroke='%231D4ED8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-size: 12px 12px; background-repeat: no-repeat; background-position: center;
+}
+.pcc-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; padding-top: 16px; border-top: 1px solid rgba(0,0,0,.07);
+}
+.compat-badge {
+  display: inline-flex; align-items: flex-start; gap: 16px;
+  background: #fff; border: 2px solid var(--green-soft);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  text-align: left; max-width: 600px;
+  box-shadow: var(--shadow-sm);
+}
+.compat-badge svg { flex: none; margin-top: 2px; }
+
+@media (max-width: 820px) {
+  .product-catalog-card, .product-catalog-card:nth-child(even) {
+    grid-template-columns: 1fr; direction: ltr;
+  }
+}
+</style>

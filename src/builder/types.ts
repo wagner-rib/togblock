@@ -5,7 +5,7 @@ export interface LetterPayload {
 
 export interface CartItem {
   id: string;
-  type: 'custom-name';
+  type: 'custom-name' | 'door-sign';
   name: string;
   theme: string;
   oneColour: string | null;
@@ -17,4 +17,6 @@ export interface CartItem {
   currency: string;
   qty: number;
   createdAt: string;
+  plateColour?: string;
+  textColour?: string;
 }
