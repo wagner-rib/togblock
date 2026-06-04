@@ -6,26 +6,19 @@
 /* ── HERO BACKGROUND SLIDESHOW ──────────────────────────────── */
 .home-hero {
   position: relative;
-  height: clamp(360px, 58vh, 580px);
   overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: clamp(36px, 5vh, 60px);
 }
 
-/* Slide images stacked, fade in/out */
 .home-hero__slides {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  height: clamp(360px, 60vh, 580px);
+  overflow: hidden;
 }
 
 .hero-slide {
   position: absolute;
   inset: 0;
-  background-size: contain;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-color: #f8f8f8;
   opacity: 0;
   transition: opacity 1.2s ease-in-out;
   will-change: opacity;
@@ -33,23 +26,37 @@
 
 .hero-slide.is-active { opacity: 1; }
 
-/* Subtle gradient at the bottom so text sits over light bg */
-.home-hero__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(248,248,248,.0) 0%,
-    rgba(248,248,248,.5) 55%,
-    rgba(248,248,248,.92) 80%,
-    rgba(248,248,248,1)   100%
-  );
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
 }
 
-/* Content */
+/* Gradient fades the bottom of the slides container */
+.home-hero__overlay {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 55%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(248,248,248,.55) 55%,
+    rgba(248,248,248,.95) 85%,
+    #f8f8f8 100%
+  );
+  z-index: 1;
+}
+
+/* Text content at bottom of the slides area */
 .home-hero__content {
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
   z-index: 2;
+  padding-bottom: clamp(24px, 4vw, 44px);
 }
 
 .home-hero h1 {
@@ -103,8 +110,8 @@
 .hero-arrow:hover  { background: #fff; transform: translateY(-50%) scale(1.08); }
 .hero-arrow:active { transform: translateY(-50%) scale(.95); }
 .hero-arrow:focus-visible { box-shadow: var(--focus-ring); }
-.hero-arrow--prev { left: 16px; }
-.hero-arrow--next { right: 16px; }
+.hero-arrow--prev { left: 16px; z-index: 3; }
+.hero-arrow--next { right: 16px; z-index: 3; }
 @media (max-width: 520px) {
   .hero-arrow { width: 38px; height: 38px; }
   .hero-arrow--prev { left: 10px; }
@@ -114,7 +121,7 @@
 /* Dot navigation */
 .hero-dots {
   position: absolute;
-  bottom: 18px;
+  bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;

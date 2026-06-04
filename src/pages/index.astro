@@ -32,12 +32,20 @@ const allCards = [...sliderCards, ...sliderCards];
   <!-- ═══════════════════════════════════════════════ HERO ═══ -->
   <section class="home-hero" aria-label="Hero">
 
-    <!-- Background slideshow — images cycle every 4 s -->
+    <!-- Background slideshow — real <img> tags, grid-stacked so height is image-driven -->
     <div class="home-hero__slides" aria-hidden="true" data-hero-slides>
-      <div class="hero-slide is-active" style={`background-image:url('/products/luca-letters.jpg')`}></div>
-      <div class="hero-slide" style={`background-image:url('/products/finn-letters.jpg')`}></div>
-      <div class="hero-slide" style={`background-image:url('/products/robert-letters.jpg')`}></div>
-      <div class="hero-slide" style={`background-image:url('/products/charlie-sign.jpg')`}></div>
+      <div class="hero-slide is-active">
+        <img src="/products/luca-letters.jpg" alt="" loading="eager" fetchpriority="high" decoding="async"/>
+      </div>
+      <div class="hero-slide">
+        <img src="/products/finn-letters.jpg" alt="" loading="lazy" decoding="async"/>
+      </div>
+      <div class="hero-slide">
+        <img src="/products/robert-letters.jpg" alt="" loading="lazy" decoding="async"/>
+      </div>
+      <div class="hero-slide">
+        <img src="/products/charlie-sign.jpg" alt="" loading="lazy" decoding="async"/>
+      </div>
     </div>
     <div class="home-hero__overlay" aria-hidden="true"></div>
 
