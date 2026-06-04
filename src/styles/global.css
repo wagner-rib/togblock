@@ -247,11 +247,11 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
 
 /* Inline SVG brick mark */
 .brand-icon {
-  width: 46px; height: auto; flex: none; display: block;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+  width: 26px; height: auto; flex: none; display: block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
   transition: transform .22s var(--ease-pop);
 }
-.brand:hover .brand-icon { transform: rotate(-6deg) scale(1.07); }
+.brand:hover .brand-icon { transform: rotate(-5deg) scale(1.1); }
 
 /* Wordmark */
 .brand-word {

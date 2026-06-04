@@ -1,20 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36">
-  <!-- Left stud shadow -->
-  <circle cx="16" cy="10" r="7.5" fill="#1D4ED8" opacity=".7"/>
-  <!-- Left stud face -->
-  <circle cx="16" cy="7.5" r="7.5" fill="#2563EB"/>
-  <!-- Left stud highlight -->
-  <circle cx="13.2" cy="5" r="3" fill="white" opacity=".45"/>
-  <!-- Right stud shadow -->
-  <circle cx="40" cy="10" r="7.5" fill="#1D4ED8" opacity=".7"/>
-  <!-- Right stud face -->
-  <circle cx="40" cy="7.5" r="7.5" fill="#2563EB"/>
-  <!-- Right stud highlight -->
-  <circle cx="37.2" cy="5" r="3" fill="white" opacity=".45"/>
-  <!-- Brick body -->
-  <rect x="1" y="14" width="54" height="20" rx="6" fill="#2563EB"/>
-  <!-- Top bevel -->
-  <rect x="1" y="14" width="54" height="8" rx="6" fill="white" opacity=".14"/>
-  <!-- Bottom depth -->
-  <rect x="3" y="30" width="50" height="4" rx="3" fill="black" opacity=".22"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 47 63">
+  <!-- Letter T in brick cells — 5×7 grid, 7px cells, 1px gaps -->
+  <!-- Top bar: row 0 cols 0–4 -->
+  <rect x="0"  y="0" width="7" height="7" rx="1.5" fill="#60A5FA"/>
+  <rect x="0"  y="0" width="7" height="2"  rx="1.5" fill="white" opacity=".3"/>
+  <circle cx="3.5"  cy="3.5" r="1.8" fill="white" opacity=".45"/>
+  <rect x="8"  y="0" width="7" height="7" rx="1.5" fill="#60A5FA"/>
+  <rect x="8"  y="0" width="7" height="2"  rx="1.5" fill="white" opacity=".3"/>
+  <circle cx="11.5" cy="3.5" r="1.8" fill="white" opacity=".45"/>
+  <rect x="16" y="0" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <rect x="16" y="0" width="7" height="2"  rx="1.5" fill="white" opacity=".35"/>
+  <circle cx="19.5" cy="3.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="24" y="0" width="7" height="7" rx="1.5" fill="#60A5FA"/>
+  <rect x="24" y="0" width="7" height="2"  rx="1.5" fill="white" opacity=".3"/>
+  <circle cx="27.5" cy="3.5" r="1.8" fill="white" opacity=".45"/>
+  <rect x="32" y="0" width="7" height="7" rx="1.5" fill="#60A5FA"/>
+  <rect x="32" y="0" width="7" height="2"  rx="1.5" fill="white" opacity=".3"/>
+  <circle cx="35.5" cy="3.5" r="1.8" fill="white" opacity=".45"/>
+  <!-- Stem: col 2 rows 1–6 -->
+  <rect x="16" y="8"  width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="11.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="16" y="16" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="19.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="16" y="24" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="27.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="16" y="32" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="35.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="16" y="40" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="43.5" r="1.8" fill="white" opacity=".5"/>
+  <rect x="16" y="48" width="7" height="7" rx="1.5" fill="#FACC15"/>
+  <circle cx="19.5" cy="51.5" r="1.8" fill="white" opacity=".5"/>
 </svg>
