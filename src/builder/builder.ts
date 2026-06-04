@@ -306,18 +306,24 @@ export class NameBuilder {
       name.style.transform = '';
       return;
     }
+    // Reset so we can measure the natural (unscaled) size
     scaler.style.width = '';
     scaler.style.height = '';
     name.style.transform = 'none';
+
     const natW = name.offsetWidth;
     const natH = name.offsetHeight;
     const cs = getComputedStyle(stage);
-    const avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    let scale = Math.min(1, avail / natW);
-    scale = Math.max(scale, 0.4);
+    const avail = stage.clientWidth
+      - parseFloat(cs.paddingLeft)
+      - parseFloat(cs.paddingRight);
+
+    // Scale down to fit — no floor, so any name length always fits
+    const scale = Math.min(1, avail / natW);
+
     name.style.transformOrigin = 'top left';
     name.style.transform = `scale(${scale})`;
-    scaler.style.width = natW * scale + 'px';
+    scaler.style.width  = natW * scale + 'px';
     scaler.style.height = natH * scale + 'px';
   }
 

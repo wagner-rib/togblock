@@ -22,8 +22,7 @@
   min-height: clamp(200px, 30vw, 340px);
   display: grid; place-items: center;
   padding: clamp(24px, 4vw, 48px);
-  overflow-x: auto; overflow-y: hidden;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
 /* Simulated shelf line */
 .builder-stage::after {
@@ -35,8 +34,6 @@
   background: linear-gradient(90deg, transparent, rgba(0,0,0,.18) 20%, rgba(0,0,0,.22) 80%, transparent);
   pointer-events: none;
 }
-.builder-stage::-webkit-scrollbar        { height: 8px; }
-.builder-stage::-webkit-scrollbar-thumb  { background: var(--sage); border-radius: 999px; }
 
 .brick-scaler {
   display: flex; align-items: flex-start; justify-content: center;
