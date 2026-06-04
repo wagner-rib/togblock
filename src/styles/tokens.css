@@ -1,33 +1,33 @@
-/* TógBlocks — Design Tokens. Single source of truth. */
+/* TógBlocks — Design Tokens. Single source of truth. Default = Cobalt Arcade. */
 :root {
-  /* Brand colours */
-  --green:        #169B62;
-  --green-deep:   #0E6B43;
-  --sage:         #7FB69A;
-  --cream:        #F3EAD3;
-  --orange:       #F58A3C;
-  --ink:          #1D2B22;
-  --offwhite:     #FBF8F0;
+  /* Brand colours — Cobalt Arcade default */
+  --green:        #2563EB;
+  --green-deep:   #1D4ED8;
+  --sage:         #60A5FA;
+  --cream:        #EFF6FF;
+  --orange:       #FACC15;
+  --ink:          #0F1C3F;
+  --offwhite:     #F8FAFF;
   --white:        #FFFFFF;
 
   /* Derived tints / shades */
-  --green-hover:  #128253;
-  --green-700:    #0B5536;
-  --orange-hover: #E2772B;
-  --orange-soft:  #FCE2CC;
-  --sage-soft:    #DCEBE2;
-  --green-soft:   #D8EDE2;
-  --cream-deep:   #E9DCBE;
-  --ink-60:       #5A6960;
-  --ink-40:       #8A968F;
-  --line:         rgba(29,43,34,.12);
-  --line-strong:  rgba(29,43,34,.22);
+  --green-hover:  #1E40AF;
+  --green-700:    #1E3A8A;
+  --orange-hover: #EAB308;
+  --orange-soft:  #FEF9C3;
+  --sage-soft:    #DBEAFE;
+  --green-soft:   #DBEAFE;
+  --cream-deep:   #BFDBFE;
+  --ink-60:       #3B5A9E;
+  --ink-40:       #6B82B8;
+  --line:         rgba(29,78,216,.12);
+  --line-strong:  rgba(29,78,216,.22);
 
   /* Product brick colours */
   --brick-red:    #D8412F;
-  --brick-blue:   #2B6CB0;
-  --brick-yellow: #F2C200;
-  --brick-green:  #169B62;
+  --brick-blue:   #2563EB;
+  --brick-yellow: #FACC15;
+  --brick-green:  #2563EB;
 
   /* Typography */
   --font-display: "Baloo 2", system-ui, sans-serif;
@@ -84,6 +84,8 @@
   /* Focus rings */
   --focus-ring:         0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
   --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+
+
 
   /* Easing */
   --ease-pop: cubic-bezier(.34,1.56,.64,1);

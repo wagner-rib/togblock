@@ -67,8 +67,8 @@ const navItems = [
   <!-- Vibe init: apply saved theme before first paint to avoid flash -->
   <script is:inline>
     (function(){
-      var v = localStorage.getItem('togblocks_vibe');
-      if (v && v !== 'clover') document.documentElement.setAttribute('data-vibe', v);
+      var v = localStorage.getItem('togblocks_vibe') || 'cobalt';
+      if (v !== 'cobalt') document.documentElement.setAttribute('data-vibe', v);
     })();
   </script>
 </head>

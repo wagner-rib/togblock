@@ -34,12 +34,12 @@ const VIBES = [
 ];
 
 function getVibe(): string {
-  return localStorage.getItem(VIBE_KEY) || 'clover';
+  return localStorage.getItem(VIBE_KEY) || 'cobalt';
 }
 
 function applyVibe(id: string): void {
   const html = document.documentElement;
-  if (id === 'clover') {
+  if (id === 'cobalt') {
     html.removeAttribute('data-vibe');
   } else {
     html.setAttribute('data-vibe', id);
