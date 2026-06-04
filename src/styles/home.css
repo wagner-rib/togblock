@@ -482,7 +482,28 @@
 }
 
 .feature-split__copy .eyebrow {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+}
+
+/* Big bold product name */
+.product-title {
+  font-size: clamp(2.4rem, 1.8rem + 2.8vw, 3.8rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.0 !important;
+  letter-spacing: -.03em !important;
+  color: var(--ink) !important;
+  margin-bottom: 10px !important;
+}
+
+/* Italic subtitle underneath */
+.product-subtitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  color: var(--ink-60);
+  font-style: italic;
+  margin-bottom: 20px;
+  line-height: 1.3;
 }
 
 .feature-split__copy h2 {
