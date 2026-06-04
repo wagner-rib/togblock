@@ -29,47 +29,42 @@ const allCards = [...sliderCards, ...sliderCards];
   ogImage="/products/luca-letters.jpg"
 >
 
-  <!-- ═══════════════════════════════════════ HERO + SLIDER ═══ -->
-  <section class="hero-slider-section" aria-label="Hero">
+  <!-- ═══════════════════════════════════════════════ HERO ═══ -->
+  <section class="home-hero" aria-label="Hero">
 
-    <!-- Headline + CTAs -->
-    <div class="hero-text wrap">
+    <!-- Background slideshow — images cycle every 4 s -->
+    <div class="home-hero__slides" aria-hidden="true" data-hero-slides>
+      <div class="hero-slide is-active" style={`background-image:url('/products/luca-letters.jpg')`}></div>
+      <div class="hero-slide" style={`background-image:url('/products/finn-letters.jpg')`}></div>
+      <div class="hero-slide" style={`background-image:url('/products/robert-letters.jpg')`}></div>
+      <div class="hero-slide" style={`background-image:url('/products/charlie-sign.jpg')`}></div>
+    </div>
+    <div class="home-hero__overlay" aria-hidden="true"></div>
+
+    <!-- Dot indicators -->
+    <div class="hero-dots" aria-hidden="true" data-hero-dots>
+      <button class="hero-dot is-active" data-index="0"></button>
+      <button class="hero-dot" data-index="1"></button>
+      <button class="hero-dot" data-index="2"></button>
+      <button class="hero-dot" data-index="3"></button>
+    </div>
+
+    <!-- Content -->
+    <div class="home-hero__content wrap">
       <h1>
-        Build names they'll love <em class="accent">forever</em>
+        Build names<br>they'll love <em class="accent">forever</em>
       </h1>
-      <p class="hero-text__sub">
-        Personalised 3D brick name letters &amp; door signs — compatible with LEGO®, handmade in Ireland.
+      <p class="home-hero__sub">
+        Personalised 3D brick letters &amp; door signs — handmade in Ireland, compatible with LEGO®.
       </p>
-      <div class="hero-text__ctas">
+      <div class="home-hero__ctas">
         <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
-        <a class="btn btn--secondary btn--lg" href="/builder">
+        <a class="btn btn--white-outline btn--lg" href="/builder">
           Start building
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </a>
-      </div>
-    </div>
-
-    <!-- Animated product slider as the visual hero -->
-    <div class="slider-viewport hero-slider-viewport" aria-label="Product categories">
-      <div class="slider-track" data-slider role="list">
-        {allCards.map((card) => (
-          <a href={card.href} class="slider-card" role="listitem" aria-label={`${card.name} — ${card.price}`}>
-            {card.badge && <span class="slider-card__sticker">{card.badge}</span>}
-            <div class="slider-card__media">
-              <img src={card.img} alt={card.alt} loading="eager" decoding="async" />
-              <div class="slider-card__overlay" aria-hidden="true">
-                <span class="btn btn--cta slider-card__cta">Personalise it →</span>
-              </div>
-            </div>
-            <div class="slider-card__body">
-              <span class="slider-card__cat">{card.cat}</span>
-              <p class="slider-card__name">{card.name}</p>
-              <span class="slider-card__price">{card.price}</span>
-            </div>
-          </a>
-        ))}
       </div>
     </div>
 
@@ -126,6 +121,34 @@ const allCards = [...sliderCards, ...sliderCards];
             Shop Brick Letters →
           </a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ PRODUCT CAROUSEL ═══ -->
+  <section class="products-carousel" aria-labelledby="carousel-heading">
+    <div class="wrap carousel-head" data-reveal>
+      <h2 id="carousel-heading">Our builds</h2>
+      <p class="muted">Tap any card to personalise it.</p>
+    </div>
+    <div class="slider-viewport" aria-label="Product categories">
+      <div class="slider-track" data-slider role="list">
+        {allCards.map((card) => (
+          <a href={card.href} class="slider-card" role="listitem" aria-label={`${card.name} — ${card.price}`}>
+            {card.badge && <span class="slider-card__sticker">{card.badge}</span>}
+            <div class="slider-card__media">
+              <img src={card.img} alt={card.alt} loading="lazy" decoding="async" />
+              <div class="slider-card__overlay" aria-hidden="true">
+                <span class="btn btn--cta slider-card__cta">Personalise it →</span>
+              </div>
+            </div>
+            <div class="slider-card__body">
+              <span class="slider-card__cat">{card.cat}</span>
+              <p class="slider-card__name">{card.name}</p>
+              <span class="slider-card__price">{card.price}</span>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   </section>
