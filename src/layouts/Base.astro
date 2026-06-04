@@ -80,73 +80,41 @@ const navItems = [
     <div class="wrap nav">
       <a class="brand" href="/" aria-label="TógBlocks home">
         <!--
-          Letter "T" built from 5×7 brick cells — exactly like the product.
-          step=8px (7px cell + 1px gap). 11 filled cells.
-          Each cell: body + top-bevel + bottom-depth + stud circle.
+          Stud-dot T — 11 stud circles forming the letter T,
+          viewed from above like looking straight down at the product.
+          5 studs across (top bar) + 6 studs down (stem). Step=10.
         -->
-        <svg class="brand-icon" viewBox="0 0 39 55" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg class="brand-icon" viewBox="-1 -1 46 66" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
-            <linearGradient id="bc" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="var(--sage)"/>
-              <stop offset="1" stop-color="var(--green)"/>
-            </linearGradient>
+            <radialGradient id="sg" cx="38%" cy="32%" r="60%">
+              <stop offset="0"   stop-color="white" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="black" stop-opacity=".0"/>
+            </radialGradient>
           </defs>
-          <!-- ── top bar: row 0, cols 0-4 ── -->
-          <!-- col 0 -->
-          <rect x="0"  y="0" width="7" height="7" rx="1.5" fill="url(#bc)"/>
-          <rect x="0"  y="0" width="7" height="2.2" rx="1.5" fill="white" opacity=".28"/>
-          <rect x="0"  y="4.8" width="7" height="2.2" rx="1" fill="black" opacity=".18"/>
-          <circle cx="3.5" cy="3.5" r="1.7" fill="white" opacity=".45"/>
-          <!-- col 1 -->
-          <rect x="8"  y="0" width="7" height="7" rx="1.5" fill="url(#bc)"/>
-          <rect x="8"  y="0" width="7" height="2.2" rx="1.5" fill="white" opacity=".28"/>
-          <rect x="8"  y="4.8" width="7" height="2.2" rx="1" fill="black" opacity=".18"/>
-          <circle cx="11.5" cy="3.5" r="1.7" fill="white" opacity=".45"/>
-          <!-- col 2 (centre) -->
-          <rect x="16" y="0" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16" y="0" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16" y="4.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="3.5" r="1.7" fill="white" opacity=".5"/>
-          <!-- col 3 -->
-          <rect x="24" y="0" width="7" height="7" rx="1.5" fill="url(#bc)"/>
-          <rect x="24" y="0" width="7" height="2.2" rx="1.5" fill="white" opacity=".28"/>
-          <rect x="24" y="4.8" width="7" height="2.2" rx="1" fill="black" opacity=".18"/>
-          <circle cx="27.5" cy="3.5" r="1.7" fill="white" opacity=".45"/>
-          <!-- col 4 -->
-          <rect x="32" y="0" width="7" height="7" rx="1.5" fill="url(#bc)"/>
-          <rect x="32" y="0" width="7" height="2.2" rx="1.5" fill="white" opacity=".28"/>
-          <rect x="32" y="4.8" width="7" height="2.2" rx="1" fill="black" opacity=".18"/>
-          <circle cx="35.5" cy="3.5" r="1.7" fill="white" opacity=".45"/>
-          <!-- ── stem: col 2, rows 1-6 ── -->
-          <rect x="16"  y="8"  width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="8"  width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="12.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="11.5" r="1.7" fill="white" opacity=".5"/>
-
-          <rect x="16"  y="16" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="16" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="20.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="19.5" r="1.7" fill="white" opacity=".5"/>
-
-          <rect x="16"  y="24" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="24" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="28.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="27.5" r="1.7" fill="white" opacity=".5"/>
-
-          <rect x="16"  y="32" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="32" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="36.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="35.5" r="1.7" fill="white" opacity=".5"/>
-
-          <rect x="16"  y="40" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="40" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="44.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="43.5" r="1.7" fill="white" opacity=".5"/>
-
-          <rect x="16"  y="48" width="7" height="7" rx="1.5" fill="var(--orange)"/>
-          <rect x="16"  y="48" width="7" height="2.2" rx="1.5" fill="white" opacity=".32"/>
-          <rect x="16"  y="52.8" width="7" height="2.2" rx="1" fill="black" opacity=".2"/>
-          <circle cx="19.5" cy="51.5" r="1.7" fill="white" opacity=".5"/>
+          <!-- top bar studs (row 0, cols 0–4) -->
+          <circle cx="2"  cy="2"  r="4.5" fill="var(--green)"/>
+          <circle cx="2"  cy="2"  r="4.5" fill="url(#sg)"/>
+          <circle cx="12" cy="2"  r="4.5" fill="var(--green)"/>
+          <circle cx="12" cy="2"  r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="2"  r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="2"  r="4.5" fill="url(#sg)"/>
+          <circle cx="32" cy="2"  r="4.5" fill="var(--green)"/>
+          <circle cx="32" cy="2"  r="4.5" fill="url(#sg)"/>
+          <circle cx="42" cy="2"  r="4.5" fill="var(--green)"/>
+          <circle cx="42" cy="2"  r="4.5" fill="url(#sg)"/>
+          <!-- stem studs (col 2, rows 1–6) -->
+          <circle cx="22" cy="12" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="12" r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="22" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="22" r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="32" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="32" r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="42" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="42" r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="52" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="52" r="4.5" fill="url(#sg)"/>
+          <circle cx="22" cy="62" r="4.5" fill="var(--orange)"/>
+          <circle cx="22" cy="62" r="4.5" fill="url(#sg)"/>
         </svg>
         <span class="brand-word">Tóg<em>Blocks</em></span>
       </a>
@@ -214,31 +182,35 @@ const navItems = [
       <div class="footer-grid">
         <div>
           <a class="brand brand--footer" href="/" aria-label="TógBlocks home" style="margin-bottom:14px">
-            <svg class="brand-icon" viewBox="0 0 39 55" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <!-- top bar row 0 cols 0-4 (white on dark bg) -->
-              <rect x="0"  y="0" width="7" height="7" rx="1.5" fill="white" opacity=".7"/>
-              <circle cx="3.5"  cy="3.5" r="1.7" fill="white" opacity=".35"/>
-              <rect x="8"  y="0" width="7" height="7" rx="1.5" fill="white" opacity=".7"/>
-              <circle cx="11.5" cy="3.5" r="1.7" fill="white" opacity=".35"/>
-              <rect x="16" y="0" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="3.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="24" y="0" width="7" height="7" rx="1.5" fill="white" opacity=".7"/>
-              <circle cx="27.5" cy="3.5" r="1.7" fill="white" opacity=".35"/>
-              <rect x="32" y="0" width="7" height="7" rx="1.5" fill="white" opacity=".7"/>
-              <circle cx="35.5" cy="3.5" r="1.7" fill="white" opacity=".35"/>
-              <!-- stem col 2 rows 1-6 -->
-              <rect x="16" y="8"  width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="11.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="16" y="16" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="19.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="16" y="24" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="27.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="16" y="32" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="35.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="16" y="40" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="43.5" r="1.7" fill="white" opacity=".45"/>
-              <rect x="16" y="48" width="7" height="7" rx="1.5" fill="var(--orange)" opacity=".9"/>
-              <circle cx="19.5" cy="51.5" r="1.7" fill="white" opacity=".45"/>
+            <svg class="brand-icon" viewBox="-1 -1 46 66" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <radialGradient id="sgf" cx="38%" cy="32%" r="60%">
+                  <stop offset="0"    stop-color="white" stop-opacity=".5"/>
+                  <stop offset="100%" stop-color="black" stop-opacity=".0"/>
+                </radialGradient>
+              </defs>
+              <circle cx="2"  cy="2"  r="4.5" fill="white" opacity=".7"/>
+              <circle cx="2"  cy="2"  r="4.5" fill="url(#sgf)"/>
+              <circle cx="12" cy="2"  r="4.5" fill="white" opacity=".7"/>
+              <circle cx="12" cy="2"  r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="2"  r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="2"  r="4.5" fill="url(#sgf)"/>
+              <circle cx="32" cy="2"  r="4.5" fill="white" opacity=".7"/>
+              <circle cx="32" cy="2"  r="4.5" fill="url(#sgf)"/>
+              <circle cx="42" cy="2"  r="4.5" fill="white" opacity=".7"/>
+              <circle cx="42" cy="2"  r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="12" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="12" r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="22" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="22" r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="32" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="32" r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="42" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="42" r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="52" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="52" r="4.5" fill="url(#sgf)"/>
+              <circle cx="22" cy="62" r="4.5" fill="var(--orange)"/>
+              <circle cx="22" cy="62" r="4.5" fill="url(#sgf)"/>
             </svg>
             <span class="brand-word" style="color:#fff">Tóg<em style="color:var(--orange)">Blocks</em></span>
           </a>
