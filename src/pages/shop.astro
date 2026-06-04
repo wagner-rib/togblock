@@ -1,0 +1,157 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Shop — TógBlocks"
+  description="Choose your brick size, display or play thickness, and colour theme. Simple honest pricing — €7 first letter, €5 each after."
+  currentPage="/shop"
+>
+  <div class="wrap">
+    <div class="page-hero">
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Shop · options</span>
+      <h1>Pick your perfect build</h1>
+      <p class="lead">Same simple price — €7 first letter, €5 each after. Choose how big, how chunky, and which colours.</p>
+      <div style="margin-top:20px">
+        <a class="btn btn--cta btn--lg" href="/">Open the builder <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIZES -->
+  <section class="section-tight" aria-labelledby="sizes">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="sizes">Three sizes</h2><p>The size changes the brick footprint, not the price.</p></div>
+      <div class="grid grid-3">
+        <div class="card size-card">
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:42px"></span>
+            <span class="sc-brick" style="height:54px"></span>
+            <span class="sc-brick" style="height:42px"></span>
+          </div>
+          <h3>Small</h3>
+          <p class="muted">~14mm studs. A name sits in your palm. Lovely as a cake topper or shelf trinket.</p>
+          <p class="price-tag" style="margin-top:10px">from €7</p>
+        </div>
+        <div class="card size-card" style="border:2px solid var(--green)">
+          <span class="badge" style="margin-bottom:8px">Most popular</span>
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:74px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
+          </div>
+          <h3>Medium</h3>
+          <p class="muted">~22mm studs. The everyday hero — nursery names, desk signs, gifts.</p>
+          <p class="price-tag" style="margin-top:10px">from €7</p>
+        </div>
+        <div class="card size-card">
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:74px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:92px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:74px;background:var(--sage)"></span>
+          </div>
+          <h3>Large</h3>
+          <p class="muted">~34mm studs. A statement piece you can read clear across the room.</p>
+          <p class="price-tag" style="margin-top:10px">from €7</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THICKNESS -->
+  <section class="section" style="background:var(--offwhite)" aria-labelledby="thick">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="thick">Display or play thickness</h2><p>Two builds, two jobs. Pick the one that suits where it's going.</p></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div style="display:flex;align-items:flex-end;gap:8px;height:70px;margin-bottom:18px">
+            <span style="width:54px;height:9px;background:var(--green);border-radius:var(--radius-brick);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.18)" aria-hidden="true"></span>
+            <span class="badge badge--cream">3&nbsp;mm</span>
+          </div>
+          <h3>Display thickness · 3mm</h3>
+          <p class="muted" style="margin-top:8px">A slim, single-layer panel. Light, flush against a wall or fridge, and the cheapest to post. Best left to look pretty rather than be played with.</p>
+          <ul class="spec-list" style="margin-top:16px">
+            <li><span class="si-ico" aria-hidden="true">✓</span> Wall art, fridge letters, framing</li>
+            <li><span class="si-ico" aria-hidden="true">✓</span> Lightest to post</li>
+          </ul>
+        </div>
+        <div class="card" style="border:2px solid var(--green)">
+          <div style="display:flex;align-items:flex-end;gap:8px;height:70px;margin-bottom:18px">
+            <span style="width:54px;height:38px;background:var(--orange);border-radius:var(--radius-brick);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -5px 0 rgba(0,0,0,.18)" aria-hidden="true"></span>
+            <span class="badge badge--orange">11.5&nbsp;mm</span>
+          </div>
+          <h3>Play thickness · 11.5mm</h3>
+          <p class="muted" style="margin-top:8px">A proper brick depth that clicks onto any standard baseplate. Sturdy in small hands, fully re-buildable, plays nicely with the bricks you already own.</p>
+          <ul class="spec-list" style="margin-top:16px">
+            <li><span class="si-ico" aria-hidden="true">✓</span> Clicks onto standard baseplates</li>
+            <li><span class="si-ico" aria-hidden="true">✓</span> Built to be pulled apart &amp; rebuilt</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOUR SETS -->
+  <section class="section" id="colours" aria-labelledby="cols">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="cols">Colour sets</h2><p>Choose a ready-made theme in the builder, or tap any single letter to recolour it.</p></div>
+      <div class="grid grid-3" data-colour-sets></div>
+    </div>
+  </section>
+
+  <!-- LEAD TIME + SHIPPING -->
+  <section class="section" style="background:var(--offwhite)" id="shipping" aria-labelledby="ship">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="ship">Lead time &amp; shipping</h2><p>Made to order — here's the honest timeline.</p></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:14px">Lead time</h3>
+          <ul class="spec-list">
+            <li><span class="si-ico" aria-hidden="true">1</span><div><strong>Build</strong> — 2–3 working days to hand-assemble and quality-check.</div></li>
+            <li><span class="si-ico" aria-hidden="true">2</span><div><strong>Post</strong> — handed to An Post, then on its way.</div></li>
+            <li><span class="si-ico" aria-hidden="true">3</span><div><strong>Rush?</strong> — pop a note in the order; we'll do our best for birthdays.</div></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:14px">Shipping</h3>
+          <div class="summary-row"><span>Ireland</span><span class="price-tag">€4.95 · 1–3 days</span></div>
+          <div class="summary-row"><span>Ireland over €40</span><span class="price-tag" style="color:var(--green)">Free</span></div>
+          <div class="summary-row"><span>UK</span><span class="price-tag">€7.95 · 3–5 days</span></div>
+          <div class="summary-row"><span>EU</span><span class="price-tag">€9.95 · 4–7 days</span></div>
+          <p class="field-hint" style="margin-top:12px">Tracked where available. Builds are boxed snugly so studs don't pop in transit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPATIBILITY -->
+  <section class="section-tight">
+    <div class="wrap-narrow">
+      <div class="card" style="background:var(--green-soft);border:none">
+        <div class="trust-badge" style="margin-bottom:14px">
+          <svg class="tb-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="var(--green)" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M9 12l2 2 4-4" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Works with LEGO® &amp; other standard building bricks
+        </div>
+        <p class="muted" style="margin:0">
+          Compatible with LEGO®. TógBlocks is independent and not affiliated with, endorsed by,
+          or sponsored by the LEGO Group. LEGO® is a trademark of the LEGO Group.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="cta-band">
+        <div class="studs-deco" aria-hidden="true"></div>
+        <h2 style="margin-bottom:10px">Right, let's build it</h2>
+        <p style="color:rgba(255,255,255,.88);max-width:46ch;margin:0 auto 22px">Type a name, choose a size and colours, and watch it click together.</p>
+        <a class="btn btn--cta btn--lg" href="/">Start building <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>

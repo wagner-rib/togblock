@@ -1,0 +1,234 @@
+/*
+ * TógBlocks — Product Photo Staging
+ * Makes brick renders look like real product photography.
+ */
+
+/* ── Product photo stage (simulates shelf surface + wall) ── */
+.product-photo {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg,
+      #D6D2CD 0%,
+      #CBC7C1 52%,
+      #B8B4AE 53%,     /* shelf edge */
+      #A8A49F 100%
+    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 32px 20px 48px;
+}
+
+/* Subtle wall texture marks */
+.product-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(180deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 80px 80px;
+}
+
+/* Shadow on shelf surface */
+.product-photo::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.08));
+  pointer-events: none;
+}
+
+/* ── 3D perspective wrapper for the name ── */
+.product-name-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  filter: drop-shadow(0 18px 28px rgba(0,0,0,.40)) drop-shadow(0 6px 10px rgba(0,0,0,.25));
+}
+
+/* The name row with a slight perspective tilt */
+.product-brick-name {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  transform: perspective(360px) rotateX(8deg);
+  transform-origin: bottom center;
+}
+
+/* Cast shadow on surface below the letters */
+.product-shadow {
+  width: 90%;
+  height: 14px;
+  background: radial-gradient(ellipse 90% 100% at 50% 0%, rgba(0,0,0,.35), transparent 70%);
+  margin-top: -2px;
+  transform: perspective(200px) rotateX(55deg);
+  transform-origin: top center;
+}
+
+/* ── Individual product brick cells — bigger, chunkier, more 3D ── */
+.product-photo .brick-cell.is-on {
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.55),       /* top highlight */
+    inset 0 -5px 0 rgba(0,0,0,.30),             /* bottom depth */
+    inset -3px 0 0 rgba(0,0,0,.12),             /* right edge */
+    1px 2px 3px rgba(0,0,0,.22);                /* cast shadow */
+}
+
+.product-photo .brick-cell.is-on::after {
+  width: 58%; height: 58%;
+  background: radial-gradient(circle at 35% 28%,
+    rgba(255,255,255,.75),
+    color-mix(in srgb, #000 15%, var(--bc)) 68%);
+  box-shadow:
+    inset 0 1.5px 2px rgba(255,255,255,.65),
+    inset 0 -2px 3px rgba(0,0,0,.35),
+    0 1.5px 2px rgba(0,0,0,.18);
+}
+
+/* ── Product card (wraps the photo + caption) ── */
+.product-card-photo {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 12px 40px rgba(0,0,0,.10);
+  border: 1px solid rgba(0,0,0,.06);
+  transition: transform .2s var(--ease-pop), box-shadow .2s var(--ease-out);
+  display: flex;
+  flex-direction: column;
+}
+.product-card-photo:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.12), 0 24px 56px rgba(0,0,0,.16);
+}
+.product-card-photo .pcp-photo {
+  aspect-ratio: 4/3;
+}
+.product-card-photo .pcp-body {
+  padding: 18px 20px 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.product-card-photo .pcp-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--green-deep);
+}
+.product-card-photo .pcp-sub {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  line-height: 1.5;
+}
+.product-card-photo .pcp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-soft);
+  color: var(--green-deep);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* ── Hero product preview (large, in hero section) ── */
+.hero-product-preview {
+  background: linear-gradient(180deg, #CDCAC5 0%, #C0BDB8 55%, #AEABA6 56%, #9E9B96 100%);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  position: relative;
+  min-height: 260px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 36px;
+  box-shadow: inset 0 2px 12px rgba(0,0,0,.12), var(--shadow-lg);
+}
+
+/* subtle wall marks */
+.hero-product-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.06) 0%, transparent 60%);
+}
+
+/* ── Gallery "In the wild" photo cards ── */
+.wild-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  transition: transform .18s var(--ease-pop), box-shadow .18s var(--ease-out);
+}
+.wild-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+.wild-photo {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(180deg, #D8D4CE 0%, #CDCAC4 55%, #BDBAB4 56%, #AEABA6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 28px 16px 40px;
+  overflow: hidden;
+}
+
+.wild-photo::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 46%;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.07));
+  pointer-events: none;
+}
+
+/* letters standing on surface with drop shadow */
+.wild-letters {
+  position: relative;
+  z-index: 1;
+  transform: perspective(280px) rotateX(6deg);
+  transform-origin: bottom center;
+  filter: drop-shadow(0 14px 22px rgba(0,0,0,.38)) drop-shadow(0 4px 8px rgba(0,0,0,.22));
+  display: flex;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.wild-card .wc-body {
+  padding: 14px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wild-card .wc-label {
+  font-size: var(--fs-xs);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+}
+.wild-card .wc-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--green-deep);
+  margin: 0;
+}
+.wild-card .wc-desc {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  line-height: 1.5;
+}

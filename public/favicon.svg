@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="TógBlocks stud mark">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1FB374"/>
+      <stop offset="1" stop-color="#0E6B43"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#g)"/>
+  <rect x="3" y="3" width="42" height="20" rx="13" fill="#ffffff" opacity="0.10"/>
+  <g fill="#FBF8F0">
+    <circle cx="17" cy="17" r="5.4"/>
+    <circle cx="31" cy="17" r="5.4"/>
+    <circle cx="17" cy="31" r="5.4"/>
+    <circle cx="31" cy="31" r="5.4"/>
+  </g>
+  <g fill="#0E6B43" opacity="0.18">
+    <circle cx="17" cy="18.4" r="5.4"/>
+    <circle cx="31" cy="18.4" r="5.4"/>
+    <circle cx="17" cy="32.4" r="5.4"/>
+    <circle cx="31" cy="32.4" r="5.4"/>
+  </g>
+  <g fill="#FBF8F0">
+    <circle cx="17" cy="17" r="5.4"/>
+    <circle cx="31" cy="17" r="5.4"/>
+    <circle cx="17" cy="31" r="5.4"/>
+    <circle cx="31" cy="31" r="5.4"/>
+  </g>
+</svg>

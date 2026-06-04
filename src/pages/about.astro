@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="About — TógBlocks"
+  description="TógBlocks started on a kitchen table in Galway. Custom brick names built by hand in Ireland. Tóg is Irish for build."
+  currentPage="/about"
+>
+  <div class="wrap-narrow">
+    <div class="page-hero">
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Our story</span>
+      <h1>Small maker, big tower of bricks</h1>
+      <p class="lead"><em>Tóg</em> is the Irish for "build". It's also, handily, the start of "together".</p>
+    </div>
+  </div>
+
+  <section class="section-tight">
+    <div class="wrap-narrow stack">
+      <p style="font-size:var(--fs-md)">
+        TógBlocks started on a kitchen table in <strong>Galway</strong>, the way most good Irish notions do.
+        A niece wanted her name above her bed, the shop-bought one didn't come in her name, and an evening
+        of clicking bricks together turned into something we couldn't stop doing.
+      </p>
+      <p style="font-size:var(--fs-md)">
+        Now we build names for cots, cakes, desks and doors all over Ireland — each one assembled by hand,
+        checked, and boxed with a bit of care. No factory, no minimum order, no two quite the same.
+      </p>
+
+      <div class="card" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;text-align:center;background:var(--green-soft);border:none">
+        <div data-about-bricks></div>
+        <p style="font-family:var(--font-display);font-weight:700;color:var(--green-deep);font-size:var(--fs-lg);max-width:24ch">
+          Genuinely compatible. Standard stud spacing means our builds click onto the bricks you already love.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--offwhite)">
+    <div class="wrap">
+      <div class="sec-head"><h2>What we care about</h2></div>
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem" aria-hidden="true">⚒</div>
+          <h3>Made by hand, here</h3>
+          <p class="muted">Every order is built in Ireland, by us, not drop-shipped from afar.</p>
+        </div>
+        <div class="card">
+          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem;background:var(--green)" aria-hidden="true">♻</div>
+          <h3>Bricks, not landfill</h3>
+          <p class="muted">A keepsake you can pull apart and rebuild — it's a toy and a memento at once.</p>
+        </div>
+        <div class="card">
+          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem;background:var(--sage);color:var(--green-700)" aria-hidden="true">♥</div>
+          <h3>Plain, honest dealing</h3>
+          <p class="muted">Clear pricing, real lead times, and a person on the other end of the email.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="cta-band">
+        <div class="studs-deco" aria-hidden="true"></div>
+        <h2 style="margin-bottom:10px">Build something with your name on it</h2>
+        <p style="color:rgba(255,255,255,.88);max-width:44ch;margin:0 auto 22px">It takes about a minute. We'll take it from there.</p>
+        <a class="btn btn--cta btn--lg" href="/">Open the builder <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>

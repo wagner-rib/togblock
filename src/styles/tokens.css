@@ -1,0 +1,91 @@
+/* TógBlocks — Design Tokens. Single source of truth. */
+:root {
+  /* Brand colours */
+  --green:        #169B62;
+  --green-deep:   #0E6B43;
+  --sage:         #7FB69A;
+  --cream:        #F3EAD3;
+  --orange:       #F58A3C;
+  --ink:          #1D2B22;
+  --offwhite:     #FBF8F0;
+  --white:        #FFFFFF;
+
+  /* Derived tints / shades */
+  --green-hover:  #128253;
+  --green-700:    #0B5536;
+  --orange-hover: #E2772B;
+  --orange-soft:  #FCE2CC;
+  --sage-soft:    #DCEBE2;
+  --green-soft:   #D8EDE2;
+  --cream-deep:   #E9DCBE;
+  --ink-60:       #5A6960;
+  --ink-40:       #8A968F;
+  --line:         rgba(29,43,34,.12);
+  --line-strong:  rgba(29,43,34,.22);
+
+  /* Product brick colours */
+  --brick-red:    #D8412F;
+  --brick-blue:   #2B6CB0;
+  --brick-yellow: #F2C200;
+  --brick-green:  #169B62;
+
+  /* Typography */
+  --font-display: "Baloo 2", system-ui, sans-serif;
+  --font-body:    "Nunito", system-ui, sans-serif;
+
+  /* Fluid type scale */
+  --fs-xs:   0.8125rem;
+  --fs-sm:   0.9375rem;
+  --fs-base: 1.0625rem;
+  --fs-md:   clamp(1.1875rem, 1.1rem + .35vw, 1.375rem);
+  --fs-lg:   clamp(1.4rem, 1.25rem + .7vw, 1.75rem);
+  --fs-xl:   clamp(1.75rem, 1.45rem + 1.4vw, 2.4rem);
+  --fs-2xl:  clamp(2.2rem, 1.7rem + 2.4vw, 3.25rem);
+  --fs-3xl:  clamp(2.8rem, 2rem + 3.8vw, 4.5rem);
+  --fs-4xl:  clamp(3.4rem, 2.2rem + 5.5vw, 5.75rem);
+
+  --lh-tight:  1.04;
+  --lh-snug:   1.18;
+  --lh-normal: 1.55;
+
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Radii */
+  --radius-xs:    6px;
+  --radius-sm:    10px;
+  --radius-md:    16px;
+  --radius-lg:    24px;
+  --radius-xl:    34px;
+  --radius-pill:  999px;
+  --radius-brick: 5px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px rgba(14,107,67,.10), 0 1px 1px rgba(29,43,34,.06);
+  --shadow-md:  0 6px 18px -6px rgba(14,107,67,.22), 0 2px 6px rgba(29,43,34,.08);
+  --shadow-lg:  0 22px 48px -18px rgba(14,107,67,.34), 0 6px 16px rgba(29,43,34,.10);
+  --shadow-pop: 0 14px 32px -10px rgba(29,43,34,.30);
+
+  /* Layout */
+  --maxw:        1200px;
+  --maxw-narrow: 760px;
+  --gutter:      clamp(20px, 5vw, 56px);
+  --header-h:    74px;
+
+  /* Focus rings */
+  --focus-ring:         0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+
+  /* Easing */
+  --ease-pop: cubic-bezier(.34,1.56,.64,1);
+  --ease-out: cubic-bezier(.2,.7,.3,1);
+}

@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+
+const faqs = [
+  {
+    group: 'Compatibility',
+    items: [
+      {
+        id: 'c1', q: 'Will it work with the bricks I already have?',
+        a: 'Yes. We use standard stud spacing and tolerances, so our builds click onto standard baseplates and interlock with LEGO® and other compatible bricks. We\'re an independent Irish maker — see the note below.',
+        open: true,
+      },
+      {
+        id: 'c2', q: 'Is this an official LEGO® product?',
+        a: 'No. TógBlocks is independent and not affiliated with, endorsed by, or sponsored by the LEGO Group. We just make sure our builds are compatible with the standard bricks people love. LEGO® is a trademark of the LEGO Group.',
+      },
+    ],
+  },
+  {
+    group: 'Materials & safety',
+    items: [
+      {
+        id: 'm1', q: 'What are the bricks made of?',
+        a: 'Durable ABS-type bricks — the same family of rigid plastic standard bricks are made from. They\'re colourfast, wipe clean, and hold their click for years.',
+      },
+      {
+        id: 'm2', q: 'Are they safe for small children?',
+        a: 'Our builds contain small parts, so they\'re not suitable for under-3s and are intended as display or supervised play for older children. Wall-mounted display names keep them safely out of reach.',
+      },
+    ],
+  },
+  {
+    group: 'Shipping & lead time',
+    items: [
+      {
+        id: 's1', q: 'How long until it arrives?',
+        a: 'Builds are hand-assembled within 2–3 working days, then posted. Ireland delivery is 1–3 days (free over €40), UK 3–5 days, EU 4–7 days.',
+      },
+      {
+        id: 's2', q: 'Do you ship outside Ireland?',
+        a: 'We post to the UK and across the EU. Rates and timings are listed on the Shop page. Need somewhere further afield? Drop us a line.',
+      },
+    ],
+  },
+  {
+    group: 'Custom requests',
+    items: [
+      {
+        id: 'r1', q: 'Can I get fadas, longer words or symbols?',
+        a: 'The live builder handles letters, numbers, a space and a few symbols (& ! ? . -). For fadas (á é í ó ú), phrases longer than 14 characters, or a logo, email us and we\'ll quote a custom build.',
+      },
+      {
+        id: 'r2', q: 'Can you match a specific colour?',
+        a: 'The builder\'s themes and per-letter recolour cover most wishes. For an exact brand or room colour, send us a reference and we\'ll tell you what\'s possible.',
+      },
+    ],
+  },
+];
+---
+
+<Base
+  title="FAQ — TógBlocks"
+  description="Questions about TógBlocks answered: compatibility, materials, shipping, custom requests and more."
+  currentPage="/faq"
+>
+  <div class="wrap-narrow">
+    <div class="page-hero">
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> FAQ</span>
+      <h1>Questions, answered</h1>
+      <p class="lead">Can't find it here? Email <a href="mailto:hello@togblocks.ie">hello@togblocks.ie</a> and a real person will reply.</p>
+    </div>
+
+    <!-- compatibility callout -->
+    <div class="card" style="background:var(--green-soft);border:none;margin-bottom:32px">
+      <div class="trust-badge" style="margin-bottom:14px">
+        <svg class="tb-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="var(--green)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Works with LEGO® &amp; other standard building bricks
+      </div>
+      <p class="muted" style="margin:0">
+        Standard stud spacing means a TógBlocks build clicks straight onto any standard baseplate and mixes
+        with the bricks you already own. <strong>The fine print:</strong> Compatible with LEGO®. TógBlocks
+        is independent and not affiliated with, endorsed by, or sponsored by the LEGO Group.
+        LEGO® is a trademark of the LEGO Group.
+      </p>
+    </div>
+
+    {faqs.map((group) => (
+      <>
+        <h2 id={`faq-${group.group.toLowerCase().replace(/[^a-z]/g, '-')}`} style="margin-bottom:16px">{group.group}</h2>
+        <div class="accordion" style="margin-bottom:36px">
+          {group.items.map((item) => (
+            <div class="acc-item">
+              <h3>
+                <button
+                  class="acc-trigger"
+                  aria-expanded={item.open ? 'true' : 'false'}
+                  aria-controls={item.id}
+                >
+                  {item.q}
+                  <span class="acc-ico" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 14 14">
+                      <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                </button>
+              </h3>
+              <div class="acc-panel" id={item.id}>
+                <div set:html={item.a}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ))}
+
+    <div style="margin-top:40px;padding-bottom:40px">
+      <a class="btn btn--cta btn--lg" href="/">Build yours now <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</Base>

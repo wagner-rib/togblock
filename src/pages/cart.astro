@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Basket — TógBlocks"
+  description="Your TógBlocks basket. Review your custom brick name builds before checkout."
+  currentPage="/cart"
+>
+  <div class="wrap">
+    <div class="page-hero">
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Basket</span>
+      <h1>Your basket</h1>
+      <p class="lead">Every build is made to order, by hand, in Ireland.</p>
+    </div>
+
+    <div data-cart-root></div>
+  </div>
+
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="trust-badge" style="margin:0 auto;width:fit-content">
+        <svg class="tb-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="var(--green)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Works with LEGO® &amp; other standard building bricks — standard stud spacing
+      </div>
+    </div>
+  </section>
+</Base>

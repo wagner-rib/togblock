@@ -1,0 +1,305 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="TógBlocks — build any name in bricks"
+  description="Custom names built in studded bricks, made in Ireland. Type a name, watch it build, add to basket. Works with LEGO® and other standard building bricks."
+  currentPage="/"
+>
+  <!-- ============ HERO + BUILDER ============ -->
+  <section class="hero">
+    <span class="float-brick" style="width:46px;height:46px;background:var(--orange);left:6%;top:24%;--rot:-8deg" aria-hidden="true"></span>
+    <span class="float-brick" style="width:38px;height:38px;background:var(--sage);right:7%;top:16%;--rot:10deg;animation-delay:.8s" aria-hidden="true"></span>
+    <span class="float-brick" style="width:54px;height:54px;background:var(--green);right:12%;bottom:8%;--rot:-5deg;animation-delay:1.4s" aria-hidden="true"></span>
+    <div class="wrap">
+      <div class="hero-head">
+        <span class="eyebrow">
+          <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+          Made in Ireland · custom brick names
+        </span>
+        <h1>Build any name <span class="hl">in bricks</span></h1>
+        <p class="lead">
+          Type a name, watch it click together stud by stud, pick your colours,
+          and we'll build the real thing and post it to your door.
+        </p>
+      </div>
+      <div class="hero-builder">
+        <div data-name-builder data-initial="ADA"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRUST STRIP ============ -->
+  <section class="trust-strip" aria-label="Why people trust us">
+    <div class="wrap">
+      <div class="trust-item">
+        <svg class="ti-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Works with LEGO® &amp; standard bricks
+      </div>
+      <span class="trust-divider" aria-hidden="true"></span>
+      <div class="trust-item">
+        <span class="stars" aria-label="5 stars" aria-hidden="true">★★★★★</span>
+        <span>4.9 from 600+ wee builders</span>
+      </div>
+      <span class="trust-divider" aria-hidden="true"></span>
+      <div class="trust-item">
+        <svg class="ti-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+          <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Free Irish shipping over €40
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section" aria-labelledby="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> How it works</span>
+        <h2 id="how">Three clicks to a keepsake</h2>
+        <p>No fiddly design tools. If you can type, you can build.</p>
+      </div>
+      <div class="grid grid-3 steps">
+        <div class="step">
+          <div class="step-num" aria-hidden="true">1</div>
+          <h3>Type the name</h3>
+          <p class="muted">Up to 14 letters. A nickname, a baby's name, "gaffer", whatever you fancy.</p>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">2</div>
+          <h3>Pick your colours</h3>
+          <p class="muted">Choose a theme or tap any single letter to recolour just that one.</p>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">3</div>
+          <h3>We build &amp; post it</h3>
+          <p class="muted">Hand-assembled in Ireland from genuine compatible bricks, boxed and sent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRODUCT PHOTO GALLERY ============ -->
+  <section class="section" style="background:var(--offwhite)" aria-labelledby="uses">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Where they live</span>
+        <h2 id="uses">One build, a hundred homes</h2>
+        <p>Nursery shelves, birthday cakes, desks that needed a bit of joy.</p>
+      </div>
+      <div class="grid grid-3">
+
+        <article class="wild-card">
+          <div class="wild-photo pcp-photo" aria-label="Pastel brick letters spelling MILA on a shelf">
+            <div class="wild-letters" data-brick-scene="nursery"></div>
+          </div>
+          <div class="wc-body">
+            <span class="wc-label">Nursery wall</span>
+            <h3 class="wc-title">Name above the cot</h3>
+            <p class="wc-desc">Soft pastel sets that match the room. The first thing they'll read is their own name.</p>
+          </div>
+        </article>
+
+        <article class="wild-card">
+          <div class="wild-photo pcp-photo" aria-label="Bold rainbow brick number on a surface">
+            <div class="wild-letters" data-brick-scene="cake"></div>
+          </div>
+          <div class="wc-body">
+            <span class="wc-label">Cake topper</span>
+            <h3 class="wc-title">Birthday cake topper</h3>
+            <p class="wc-desc">Age and name in bold brights. Wipe clean, keep forever, reuse next year.</p>
+          </div>
+        </article>
+
+        <article class="wild-card">
+          <div class="wild-photo pcp-photo" aria-label="Green brick letters spelling BOSS on a desk surface">
+            <div class="wild-letters" data-brick-scene="desk"></div>
+          </div>
+          <div class="wc-body">
+            <span class="wc-label">Desk sign</span>
+            <h3 class="wc-title">Desk &amp; door sign</h3>
+            <p class="wc-desc">Claim the home office or the bedroom door. Clicks onto any baseplate you like.</p>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Real photo CTA -->
+      <div style="margin-top:clamp(28px,4vw,44px);text-align:center">
+        <p class="muted" style="margin-bottom:14px;font-size:var(--fs-sm)">
+          📷 &nbsp;Have yours already? Tag us <strong>@togblocks</strong> — we'd love to see it.
+        </p>
+        <a class="btn btn--secondary" href="/shop">See all finishes &amp; sizes <span aria-hidden="true">→</span></a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SIZES / PRICING ============ -->
+  <section class="section" aria-labelledby="sizes">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Sizes &amp; pricing</span>
+        <h2 id="sizes">Simple, honest pricing</h2>
+        <p>€7 for the first letter, €5 for every letter after. The size you pick changes the brick, not the price.</p>
+      </div>
+      <div class="grid grid-3">
+        <div class="card size-card">
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:46px"></span>
+            <span class="sc-brick" style="height:58px"></span>
+            <span class="sc-brick" style="height:46px"></span>
+          </div>
+          <h3>Small</h3>
+          <p class="muted">Pocket-sized · ~14mm studs. Shelf trinkets &amp; cake toppers.</p>
+        </div>
+        <div class="card size-card" style="border:2px solid var(--green)">
+          <span class="badge" style="margin-bottom:8px">Most popular</span>
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:62px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:78px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:62px;background:var(--orange)"></span>
+          </div>
+          <h3>Medium</h3>
+          <p class="muted">The classic · ~22mm studs. Nursery names &amp; desk signs.</p>
+        </div>
+        <div class="card size-card">
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:78px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:96px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:78px;background:var(--sage)"></span>
+          </div>
+          <h3>Large</h3>
+          <p class="muted">Statement · ~34mm studs. Wall words you can read across the room.</p>
+        </div>
+      </div>
+      <div class="center" style="margin-top:32px">
+        <a class="btn btn--secondary" href="/shop">See full options &amp; thickness <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="section" style="background:var(--offwhite)" aria-labelledby="love">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Kind words</span>
+        <h2 id="love">People rather love them</h2>
+      </div>
+      <div class="grid grid-3">
+        <div class="card quote-card">
+          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
+          <blockquote>"Ordered 'FINN' for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed."</blockquote>
+          <div class="qc-by">
+            <span class="qc-avatar" style="background:var(--green)" aria-hidden="true">AO</span>
+            <div><strong>Aoife O'Brien</strong><div class="muted" style="font-size:var(--fs-sm)">Galway</div></div>
+          </div>
+        </div>
+        <div class="card quote-card">
+          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
+          <blockquote>"Clicked straight onto our existing baseplate. The kids now spell out rude words with it, which is on them, not TógBlocks."</blockquote>
+          <div class="qc-by">
+            <span class="qc-avatar" style="background:var(--orange)" aria-hidden="true">DM</span>
+            <div><strong>Dara Murphy</strong><div class="muted" style="font-size:var(--fs-sm)">Cork</div></div>
+          </div>
+        </div>
+        <div class="card quote-card">
+          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
+          <blockquote>"Recoloured each letter to match her room. The little preview made it impossible to get wrong. Will be back at Christmas."</blockquote>
+          <div class="qc-by">
+            <span class="qc-avatar" style="background:var(--sage);color:var(--green-700)" aria-hidden="true">NK</span>
+            <div><strong>Niamh Kelly</strong><div class="muted" style="font-size:var(--fs-sm)">Dublin</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ TEASER ============ -->
+  <section class="section" aria-labelledby="faqt">
+    <div class="wrap-narrow">
+      <div class="sec-head">
+        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Good to know</span>
+        <h2 id="faqt">The questions we get most</h2>
+      </div>
+      <div class="accordion">
+        <div class="acc-item">
+          <h3>
+            <button class="acc-trigger" aria-expanded="true" aria-controls="ft1">
+              Will it actually work with my bricks?
+              <span class="acc-ico" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="acc-panel" id="ft1">
+            <div>Yes. We use standard stud spacing, so your build clicks onto any standard baseplate and plays nicely with LEGO® and other compatible bricks.</div>
+          </div>
+        </div>
+        <div class="acc-item">
+          <h3>
+            <button class="acc-trigger" aria-expanded="false" aria-controls="ft2">
+              How long until it arrives?
+              <span class="acc-ico" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="acc-panel" id="ft2">
+            <div>Most builds are hand-assembled and posted within 2–3 working days. Ireland delivery is 1–3 days after that; free over €40.</div>
+          </div>
+        </div>
+        <div class="acc-item">
+          <h3>
+            <button class="acc-trigger" aria-expanded="false" aria-controls="ft3">
+              Can the letters come apart?
+              <span class="acc-ico" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="acc-panel" id="ft3">
+            <div>They're built to hold together but they're still bricks — pull them apart and rebuild any time.</div>
+          </div>
+        </div>
+      </div>
+      <div class="center" style="margin-top:28px">
+        <a class="btn btn--ghost" href="/faq">Read all FAQs <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWSLETTER ============ -->
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="news-card">
+        <div class="studs-deco" aria-hidden="true"></div>
+        <div class="feature-row" style="gap:32px">
+          <div>
+            <h2>Get a fiver off your first build</h2>
+            <p style="color:rgba(255,255,255,.85);margin-top:8px">
+              Pop in your email for the occasional brick-related delight and a wee welcome discount. No spam, promise.
+            </p>
+          </div>
+          <div>
+            <form class="newsletter-form" data-newsletter>
+              <label class="sr-only" for="nl">Email address</label>
+              <input class="input" id="nl" type="email" required placeholder="you@example.ie" />
+              <button class="btn btn--cta" type="submit">Send it on</button>
+            </form>
+            <p data-newsletter-msg hidden></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import '../builder/builder.ts';
+  </script>
+</Base>

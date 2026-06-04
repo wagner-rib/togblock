@@ -1,0 +1,165 @@
+/*
+ * TógBlocks — Vibe Palettes
+ * Override design tokens per [data-vibe] attribute on <html>.
+ * Default (no attribute) = Clover (original Irish).
+ */
+
+/* ─── CANDY POP ─── electric violet + hot-pink ──────────────────────── */
+[data-vibe="candy"] {
+  --green:        #7C3AED;
+  --green-deep:   #5B21B6;
+  --green-hover:  #6D28D9;
+  --green-700:    #4C1D95;
+  --sage:         #A78BFA;
+  --cream:        #FAF5FF;
+  --orange:       #EC4899;
+  --orange-hover: #DB2777;
+  --orange-soft:  #FCE7F3;
+  --sage-soft:    #EDE9FE;
+  --green-soft:   #EDE9FE;
+  --cream-deep:   #DDD6FE;
+  --ink:          #1E1333;
+  --ink-60:       #6B4F8A;
+  --ink-40:       #9E83B8;
+  --line:         rgba(92,33,182,.12);
+  --line-strong:  rgba(92,33,182,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #7C3AED;
+}
+
+/* ─── COBALT ARCADE ─── cobalt + lemon ──────────────────────────────── */
+[data-vibe="cobalt"] {
+  --green:        #2563EB;
+  --green-deep:   #1D4ED8;
+  --green-hover:  #1E40AF;
+  --green-700:    #1E3A8A;
+  --sage:         #60A5FA;
+  --cream:        #EFF6FF;
+  --orange:       #FACC15;
+  --orange-hover: #EAB308;
+  --orange-soft:  #FEF9C3;
+  --sage-soft:    #DBEAFE;
+  --green-soft:   #DBEAFE;
+  --cream-deep:   #BFDBFE;
+  --ink:          #0F1C3F;
+  --ink-60:       #3B5A9E;
+  --ink-40:       #6B82B8;
+  --line:         rgba(29,78,216,.12);
+  --line-strong:  rgba(29,78,216,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #2563EB;
+}
+
+/* ─── SUNSET POP ─── coral + tangerine on warm peach ────────────────── */
+[data-vibe="sunset"] {
+  --green:        #EA580C;
+  --green-deep:   #9A3412;
+  --green-hover:  #C2410C;
+  --green-700:    #7C2D12;
+  --sage:         #FCA5A5;
+  --cream:        #FFF7ED;
+  --orange:       #FBBF24;
+  --orange-hover: #F59E0B;
+  --orange-soft:  #FEF3C7;
+  --sage-soft:    #FED7AA;
+  --green-soft:   #FFEDD5;
+  --cream-deep:   #FED7AA;
+  --ink:          #3B1D07;
+  --ink-60:       #92400E;
+  --ink-40:       #B45309;
+  --line:         rgba(154,52,18,.12);
+  --line-strong:  rgba(154,52,18,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #EA580C;
+}
+
+/* ─── MIDNIGHT ─── dark navy + neon teal ────────────────────────────── */
+[data-vibe="midnight"] {
+  --green:        #14B8A6;
+  --green-deep:   #0F766E;
+  --green-hover:  #0D9488;
+  --green-700:    #115E59;
+  --sage:         #5EEAD4;
+  --cream:        #F0FDFA;
+  --orange:       #F472B6;
+  --orange-hover: #EC4899;
+  --orange-soft:  #FCE7F3;
+  --sage-soft:    #CCFBF1;
+  --green-soft:   #CCFBF1;
+  --cream-deep:   #99F6E4;
+  --ink:          #082F2B;
+  --ink-60:       #2D6A65;
+  --ink-40:       #5EADA8;
+  --line:         rgba(15,118,110,.12);
+  --line-strong:  rgba(15,118,110,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #14B8A6;
+}
+
+/* ─── Vibe Switcher UI ──────────────────────────────────────────────── */
+.vibe-dock {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  font-family: var(--font-display);
+}
+
+.vibe-toggle {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--green-deep);
+  color: #fff;
+  border: none; cursor: pointer;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.28);
+  font-size: 22px;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+}
+.vibe-toggle:hover { transform: scale(1.1); box-shadow: 0 8px 24px rgba(0,0,0,.36); }
+.vibe-toggle:focus-visible { box-shadow: var(--focus-ring); }
+
+.vibe-panel {
+  background: #fff;
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.10);
+  border: 1.5px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 168px;
+  transform-origin: bottom right;
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), opacity .15s;
+}
+.vibe-panel[hidden] { display: none; }
+
+.vibe-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 13px; border-radius: 12px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: 600; font-size: 0.9375rem;
+  color: #1D2B22;
+  transition: background .12s;
+  white-space: nowrap;
+  text-align: left;
+}
+.vibe-option:hover  { background: #F3EAD3; }
+.vibe-option.is-active { background: #D8EDE2; }
+.vibe-option:focus-visible { outline: 2px solid #0E6B43; outline-offset: 2px; border-radius: 12px; }
+
+.vibe-option .vo-dots {
+  display: flex; gap: 3px; flex: none;
+}
+.vibe-option .vo-dots span {
+  width: 12px; height: 12px; border-radius: 50%;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.5);
+}
