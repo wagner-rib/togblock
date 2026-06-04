@@ -26,7 +26,7 @@ function swatchBtn(color: string, onClick: () => void): HTMLButtonElement {
 interface BuilderState {
   text: string;
   theme: string;
-  cell: number;
+  cell: number;   // fixed at 28 — single size
   oneColor: string;
   overrides: Record<number, string>;
 }
@@ -47,8 +47,6 @@ export class NameBuilder {
     hint: HTMLElement;
     themes: HTMLElement;
     onecolour: HTMLElement;
-    size: HTMLInputElement;
-    sizeval: HTMLElement;
     price: HTMLElement;
     breakdown: HTMLElement;
     add: HTMLButtonElement;
@@ -107,18 +105,6 @@ export class NameBuilder {
             <div class="swatches" data-onecolour hidden role="group" aria-label="Pick one colour"></div>
           </div>
 
-          <div class="control-group">
-            <div class="control-head">
-              <label class="label" for="nb-size">Brick size</label>
-              <span class="val" data-sizeval>Medium</span>
-            </div>
-            <div class="slider-row">
-              <input id="nb-size" class="slider" data-size type="range" min="14" max="34" step="2" value="${s.cell}"
-                aria-valuetext="Medium bricks" />
-            </div>
-            <div class="size-ticks"><span>Small</span><span>Medium</span><span>Large</span></div>
-          </div>
-
           <div class="builder-checkout">
             <div class="price-block">
               <span class="pb-now" data-price>€0</span>
@@ -149,8 +135,6 @@ export class NameBuilder {
       hint:       q('[data-hint]',        this.host),
       themes:     q('[data-themes]',      this.host),
       onecolour:  q('[data-onecolour]',   this.host),
-      size:       q('[data-size]',        this.host),
-      sizeval:    q('[data-sizeval]',     this.host),
       price:      q('[data-price]',       this.host),
       breakdown:  q('[data-breakdown]',   this.host),
       add:        q('[data-add]',         this.host),
@@ -187,7 +171,6 @@ export class NameBuilder {
 
     // Events
     this.el.input.addEventListener('input', (e) => this.setText((e.target as HTMLInputElement).value));
-    this.el.size.addEventListener('input', (e) => this.setSize(+(e.target as HTMLInputElement).value));
     this.el.add.addEventListener('click', () => this.addToCart());
     this.el.popClose.addEventListener('click', () => this.closePop());
     document.addEventListener('click', (e) => {
@@ -227,14 +210,6 @@ export class NameBuilder {
     );
   }
 
-  setSize(px: number): void {
-    this.state.cell = px;
-    const label = px <= 18 ? 'Small' : px >= 30 ? 'Large' : 'Medium';
-    this.el.sizeval.textContent = label;
-    this.el.size.setAttribute('aria-valuetext', label + ' bricks');
-    q('[data-builder]', this.host).style.setProperty('--cell', px + 'px');
-    this.fit();
-  }
 
   /* ---- render ---- */
   private chars(): string[] {
@@ -438,7 +413,7 @@ export class NameBuilder {
       theme: this.state.theme,
       oneColour: THEMES[this.state.theme]?.single ? this.state.oneColor : null,
       brickSizePx: this.state.cell,
-      sizeLabel: this.state.cell <= 18 ? 'Small' : this.state.cell >= 30 ? 'Large' : 'Medium',
+      sizeLabel: 'Standard',
       letters: colours,
       brickCount: this.brickCount(),
       price: this.price(),
