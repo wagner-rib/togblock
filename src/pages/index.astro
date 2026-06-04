@@ -1,440 +1,353 @@
 ---
 import Base from '../layouts/Base.astro';
+
+const reviews = [
+  { stars: 5, quote: "Ordered FINN for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed — it's the first thing you see walking into his room.", name: 'Aoife O\'Brien', loc: 'Galway', init: 'AO', bg: '#169B62' },
+  { stars: 5, quote: "Clicked straight onto our existing baseplate. The kids now spell out rude words with it, which is on them, not TógBlocks.", name: 'Dara Murphy', loc: 'Cork', init: 'DM', bg: '#E0473A' },
+  { stars: 5, quote: "Recoloured each letter to match her room. The little preview made it impossible to get wrong. Will be back at Christmas.", name: 'Niamh Kelly', loc: 'Dublin', init: 'NK', bg: '#2563EB' },
+  { stars: 5, quote: "Brilliant quality. The door sign for Charlie's room is the talk of every playdate. Fast delivery too!", name: 'Sarah Connelly', loc: 'Limerick', init: 'SC', bg: '#F58A3C' },
+  { stars: 5, quote: "Perfect birthday gift. Typed the name, picked the colours, it arrived looking exactly like the preview. Magic.", name: 'Pádraic Walsh', loc: 'Sligo', init: 'PW', bg: '#7C3AED' },
+  { stars: 5, quote: "These are SO well made. Solid, heavy, and the studs are perfect. Snapped straight onto a baseplate. 10/10.", name: 'Emma Riordan', loc: 'Waterford', init: 'ER', bg: '#0F766E' },
+];
+
+const sliderCards = [
+  { img: '/products/luca-letters.jpg', alt: 'Rainbow LUCA 3D brick letters', cat: 'Brick Letters', name: 'Name Letters', price: 'from €7', href: '/products/brick-letters', badge: 'Best Seller' },
+  { img: '/products/finn-letters.jpg', alt: 'Blue FINN letters in a nursery', cat: 'Brick Letters', name: 'Nursery Names', price: 'from €7', href: '/products/brick-letters', badge: null },
+  { img: '/products/charlie-sign.jpg', alt: 'Charlie door sign on red baseplate', cat: 'Door Sign', name: 'Door / Room Sign', price: 'from €12', href: '/products/door-sign', badge: 'New' },
+  { img: '/products/robert-letters.jpg', alt: 'Rainbow ROBERT brick letters', cat: 'Brick Letters', name: 'Rainbow Letters', price: 'from €7', href: '/products/brick-letters', badge: null },
+  { img: '/products/luca-letters.jpg', alt: 'Gift-ready brick name letters', cat: 'Brick Letters', name: 'Gift Ready', price: 'from €7', href: '/products/brick-letters', badge: null },
+  { img: '/products/charlie-sign.jpg', alt: 'Personalised door sign', cat: 'Door Sign', name: 'Personalised Sign', price: 'from €12', href: '/products/door-sign', badge: null },
+];
+// Duplicate for seamless loop
+const allCards = [...sliderCards, ...sliderCards];
 ---
 
 <Base
   title="TógBlocks — Build names they'll love forever"
-  description="Handmade personalised LEGO-compatible brick name letters and door signs, made in Ireland. Type a name, pick colours, we build and post it."
+  description="Personalised 3D brick name letters and door signs, handmade in Ireland. Compatible with LEGO®. Type a name, pick colours, we build and post."
   currentPage="/"
   ogImage="/products/luca-letters.jpg"
 >
 
-  <!-- ============ HERO ============ -->
-  <section class="home-hero">
-    <div class="home-hero__media">
+  <!-- ═══════════════════════════════════════ HERO ═══ -->
+  <section class="home-hero" aria-label="Hero">
+    <div class="home-hero__media" aria-hidden="true">
       <img
         src="/products/luca-letters.jpg"
-        alt="Rainbow 3D brick letters L U C A on a wooden surface with LEGO minifigures"
+        alt=""
         class="home-hero__photo"
         loading="eager"
         decoding="async"
+        fetchpriority="high"
       />
       <div class="home-hero__overlay"></div>
     </div>
+
     <div class="home-hero__content wrap">
-      <span class="eyebrow" style="color:#fff;opacity:.9">
-        <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
-        Handmade in Ireland · ships in 3 days
-      </span>
-      <h1 class="home-hero__heading">Build names they'll<br>love forever</h1>
+      <p class="home-hero__badge">
+        🇮🇪 Handmade in Ireland &nbsp;·&nbsp; Ships in 3 days
+      </p>
+      <h1>
+        Build names<br>
+        they'll love<br>
+        <em class="accent">forever</em>
+      </h1>
       <p class="home-hero__sub">
-        Personalised brick name letters &amp; door signs, compatible with LEGO®.
-        Pick your name, choose your colours — we build and post it.
+        Personalised 3D brick name letters and door signs,<br>
+        compatible with LEGO®. Every one built by hand.
       </p>
       <div class="home-hero__ctas">
         <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
-        <a class="btn btn--secondary home-hero__secondary btn--lg" href="/builder">Start building</a>
+        <a class="btn btn--white-outline btn--lg" href="/builder">
+          Start building
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">
+      <span>Scroll</span>
+      <div class="hero-scroll__line"></div>
     </div>
   </section>
 
-  <!-- ============ TRUST STRIP ============ -->
-  <section class="trust-strip" aria-label="Why people trust us">
-    <div class="wrap">
-      <div class="trust-item">
-        <svg class="ti-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Works with LEGO® &amp; standard bricks
-      </div>
-      <span class="trust-divider" aria-hidden="true"></span>
-      <div class="trust-item">
-        <span class="stars" aria-label="5 stars" aria-hidden="true">★★★★★</span>
-        <span>4.9 from 600+ happy customers</span>
-      </div>
-      <span class="trust-divider" aria-hidden="true"></span>
-      <div class="trust-item">
-        <svg class="ti-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
-          <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        Free Irish shipping over €40
+  <!-- ═══════════════════════════════════ TRUST TICKER ═══ -->
+  <div class="trust-ticker" aria-hidden="true">
+    <div class="trust-ticker__wrap">
+      <div class="trust-ticker__track">
+        {[...Array(2)].map(() => (
+          <>
+            <span class="ticker-item">★★★★★ Rated 4.9</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">🇮🇪 Made in Ireland</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">600+ happy builders</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">Ships in 3 days</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">Works with LEGO®</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">Free Irish shipping over €40</span>
+            <span class="ticker-dot">◆</span>
+            <span class="ticker-item">Handbuilt to order</span>
+            <span class="ticker-dot">◆</span>
+          </>
+        ))}
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ============ PRODUCTS GRID ============ -->
-  <section class="section" aria-labelledby="products-heading">
+  <!-- ═══════════════════════════════ PRODUCT SLIDER ═══ -->
+  <section class="products-slider" aria-labelledby="slider-heading">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Our products</span>
-        <h2 id="products-heading">Choose your build</h2>
-        <p>Two ways to celebrate a name — both built by hand in Ireland.</p>
+      <div class="section-label" data-reveal>
+        <span class="eyebrow">
+          <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+          Our builds
+        </span>
+        <h2 id="slider-heading">Something for everyone</h2>
+        <p class="muted">Brick letters for the nursery, door signs for the bedroom, gifts that last forever.</p>
       </div>
-      <div class="home-products-grid">
+    </div>
 
-        <article class="home-product-card">
-          <a href="/products/brick-letters" class="hpc-media" aria-label="Brick Name Letters product page">
-            <img
-              src="/products/luca-letters.jpg"
-              alt="3D rainbow brick letters spelling LUCA with minifigures"
-              loading="lazy"
-              decoding="async"
-            />
-            <span class="hpc-badge">Most popular</span>
-          </a>
-          <div class="hpc-body">
-            <h3 class="hpc-title">Brick Name Letters</h3>
-            <p class="hpc-desc">Chunky 3D brick letters in any colour combo — perfect for shelves, nurseries and desks.</p>
-            <div class="hpc-foot">
-              <span class="price-tag">from €7</span>
-              <a class="btn btn--primary btn--sm" href="/builder?product=letters">Personalise It <span aria-hidden="true">→</span></a>
+    <div class="slider-viewport" aria-label="Product categories slider">
+      <div class="slider-track" data-slider role="list">
+        {allCards.map((card) => (
+          <a href={card.href} class="slider-card" role="listitem" aria-label={`${card.name} — ${card.price}`}>
+            {card.badge && <span class="slider-card__sticker" aria-label={card.badge}>{card.badge}</span>}
+            <div class="slider-card__media">
+              <img src={card.img} alt={card.alt} loading="lazy" decoding="async" />
+              <div class="slider-card__overlay" aria-hidden="true">
+                <span class="btn btn--cta slider-card__cta">Personalise it →</span>
+              </div>
             </div>
-          </div>
-        </article>
-
-        <article class="home-product-card">
-          <a href="/products/door-sign" class="hpc-media" aria-label="Door / Room Sign product page">
-            <img
-              src="/products/charlie-sign.jpg"
-              alt="Red LEGO baseplate door sign with Charlie in yellow raised letters"
-              loading="lazy"
-              decoding="async"
-            />
-          </a>
-          <div class="hpc-body">
-            <h3 class="hpc-title">Door / Room Sign</h3>
-            <p class="hpc-desc">A rectangular LEGO baseplate with your name raised in contrasting colour — the ultimate door sign.</p>
-            <div class="hpc-foot">
-              <span class="price-tag">from €12</span>
-              <a class="btn btn--primary btn--sm" href="/builder?product=sign">Personalise It <span aria-hidden="true">→</span></a>
+            <div class="slider-card__body">
+              <span class="slider-card__cat">{card.cat}</span>
+              <p class="slider-card__name">{card.name}</p>
+              <span class="slider-card__price">{card.price}</span>
             </div>
-          </div>
-        </article>
-
+          </a>
+        ))}
       </div>
     </div>
   </section>
 
-  <!-- ============ HOW IT WORKS ============ -->
-  <section class="section" style="background:var(--offwhite)" aria-labelledby="how">
+  <!-- ════════════════════════════════════════ STATS ═══ -->
+  <section class="stats-band" aria-label="By the numbers">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> How it works</span>
-        <h2 id="how">Three clicks to a keepsake</h2>
-        <p>No fiddly design tools. If you can type, you can build.</p>
-      </div>
-      <div class="grid grid-3 steps">
-        <div class="step">
-          <div class="step-num" aria-hidden="true">1</div>
-          <h3>Choose a product</h3>
-          <p class="muted">Pick brick letters for a shelf display or a baseplate sign for the door.</p>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">2</div>
-          <h3>Type &amp; customise</h3>
-          <p class="muted">Enter the name, pick your colours. The live preview shows exactly what you'll get.</p>
-        </div>
-        <div class="step">
-          <div class="step-num" aria-hidden="true">3</div>
-          <h3>We build &amp; post it</h3>
-          <p class="muted">Hand-assembled in Ireland from genuine compatible bricks, boxed and sent in 3 days.</p>
-        </div>
+      <div class="stats-grid">
+        {[
+          { num: '600+', label: 'Happy builders' },
+          { num: '★ 4.9', label: 'Average rating' },
+          { num: '3 days', label: 'Ships in' },
+          { num: '100%', label: 'Handmade' },
+        ].map((s, i) => (
+          <div class="stat-card" data-reveal data-delay={String(i + 1)}>
+            <span class="stat-card__num">{s.num}</span>
+            <span class="stat-card__label">{s.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   </section>
 
-  <!-- ============ GALLERY ============ -->
-  <section class="section" aria-labelledby="gallery-heading">
+  <!-- ═══════════════════════════ FEATURE SPLIT — LETTERS ═══ -->
+  <section class="feature-split" aria-labelledby="feat1">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> In the wild</span>
-        <h2 id="gallery-heading">One build, a hundred homes</h2>
-        <p>Nursery shelves, bedroom doors, desks that needed a bit of joy.</p>
-      </div>
-      <div class="home-gallery">
-        <div class="home-gallery__item home-gallery__item--tall">
-          <img src="/products/luca-letters.jpg" alt="Rainbow brick letters LUCA on wooden surface with Batman and Harry Potter minifigures" loading="lazy" decoding="async" />
+      <div class="feature-split__inner" data-reveal>
+        <div class="feature-split__visual">
+          <img
+            src="/products/finn-letters.jpg"
+            alt="Blue 3D brick letters FINN displayed on a white nursery shelf"
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="feature-split__visual-badge">
+            🏆 Best for nurseries &amp; bedrooms
+          </div>
         </div>
-        <div class="home-gallery__item">
-          <img src="/products/finn-letters.jpg" alt="Blue toned brick letters FINN on a white kids room shelf" loading="lazy" decoding="async" />
+        <div class="feature-split__copy">
+          <span class="eyebrow">
+            <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+            Brick Name Letters
+          </span>
+          <h2 id="feat1">A keepsake they'll still love at&nbsp;18</h2>
+          <p>Chunky 3D letters built from genuine compatible bricks — every stud perfect, every colour exactly as you designed it in the builder.</p>
+          <ul class="feature-list">
+            <li><span class="icon" aria-hidden="true">✓</span> Snaps onto any standard baseplate</li>
+            <li><span class="icon" aria-hidden="true">🎨</span> 5 colour themes + per-letter recolour</li>
+            <li><span class="icon" aria-hidden="true">📐</span> Small, Medium &amp; Large sizes</li>
+            <li><span class="icon" aria-hidden="true">🇮🇪</span> Built by hand in Ireland, ships in 3 days</li>
+          </ul>
+          <a class="btn btn--cta btn--lg" href="/products/brick-letters">
+            Shop Brick Letters →
+          </a>
         </div>
-        <div class="home-gallery__item">
-          <img src="/products/charlie-sign.jpg" alt="Red LEGO baseplate door sign Charlie with yellow letters and decorative bricks" loading="lazy" decoding="async" />
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:clamp(20px,3vw,36px)">
-        <a class="btn btn--secondary" href="/products">See all products <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
 
-  <!-- ============ TESTIMONIALS ============ -->
-  <section class="section" style="background:var(--offwhite)" aria-labelledby="love">
+  <!-- ═══════════════════════════ FEATURE SPLIT — SIGN ═══ -->
+  <section class="feature-split" style="background:#f7f9fc" aria-labelledby="feat2">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Kind words</span>
-        <h2 id="love">People rather love them</h2>
-      </div>
-      <div class="grid grid-3">
-        <div class="card quote-card">
-          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
-          <blockquote>"Ordered 'FINN' for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed."</blockquote>
-          <div class="qc-by">
-            <span class="qc-avatar" style="background:var(--green)" aria-hidden="true">AO</span>
-            <div><strong>Aoife O'Brien</strong><div class="muted" style="font-size:var(--fs-sm)">Galway</div></div>
+      <div class="feature-split__inner rev" data-reveal>
+        <div class="feature-split__visual" style="aspect-ratio:1">
+          <img
+            src="/products/charlie-sign.jpg"
+            alt="Red LEGO baseplate door sign with Charlie in yellow raised letters"
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="feature-split__visual-badge">
+            🚪 Bedroom doors, lockers, desks
           </div>
         </div>
-        <div class="card quote-card">
-          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
-          <blockquote>"The door sign for Charlie's room is unreal. The red plate with yellow letters looks exactly like the photo. Huge hit."</blockquote>
-          <div class="qc-by">
-            <span class="qc-avatar" style="background:var(--orange)" aria-hidden="true">DM</span>
-            <div><strong>Dara Murphy</strong><div class="muted" style="font-size:var(--fs-sm)">Cork</div></div>
-          </div>
-        </div>
-        <div class="card quote-card">
-          <span class="qc-stars" aria-label="5 out of 5">★★★★★</span>
-          <blockquote>"Recoloured each letter to match her room. The live preview made it impossible to get wrong. Will be back at Christmas."</blockquote>
-          <div class="qc-by">
-            <span class="qc-avatar" style="background:var(--sage);color:var(--green-700)" aria-hidden="true">NK</span>
-            <div><strong>Niamh Kelly</strong><div class="muted" style="font-size:var(--fs-sm)">Dublin</div></div>
-          </div>
+        <div class="feature-split__copy">
+          <span class="eyebrow">
+            <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+            Door &amp; Room Signs
+          </span>
+          <h2 id="feat2">Make their space officially&nbsp;theirs</h2>
+          <p>A colourful LEGO-compatible baseplate with their name raised in contrasting brick letters — with playful decorative bricks on the edges.</p>
+          <ul class="feature-list">
+            <li><span class="icon" aria-hidden="true">✓</span> Choose plate colour + text colour</li>
+            <li><span class="icon" aria-hidden="true">🧱</span> Decorative edge bricks included</li>
+            <li><span class="icon" aria-hidden="true">🔧</span> Fully rearrangeable &amp; rebuild-able</li>
+            <li><span class="icon" aria-hidden="true">📦</span> Gift-boxed, ready to give</li>
+          </ul>
+          <a class="btn btn--cta btn--lg" href="/products/door-sign">
+            Shop Door Signs →
+          </a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ FAQ TEASER ============ -->
-  <section class="section" aria-labelledby="faqt">
-    <div class="wrap-narrow">
-      <div class="sec-head">
-        <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Good to know</span>
-        <h2 id="faqt">The questions we get most</h2>
-      </div>
-      <div class="accordion">
-        <div class="acc-item">
-          <h3>
-            <button class="acc-trigger" aria-expanded="true" aria-controls="ft1">
-              Will it actually work with my bricks?
-              <span class="acc-ico" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-              </span>
-            </button>
-          </h3>
-          <div class="acc-panel" id="ft1">
-            <div>Yes. We use standard stud spacing, so your build clicks onto any standard baseplate and plays nicely with LEGO® and other compatible bricks.</div>
-          </div>
-        </div>
-        <div class="acc-item">
-          <h3>
-            <button class="acc-trigger" aria-expanded="false" aria-controls="ft2">
-              How long until it arrives?
-              <span class="acc-ico" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-              </span>
-            </button>
-          </h3>
-          <div class="acc-panel" id="ft2">
-            <div>Most builds are hand-assembled and posted within 2–3 working days. Ireland delivery is 1–3 days after that; free over €40.</div>
-          </div>
-        </div>
-        <div class="acc-item">
-          <h3>
-            <button class="acc-trigger" aria-expanded="false" aria-controls="ft3">
-              What's the difference between letters and a door sign?
-              <span class="acc-ico" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-              </span>
-            </button>
-          </h3>
-          <div class="acc-panel" id="ft3">
-            <div>Brick Name Letters are individual 3D chunky letters that stand freely on a shelf or surface. Door Signs are a single wide LEGO baseplate with the name raised in the centre — designed to hang or lean on a door or wall.</div>
-          </div>
-        </div>
-      </div>
-      <div class="center" style="margin-top:28px">
-        <a class="btn btn--ghost" href="/faq">Read all FAQs <span aria-hidden="true">→</span></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ NEWSLETTER ============ -->
-  <section class="section-tight">
+  <!-- ═══════════════════════════════ HOW IT WORKS ═══ -->
+  <section class="how-section" aria-labelledby="how-heading">
     <div class="wrap">
-      <div class="news-card">
-        <div class="studs-deco" aria-hidden="true"></div>
-        <div class="feature-row" style="gap:32px">
-          <div>
-            <h2>Get a fiver off your first build</h2>
-            <p style="color:rgba(255,255,255,.85);margin-top:8px">
-              Pop in your email for the occasional brick-related delight and a wee welcome discount. No spam, promise.
-            </p>
+      <div class="sec-head" data-reveal>
+        <span class="eyebrow">
+          <span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span>
+          Simple process
+        </span>
+        <h2 id="how-heading">Three steps to a keepsake</h2>
+        <p>No design skills. No fiddly tools. If you can type, you can build.</p>
+      </div>
+      <div class="how-steps">
+        {[
+          { icon: '⌨️', title: 'Type the name', body: 'Up to 14 letters. A baby\'s name, a nickname, "BOSS" — whatever you fancy.', delay: '1' },
+          { icon: '🎨', title: 'Pick your colours', body: 'Choose a theme or tap any single letter to recolour just that one.', delay: '2' },
+          { icon: '📦', title: 'We build & post it', body: 'Hand-assembled in Ireland, quality-checked, boxed and sent to your door.', delay: '3' },
+        ].map((step, i) => (
+          <div class="how-step" data-reveal data-delay={step.delay}>
+            <span class="how-step__num" aria-hidden="true">{i + 1}</span>
+            <div class="how-step__icon" aria-hidden="true">{step.icon}</div>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
           </div>
-          <div>
-            <form class="newsletter-form" data-newsletter>
-              <label class="sr-only" for="nl">Email address</label>
-              <input class="input" id="nl" type="email" required placeholder="you@example.ie" />
-              <button class="btn btn--cta" type="submit">Send it on</button>
-            </form>
-            <p data-newsletter-msg hidden></p>
-          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ PHOTO MOSAIC ═══ -->
+  <section class="photo-mosaic-section" aria-labelledby="gallery-heading">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="eyebrow" style="color:rgba(255,255,255,.7)">In the wild</span>
+        <h2 id="gallery-heading">Where they end up</h2>
+        <p>Nursery shelves, bedroom doors, birthday tables — every build has a home.</p>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="photo-mosaic" data-reveal>
+        <div class="mosaic-img pm-1">
+          <img src="/products/luca-letters.jpg" alt="Rainbow LUCA brick letters on a wooden surface" loading="lazy" decoding="async" />
+          <span class="mosaic-img__label">Desk &amp; shelf</span>
+        </div>
+        <div class="mosaic-img pm-2">
+          <img src="/products/finn-letters.jpg" alt="Blue FINN letters in a child's bedroom" loading="lazy" decoding="async" />
+          <span class="mosaic-img__label">Nursery</span>
+        </div>
+        <div class="mosaic-img pm-3">
+          <img src="/products/charlie-sign.jpg" alt="Charlie personalised door sign" loading="lazy" decoding="async" />
+          <span class="mosaic-img__label">Door sign</span>
+        </div>
+        <div class="mosaic-img pm-4">
+          <img src="/products/robert-letters.jpg" alt="Rainbow ROBERT brick letters on a dark shelf" loading="lazy" decoding="async" />
+          <span class="mosaic-img__label">Birthday gift</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ TESTIMONIALS ═══ -->
+  <section class="testimonials-section" aria-labelledby="reviews-heading">
+    <div class="section-label" data-reveal>
+      <span class="eyebrow">
+        <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+        Real reviews
+      </span>
+      <h2 id="reviews-heading">People rather love them</h2>
+    </div>
+
+    <div class="reviews-track-wrap">
+      <div class="reviews-track" aria-label="Customer reviews">
+        {[...reviews, ...reviews].map((r, i) => (
+          <article class="review-card" aria-label={`Review by ${r.name}`}>
+            <div class="review-card__stars" aria-label={`${r.stars} out of 5 stars`}>
+              {'★'.repeat(r.stars)}
+            </div>
+            <blockquote>"{r.quote}"</blockquote>
+            <div class="review-card__by">
+              <div class="review-card__avatar" style={`background:${r.bg}`} aria-hidden="true">
+                {r.init}
+              </div>
+              <div>
+                <p class="review-card__name">{r.name}</p>
+                <p class="review-card__loc">{r.loc}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════ BIG CTA ═══ -->
+  <section class="cta-band-full" aria-labelledby="cta-heading">
+    <div class="wrap">
+      <span class="cta-band-full__eyebrow">Ready to build?</span>
+      <h2 id="cta-heading">Their name.<br><em>In bricks.</em></h2>
+      <p>Takes two minutes. Arrives in days. Lasts forever.</p>
+      <div class="cta-band-full__actions">
+        <a class="btn btn--cta btn--lg" href="/builder">Open the builder</a>
+        <a class="btn btn--white-outline btn--lg" href="/products">Browse products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════ NEWSLETTER ═══ -->
+  <section class="newsletter-section" aria-labelledby="nl-heading">
+    <div class="wrap">
+      <div class="newsletter-inner">
+        <div>
+          <h2 id="nl-heading">Get €5 off your first build</h2>
+          <p>The occasional brick-related delight and a welcome discount. No spam, promise.</p>
+        </div>
+        <div>
+          <form class="newsletter-form" data-newsletter>
+            <label class="sr-only" for="nl-email">Email address</label>
+            <input class="input" id="nl-email" type="email" required placeholder="you@example.ie" />
+            <button class="btn btn--cta" type="submit">Send it on</button>
+          </form>
+          <p data-newsletter-msg hidden></p>
         </div>
       </div>
     </div>
   </section>
 
 </Base>
-
-<style>
-/* ---- Home Hero ---- */
-.home-hero {
-  position: relative;
-  min-height: clamp(420px, 56vw, 680px);
-  display: flex; align-items: flex-end;
-  overflow: hidden;
-}
-.home-hero__media {
-  position: absolute; inset: 0;
-}
-.home-hero__photo {
-  width: 100%; height: 100%;
-  object-fit: cover; object-position: center 40%;
-  display: block;
-}
-.home-hero__overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,.78) 0%,
-    rgba(0,0,0,.45) 45%,
-    rgba(0,0,0,.12) 100%
-  );
-}
-.home-hero__content {
-  position: relative; z-index: 2;
-  padding-bottom: clamp(40px, 7vw, 88px);
-  padding-top: clamp(60px, 10vw, 120px);
-}
-.home-hero__heading {
-  font-size: clamp(2.4rem, 2rem + 2.5vw, 4.2rem);
-  color: #fff; line-height: 1.04;
-  margin-top: 10px; margin-bottom: 16px;
-  text-shadow: 0 2px 16px rgba(0,0,0,.4);
-}
-.home-hero__sub {
-  color: rgba(255,255,255,.88);
-  font-size: clamp(1rem, .9rem + .5vw, 1.2rem);
-  max-width: 540px;
-  margin-bottom: 28px;
-  line-height: 1.55;
-}
-.home-hero__ctas {
-  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
-}
-.home-hero__secondary {
-  --btn-bg: rgba(255,255,255,.15);
-  --btn-fg: #fff;
-  --btn-bd: rgba(255,255,255,.5);
-  backdrop-filter: blur(8px);
-}
-.home-hero__secondary:hover {
-  --btn-bg: rgba(255,255,255,.28);
-}
-
-/* ---- Products Grid ---- */
-.home-products-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: clamp(16px, 3vw, 32px);
-}
-@media (max-width: 640px) {
-  .home-products-grid { grid-template-columns: 1fr; }
-}
-.home-product-card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid rgba(0,0,0,.07);
-  box-shadow: 0 4px 24px -4px rgba(0,0,0,.10);
-  overflow: hidden;
-  display: flex; flex-direction: column;
-  transition: transform .18s var(--ease-pop), box-shadow .18s var(--ease-out);
-}
-.home-product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 14px 40px -8px rgba(0,0,0,.18);
-}
-.hpc-media {
-  display: block;
-  aspect-ratio: 4/3;
-  overflow: hidden;
-  position: relative;
-  text-decoration: none;
-}
-.hpc-media img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform .4s var(--ease-out);
-  display: block;
-}
-.home-product-card:hover .hpc-media img {
-  transform: scale(1.04);
-}
-.hpc-badge {
-  position: absolute; top: 14px; left: 14px;
-  background: var(--orange); color: #3a1d05;
-  font-family: var(--font-display); font-weight: 700;
-  font-size: var(--fs-xs); padding: 5px 12px;
-  border-radius: var(--radius-pill);
-}
-.hpc-body {
-  padding: var(--space-5); flex: 1; display: flex; flex-direction: column; gap: 8px;
-}
-.hpc-title {
-  font-family: var(--font-display); font-weight: 800;
-  font-size: var(--fs-lg); color: var(--ink);
-  line-height: 1.15;
-}
-.hpc-desc {
-  color: #555; font-size: var(--fs-base); line-height: 1.5;
-  flex: 1;
-}
-.hpc-foot {
-  display: flex; align-items: center;
-  justify-content: space-between; gap: 12px;
-  margin-top: 8px; padding-top: 12px;
-  border-top: 1px solid rgba(0,0,0,.07);
-}
-.hpc-foot .price-tag {
-  font-size: var(--fs-md); color: var(--green-deep);
-}
-
-/* ---- Gallery ---- */
-.home-gallery {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
-  grid-template-rows: auto;
-  gap: clamp(8px, 1.5vw, 16px);
-}
-.home-gallery__item {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--offwhite);
-}
-.home-gallery__item--tall {
-  grid-row: span 2;
-}
-.home-gallery__item img {
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
-  transition: transform .4s var(--ease-out);
-}
-.home-gallery__item:hover img { transform: scale(1.04); }
-@media (max-width: 640px) {
-  .home-gallery {
-    grid-template-columns: 1fr 1fr;
-  }
-  .home-gallery__item--tall { grid-row: span 1; grid-column: span 2; }
-}
-</style>
