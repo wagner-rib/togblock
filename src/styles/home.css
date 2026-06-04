@@ -440,7 +440,7 @@
 
 /* ── FEATURE SPLIT ──────────────────────────────────────────── */
 .feature-split {
-  padding-block: clamp(64px, 9vw, 120px);
+  padding-block: clamp(36px, 5vw, 64px);
 }
 
 .feature-split__inner {
