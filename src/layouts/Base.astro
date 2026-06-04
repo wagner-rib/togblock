@@ -79,23 +79,18 @@ const navItems = [
   <header class="site-header">
     <div class="wrap nav">
       <a class="brand" href="/" aria-label="TógBlocks home">
-        <!-- Original stud mark — green gradient square, 2×2 studs -->
+        <!-- Stud mark — uses CSS vars so it recolours with every vibe -->
         <svg class="brand-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="bgl" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#1FB374"/>
-              <stop offset="1" stop-color="#0E6B43"/>
-            </linearGradient>
-          </defs>
-          <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#bgl)"/>
-          <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".10"/>
-          <g fill="#0E6B43" opacity=".18">
+          <rect x="3" y="3" width="42" height="42" rx="13" fill="var(--green)"/>
+          <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".14"/>
+          <rect x="3" y="32" width="42" height="13" rx="13" fill="var(--green-deep)" opacity=".5"/>
+          <g fill="var(--green-deep)" opacity=".22">
             <circle cx="17" cy="18.4" r="5.4"/>
             <circle cx="31" cy="18.4" r="5.4"/>
             <circle cx="17" cy="32.4" r="5.4"/>
             <circle cx="31" cy="32.4" r="5.4"/>
           </g>
-          <g fill="#FBF8F0">
+          <g fill="white">
             <circle cx="17" cy="17" r="5.4"/>
             <circle cx="31" cy="17" r="5.4"/>
             <circle cx="17" cy="31" r="5.4"/>
@@ -169,21 +164,15 @@ const navItems = [
         <div>
           <a class="brand brand--footer" href="/" aria-label="TógBlocks home" style="margin-bottom:14px">
             <svg class="brand-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="bgf" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="rgba(255,255,255,.25)"/>
-                  <stop offset="1" stop-color="rgba(255,255,255,.10)"/>
-                </linearGradient>
-              </defs>
-              <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#bgf)"/>
-              <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".08"/>
+              <rect x="3" y="3" width="42" height="42" rx="13" fill="rgba(255,255,255,.18)"/>
+              <rect x="3" y="3" width="42" height="20" rx="13" fill="white" opacity=".10"/>
               <g fill="white" opacity=".25">
                 <circle cx="17" cy="18.4" r="5.4"/>
                 <circle cx="31" cy="18.4" r="5.4"/>
                 <circle cx="17" cy="32.4" r="5.4"/>
                 <circle cx="31" cy="32.4" r="5.4"/>
               </g>
-              <g fill="white" opacity=".80">
+              <g fill="white" opacity=".85">
                 <circle cx="17" cy="17" r="5.4"/>
                 <circle cx="31" cy="17" r="5.4"/>
                 <circle cx="17" cy="31" r="5.4"/>
