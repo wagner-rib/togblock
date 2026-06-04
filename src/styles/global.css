@@ -239,19 +239,33 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
 @media (prefers-reduced-motion: reduce) { .toast { transition: opacity .2s; transform: none; } }
 
 /* ---------- Brand / Nav ---------- */
-.brand       { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; }
-.brand-mark  {
-  width: 40px; height: 40px; flex: none; display: block;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231FB374'/%3E%3Cstop offset='1' stop-color='%230E6B43'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='3' y='3' width='42' height='42' rx='13' fill='url(%23g)'/%3E%3Crect x='3' y='3' width='42' height='20' rx='13' fill='%23fff' opacity='.10'/%3E%3Cg fill='%23FBF8F0'%3E%3Ccircle cx='17' cy='17' r='5.4'/%3E%3Ccircle cx='31' cy='17' r='5.4'/%3E%3Ccircle cx='17' cy='31' r='5.4'/%3E%3Ccircle cx='31' cy='31' r='5.4'/%3E%3C/g%3E%3Cg fill='%230E6B43' opacity='.18'%3E%3Ccircle cx='17' cy='18.4' r='5.4'/%3E%3Ccircle cx='31' cy='18.4' r='5.4'/%3E%3Ccircle cx='17' cy='32.4' r='5.4'/%3E%3Ccircle cx='31' cy='32.4' r='5.4'/%3E%3C/g%3E%3Cg fill='%23FBF8F0'%3E%3Ccircle cx='17' cy='17' r='5.4'/%3E%3Ccircle cx='31' cy='17' r='5.4'/%3E%3Ccircle cx='17' cy='31' r='5.4'/%3E%3Ccircle cx='31' cy='31' r='5.4'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
-  filter: drop-shadow(0 2px 3px rgba(14,107,67,.25));
-  transition: transform .2s var(--ease-pop);
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
 }
-.brand:hover .brand-mark { transform: rotate(-6deg) scale(1.05); }
 .brand:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
-.brand-word      { font-family: var(--font-display); font-weight: 800; font-size: 1.55rem; color: var(--green-deep); letter-spacing: -.01em; line-height: 1; }
-.brand-word span { color: var(--orange-hover); }
-.brand--lg .brand-mark { width: 64px; height: 64px; }
-.brand--lg .brand-word { font-size: 2.4rem; }
+
+/* Inline SVG brick mark */
+.brand-icon {
+  width: 46px; height: auto; flex: none; display: block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+  transition: transform .22s var(--ease-pop);
+}
+.brand:hover .brand-icon { transform: rotate(-6deg) scale(1.07); }
+
+/* Wordmark */
+.brand-word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--green-deep);
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+.brand-word em {
+  font-style: normal;
+  color: var(--orange-hover);
+}
 
 .site-header {
   position: sticky; top: 0; z-index: 100;

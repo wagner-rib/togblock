@@ -79,8 +79,24 @@ const navItems = [
   <header class="site-header">
     <div class="wrap nav">
       <a class="brand" href="/" aria-label="TógBlocks home">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-word">Tóg<span>Blocks</span></span>
+        <!-- 1×2 brick mark — uses CSS vars so it recolours with every vibe -->
+        <svg class="brand-icon" viewBox="0 0 56 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Left stud -->
+          <circle cx="16" cy="10" r="7.5" fill="var(--green)" opacity=".75"/>
+          <circle cx="16" cy="7.5" r="7.5" fill="var(--green)"/>
+          <circle cx="13.2" cy="5" r="3" fill="white" opacity=".4"/>
+          <!-- Right stud -->
+          <circle cx="40" cy="10" r="7.5" fill="var(--green)" opacity=".75"/>
+          <circle cx="40" cy="7.5" r="7.5" fill="var(--green)"/>
+          <circle cx="37.2" cy="5" r="3" fill="white" opacity=".4"/>
+          <!-- Brick body -->
+          <rect x="1" y="14" width="54" height="20" rx="6" fill="var(--green)"/>
+          <!-- Top bevel highlight -->
+          <rect x="1" y="14" width="54" height="8" rx="6" fill="white" opacity=".14"/>
+          <!-- Bottom depth shadow -->
+          <rect x="3" y="30" width="50" height="4" rx="3" fill="black" opacity=".22"/>
+        </svg>
+        <span class="brand-word">Tóg<em>Blocks</em></span>
       </a>
 
       <nav aria-label="Primary">
@@ -145,9 +161,19 @@ const navItems = [
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <a class="brand" href="/" aria-label="TógBlocks home" style="margin-bottom:14px">
-            <span class="brand-mark" aria-hidden="true"></span>
-            <span class="brand-word" style="color:#fff">Tóg<span style="color:var(--orange)">Blocks</span></span>
+          <a class="brand brand--footer" href="/" aria-label="TógBlocks home" style="margin-bottom:14px">
+            <svg class="brand-icon" viewBox="0 0 56 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="16" cy="10" r="7.5" fill="white" opacity=".55"/>
+              <circle cx="16" cy="7.5" r="7.5" fill="white" opacity=".85"/>
+              <circle cx="13.2" cy="5" r="3" fill="white" opacity=".4"/>
+              <circle cx="40" cy="10" r="7.5" fill="white" opacity=".55"/>
+              <circle cx="40" cy="7.5" r="7.5" fill="white" opacity=".85"/>
+              <circle cx="37.2" cy="5" r="3" fill="white" opacity=".4"/>
+              <rect x="1" y="14" width="54" height="20" rx="6" fill="white" opacity=".85"/>
+              <rect x="1" y="14" width="54" height="8" rx="6" fill="white" opacity=".12"/>
+              <rect x="3" y="30" width="50" height="4" rx="3" fill="black" opacity=".18"/>
+            </svg>
+            <span class="brand-word" style="color:#fff">Tóg<em style="color:var(--orange)">Blocks</em></span>
           </a>
           <p style="color:rgba(255,255,255,.75);max-width:30ch">
             Custom names in bricks, hand-built in Ireland. <em>Tóg</em> is Irish for "build".
