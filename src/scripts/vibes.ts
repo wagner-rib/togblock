@@ -31,6 +31,24 @@ const VIBES = [
     emoji: '🌙',
     dots: ['#14B8A6', '#F472B6', '#5EEAD4'],
   },
+  {
+    id: 'volt',
+    label: 'Neon Volt',
+    emoji: '⚡',
+    dots: ['#65A30D', '#A855F7', '#BEF264'],
+  },
+  {
+    id: 'cherry',
+    label: 'Cherry',
+    emoji: '🍒',
+    dots: ['#DC2626', '#D97706', '#FCA5A5'],
+  },
+  {
+    id: 'arctic',
+    label: 'Arctic',
+    emoji: '🧊',
+    dots: ['#0EA5E9', '#FB923C', '#7DD3FC'],
+  },
 ];
 
 function getVibe(): string {

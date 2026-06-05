@@ -100,6 +100,78 @@
   --brick-green:  #14B8A6;
 }
 
+/* ─── NEON VOLT ─── electric lime + violet ──────────────────────────── */
+[data-vibe="volt"] {
+  --green:        #65A30D;
+  --green-deep:   #3F6212;
+  --green-hover:  #4D7C0F;
+  --green-700:    #365314;
+  --sage:         #BEF264;
+  --cream:        #F7FEE7;
+  --orange:       #A855F7;
+  --orange-hover: #9333EA;
+  --orange-soft:  #FAF5FF;
+  --sage-soft:    #ECFCCB;
+  --green-soft:   #ECFCCB;
+  --cream-deep:   #D9F99D;
+  --ink:          #1A2E05;
+  --ink-60:       #3F6212;
+  --ink-40:       #65A30D;
+  --line:         rgba(63,98,18,.12);
+  --line-strong:  rgba(63,98,18,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #65A30D;
+}
+
+/* ─── CHERRY ─── deep cherry red + gold ─────────────────────────────── */
+[data-vibe="cherry"] {
+  --green:        #DC2626;
+  --green-deep:   #991B1B;
+  --green-hover:  #B91C1C;
+  --green-700:    #7F1D1D;
+  --sage:         #FCA5A5;
+  --cream:        #FFF1F2;
+  --orange:       #D97706;
+  --orange-hover: #B45309;
+  --orange-soft:  #FEF3C7;
+  --sage-soft:    #FEE2E2;
+  --green-soft:   #FEE2E2;
+  --cream-deep:   #FECACA;
+  --ink:          #450A0A;
+  --ink-60:       #7F1D1D;
+  --ink-40:       #B91C1C;
+  --line:         rgba(153,27,27,.12);
+  --line-strong:  rgba(153,27,27,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #DC2626;
+}
+
+/* ─── ARCTIC ─── sky blue + warm coral ──────────────────────────────── */
+[data-vibe="arctic"] {
+  --green:        #0EA5E9;
+  --green-deep:   #0369A1;
+  --green-hover:  #0284C7;
+  --green-700:    #075985;
+  --sage:         #7DD3FC;
+  --cream:        #F0F9FF;
+  --orange:       #FB923C;
+  --orange-hover: #F97316;
+  --orange-soft:  #FFEDD5;
+  --sage-soft:    #E0F2FE;
+  --green-soft:   #E0F2FE;
+  --cream-deep:   #BAE6FD;
+  --ink:          #082F49;
+  --ink-60:       #0C4A6E;
+  --ink-40:       #0369A1;
+  --line:         rgba(3,105,161,.12);
+  --line-strong:  rgba(3,105,161,.22);
+  --focus-ring:   0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);
+  --focus-ring-on-dark: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 6px var(--orange);
+  --brick-green:  #0EA5E9;
+}
+
 /* ─── Vibe Switcher UI ──────────────────────────────────────────────── */
 .vibe-dock {
   position: fixed;
