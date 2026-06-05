@@ -233,6 +233,9 @@ export class DoorSignBuilder {
       decos.appendChild(brick);
     });
 
+    // Fit text row within the plate using zoom
+    this.fitText(textRow, plate);
+
     // Update price
     const n = Math.max(1, [...text].filter(c => c !== ' ').length);
     const price = 12 + 2 * n;
@@ -246,6 +249,16 @@ export class DoorSignBuilder {
     const counterAbs = q('[data-sb-counter-abs]', this.host);
     if (counter) counter.textContent = `${this.state.text.length}/${this.MAX}`;
     if (counterAbs) counterAbs.textContent = `${this.state.text.length}/${this.MAX}`;
+  }
+
+  private fitText(textRow: HTMLElement, plate: HTMLElement): void {
+    // Reset zoom to measure natural width
+    (textRow.style as CSSStyleDeclaration & { zoom: string }).zoom = '1';
+    const natW = textRow.offsetWidth;
+    const avail = plate.clientWidth - 32; // 16px padding each side
+    if (natW <= avail) return;
+    const scale = avail / natW;
+    (textRow.style as CSSStyleDeclaration & { zoom: string }).zoom = String(scale);
   }
 
   private addToCart(): void {
