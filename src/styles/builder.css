@@ -40,7 +40,6 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  overflow: visible;
 }
 
 /* ---- The 3D perspective name stage ---- */

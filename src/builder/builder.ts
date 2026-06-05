@@ -299,33 +299,26 @@ export class NameBuilder {
   }
 
   private fit(): void {
-    const name = this.el.name, scaler = this.el.scaler, stage = this.el.stage;
-    if (!this.el.empty.hidden) {
-      scaler.style.width = '';
-      scaler.style.height = '';
-      name.style.transform = '';
-      return;
-    }
-    // Reset so we can measure the natural (unscaled) size
-    scaler.style.height = '';
-    name.style.transform = 'none';
+    const name = this.el.name, stage = this.el.stage;
+
+    // Reset zoom to measure natural layout width
+    (name.style as CSSStyleDeclaration & { zoom: string }).zoom = '1';
+
+    if (!this.el.empty.hidden) return;
 
     const natW = name.offsetWidth;
-    const natH = name.offsetHeight;
-    const cs = getComputedStyle(stage);
+    const cs   = getComputedStyle(stage);
     const avail = stage.clientWidth
       - parseFloat(cs.paddingLeft)
       - parseFloat(cs.paddingRight);
 
-    // Scale down to fit — no floor, always fits
-    const scale = Math.min(1, avail / natW);
+    if (natW <= avail) return; // already fits — nothing to do
 
-    // top center: scales inward from horizontal centre — stays centred
-    name.style.transformOrigin = 'top center';
-    name.style.transform = `scale(${scale})`;
-    // Only constrain height so the stage doesn't grow taller than needed;
-    // width is handled by the scaler being 100% of stage width.
-    scaler.style.height = natH * scale + 'px';
+    // zoom shrinks the element + its layout box together, keeping it
+    // centred naturally. Unlike transform:scale it doesn't interfere
+    // with the existing CSS perspective/rotateX on .brick-name.
+    const scale = avail / natW;
+    (name.style as CSSStyleDeclaration & { zoom: string }).zoom = String(scale);
   }
 
   /* ---- pricing: €7 first letter, €5 each additional ---- */
