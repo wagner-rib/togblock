@@ -36,7 +36,10 @@
 }
 
 .brick-scaler {
-  display: flex; align-items: flex-start; justify-content: center;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   overflow: visible;
 }
 

@@ -307,7 +307,6 @@ export class NameBuilder {
       return;
     }
     // Reset so we can measure the natural (unscaled) size
-    scaler.style.width = '';
     scaler.style.height = '';
     name.style.transform = 'none';
 
@@ -318,12 +317,14 @@ export class NameBuilder {
       - parseFloat(cs.paddingLeft)
       - parseFloat(cs.paddingRight);
 
-    // Scale down to fit — no floor, so any name length always fits
+    // Scale down to fit — no floor, always fits
     const scale = Math.min(1, avail / natW);
 
-    name.style.transformOrigin = 'top left';
+    // top center: scales inward from horizontal centre — stays centred
+    name.style.transformOrigin = 'top center';
     name.style.transform = `scale(${scale})`;
-    scaler.style.width  = natW * scale + 'px';
+    // Only constrain height so the stage doesn't grow taller than needed;
+    // width is handled by the scaler being 100% of stage width.
     scaler.style.height = natH * scale + 'px';
   }
 
