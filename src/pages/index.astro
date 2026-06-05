@@ -24,7 +24,7 @@ const allCards = [...sliderCards, ...sliderCards];
 
 <Base
   title="TógBlocks — Build names they'll love forever"
-  description="Personalised 3D brick name letters and door signs, handmade in Ireland. Compatible with LEGO®. Type a name, pick colours, we build and post."
+  description="Personalised 3D brick name letters and door signs, 3D printed in Ireland. Compatible with LEGO®. Type a name, pick colours, we build and post."
   currentPage="/"
   ogImage="/products/luca-letters.jpg"
 >
@@ -45,6 +45,9 @@ const allCards = [...sliderCards, ...sliderCards];
       </div>
       <div class="hero-slide">
         <img src="/products/charlie-sign.jpg" alt="" loading="lazy" decoding="async"/>
+      </div>
+      <div class="hero-slide">
+        <img src="/products/hero-lego-room.jpg" alt="" loading="lazy" decoding="async"/>
       </div>
     </div>
     <div class="home-hero__overlay" aria-hidden="true"></div>
@@ -73,7 +76,7 @@ const allCards = [...sliderCards, ...sliderCards];
     <div class="home-hero__content wrap">
       <h1>Build names they'll love <em class="accent">forever</em></h1>
       <p class="home-hero__sub">
-        Personalised 3D brick letters &amp; door signs — handmade in Ireland, compatible with LEGO®.
+        Personalised 3D brick letters &amp; door signs — 3D printed in Ireland, compatible with LEGO®.
       </p>
       <div class="home-hero__ctas">
         <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
@@ -96,7 +99,7 @@ const allCards = [...sliderCards, ...sliderCards];
           { num: '600+', label: 'Happy builders' },
           { num: '★ 4.9', label: 'Average rating' },
           { num: '3 days', label: 'Ships in' },
-          { num: '100%', label: 'Handmade' },
+          { num: '100%', label: '3D Printed' },
         ].map((s, i) => (
           <div class="stat-card" data-reveal data-delay={String(i + 1)}>
             <span class="stat-card__num">{s.num}</span>
@@ -134,7 +137,7 @@ const allCards = [...sliderCards, ...sliderCards];
             <li><span class="icon" aria-hidden="true">✓</span> Snaps onto any standard baseplate</li>
             <li><span class="icon" aria-hidden="true">🎨</span> 5 colour themes + per-letter recolour</li>
             <li><span class="icon" aria-hidden="true">📐</span> One perfect size — desktop display &amp; shelf ready</li>
-            <li><span class="icon" aria-hidden="true">🇮🇪</span> Built by hand in Ireland, ships in 3 days</li>
+            <li><span class="icon" aria-hidden="true">🇮🇪</span> 3D printed in Ireland, ships in 3 days</li>
           </ul>
           <a class="btn btn--cta btn--lg" href="/products/brick-letters">
             Shop Brick Letters →
@@ -196,7 +199,7 @@ const allCards = [...sliderCards, ...sliderCards];
         {[
           { icon: '⌨️', title: 'Type the name', body: 'Up to 14 letters. A baby\'s name, a nickname, "BOSS" — whatever you fancy.', delay: '1' },
           { icon: '🎨', title: 'Pick your colours', body: 'Choose a theme or tap any single letter to recolour just that one.', delay: '2' },
-          { icon: '📦', title: 'We build & post it', body: 'Hand-assembled in Ireland, quality-checked, boxed and sent to your door.', delay: '3' },
+          { icon: '📦', title: 'We build & post it', body: '3D printed in Ireland, quality-checked, boxed and sent to your door.', delay: '3' },
         ].map((step, i) => (
           <div class="how-step" data-reveal data-delay={step.delay}>
             <span class="how-step__num" aria-hidden="true">{i + 1}</span>
