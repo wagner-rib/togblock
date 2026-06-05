@@ -25,23 +25,22 @@
   overflow: hidden;
 }
 
-/* Blurred stretched fill for any gaps left by contain */
-.hero-slide::before {
-  content: '';
+.hero-slide.is-active { opacity: 1; }
+
+/* Blurred cover fills the full slide behind the sharp image */
+.hero-slide .slide-bg {
   position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
-  background-image: var(--slide-bg);
-  background-size: cover;
-  background-position: center;
-  filter: blur(18px) brightness(0.55);
+  inset: -5%;
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(20px) brightness(0.55);
   z-index: 0;
 }
 
-.hero-slide.is-active { opacity: 1; }
-
-.hero-slide img {
+/* Sharp image scaled to fit fully — no cropping */
+.hero-slide .slide-fg {
   position: relative;
   z-index: 1;
   width: 100%;

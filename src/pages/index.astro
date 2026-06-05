@@ -34,8 +34,9 @@ const allCards = [...sliderCards, ...sliderCards];
 
     <!-- Background slideshow — real <img> tags, grid-stacked so height is image-driven -->
     <div class="home-hero__slides" aria-hidden="true" data-hero-slides>
-      <div class="hero-slide is-active" style="--slide-bg: url('/products/hero-gemini.jpg')">
-        <img src="/products/hero-gemini.jpg" alt="" loading="eager" fetchpriority="high" decoding="async"/>
+      <div class="hero-slide is-active">
+        <img class="slide-bg" src="/products/hero-gemini.jpg" alt="" aria-hidden="true" loading="eager" decoding="async"/>
+        <img class="slide-fg" src="/products/hero-gemini.jpg" alt="" loading="eager" fetchpriority="high" decoding="async"/>
       </div>
     </div>
     <div class="home-hero__overlay" aria-hidden="true"></div>
