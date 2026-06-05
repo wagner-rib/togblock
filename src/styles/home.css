@@ -12,7 +12,7 @@
 .home-hero__slides {
   position: relative;
   width: 100%;
-  height: clamp(260px, 42vh, 420px);
+  aspect-ratio: 2 / 1;
   overflow: hidden;
 }
 
