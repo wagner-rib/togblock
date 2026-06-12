@@ -15,6 +15,7 @@ import '../styles/builder.css';
 import '../styles/pages.css';
 import '../styles/product.css';
 import '../styles/home.css';
+import { getTokenFromRequest, getSession } from '../lib/auth';
 
 interface Props {
   title: string;
@@ -26,9 +27,12 @@ interface Props {
 const { title, description, currentPage = '/', ogImage = '/og.png' } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
+const token = getTokenFromRequest(Astro.request);
+const user  = token ? await getSession(token) : null;
+
 const navItems = [
   { label: 'Products',     href: '/products' },
-  { label: 'How it works', href: '/#how' },
+  { label: 'Build now',     href: '/builder' },
   { label: 'About',        href: '/about' },
   { label: 'FAQ',          href: '/faq' },
 ];
@@ -58,12 +62,54 @@ const navItems = [
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image"       content={new URL(ogImage, Astro.site)} />
 
+  <!-- SEO signals -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="geo.region" content="IE" />
+  <meta name="geo.placename" content="Ireland" />
+  <meta name="rating" content="General" />
+
   <!-- Favicon -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
 
   <!-- Theme colour -->
   <meta name="theme-color" content="#1D4ED8" />
+
+  <!-- JSON-LD: Organisation + WebSite -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://togblocks.ie/#organization",
+        "name": "TógBlocks",
+        "url": "https://togblocks.ie",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://togblocks.ie/logo.svg"
+        },
+        "description": "Personalised 3D brick name letters and door signs, 3D printed in Ireland. Compatible with LEGO®.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "IE"
+        },
+        "sameAs": []
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://togblocks.ie/#website",
+        "url": "https://togblocks.ie",
+        "name": "TógBlocks",
+        "publisher": { "@id": "https://togblocks.ie/#organization" }
+      }
+    ]
+  })} />
+
+  <!-- Page-specific head content (JSON-LD, etc.) -->
+  <slot name="head" />
+
+  <!-- Stripe.js — loaded globally so Payment Element mounts fast -->
+  <script src="https://js.stripe.com/v3/" is:inline></script>
 
   <!-- Vibe init: apply saved theme before first paint to avoid flash -->
   <script is:inline>
@@ -116,10 +162,30 @@ const navItems = [
       </nav>
 
       <div class="nav-actions">
+        {user
+          ? (
+            <a class="nav-account-btn" href="/account" aria-label="My account">
+              {user.pictureUrl
+                ? <img src={user.pictureUrl} alt="" class="nav-avatar" />
+                : <span class="nav-avatar-initial">{user.name[0]}</span>
+              }
+            </a>
+          )
+          : (
+            <a class="nav-signin-btn" href="/login" aria-label="Sign in">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Sign in
+            </a>
+          )
+        }
         <a class="cart-btn" href="/cart" aria-label="Basket">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M6 7h12l-1 13H7L6 7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M9 7a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span class="cart-count" data-cart-count>0</span>
         </a>
@@ -233,4 +299,56 @@ const navItems = [
     import '../scripts/slider.ts';
   </script>
 </body>
+
+<style>
+/* ── NAV ACCOUNT / SIGN-IN ────────────────────────────────── */
+.nav-account-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: box-shadow .15s;
+}
+.nav-account-btn:hover { box-shadow: 0 0 0 3px var(--green); }
+
+.nav-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+.nav-avatar-initial {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--green-deep);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.nav-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-60);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  white-space: nowrap;
+  transition: border-color .15s, color .15s;
+}
+.nav-signin-btn:hover { border-color: var(--green); color: var(--green-deep); }
+
+@media (max-width: 600px) {
+  .nav-signin-btn span:last-child { display: none; }
+}
+</style>
 </html>

@@ -1,0 +1,92 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../../lib/adminAuth';
+import { query } from '../../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin/customers');
+
+const userId = Number(Astro.params.id);
+if (!userId) return Astro.redirect('/admin/customers');
+
+const userRes = await query<{
+  id: number; name: string; email: string; created_at: Date;
+  picture_url: string | null; google_id: string | null;
+}>('SELECT id, name, email, created_at, picture_url, google_id FROM users WHERE id = $1', [userId]);
+
+if (!userRes.rows.length) return Astro.redirect('/admin/customers');
+const customer = userRes.rows[0];
+
+const ordersRes = await query<{
+  id: number; status: string; total: number; created_at: Date; item_count: string;
+}>(`
+  SELECT o.id, o.status, o.total, o.created_at, COUNT(oi.id) AS item_count
+  FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.user_id = $1 AND o.status != 'pending_payment'
+  GROUP BY o.id ORDER BY o.created_at DESC
+`, [userId]);
+
+const totalSpend = ordersRes.rows
+  .filter(o => !['cancelled','refunded'].includes(o.status))
+  .reduce((s, o) => s + o.total, 0);
+
+function fmt(cents: number) { return `€${(cents/100).toFixed(2)}`; }
+function ref(id: number)    { return `#TB${String(id).padStart(5,'0')}`; }
+function fmtDate(d: Date)   { return new Date(d).toLocaleDateString('en-IE', { dateStyle:'medium' }); }
+
+const BADGE: Record<string,string> = {
+  paid:'paid', printing:'printing', dispatched:'dispatched',
+  delivered:'delivered', cancelled:'cancelled', refunded:'refunded',
+};
+---
+
+<AdminLayout title={customer.name} currentPage="customers" admin={admin}>
+  <div slot="actions">
+    <a href="/admin/customers" class="adm-btn adm-btn--ghost adm-btn--sm">← Customers</a>
+  </div>
+
+  <div class="adm-grid-2" style="margin-bottom:18px">
+    <div class="adm-card adm-card-bd" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:1.3rem;color:#fff;flex-shrink:0">
+          {customer.name.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-lg)">{customer.name}</div>
+          <a href={`mailto:${customer.email}`} style="color:var(--blue);font-size:var(--fs-sm)">{customer.email}</a>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div class="adm-label">Joined</div><div style="font-size:var(--fs-sm)">{fmtDate(customer.created_at)}</div></div>
+        <div><div class="adm-label">Auth</div><div style="font-size:var(--fs-sm)">{customer.google_id ? 'Google' : 'Email'}</div></div>
+        <div><div class="adm-label">Orders</div><div style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-lg)">{ordersRes.rows.length}</div></div>
+        <div><div class="adm-label">Total spent</div><div style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-lg)">{fmt(totalSpend)}</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="adm-card">
+    <div class="adm-card-hd"><span class="adm-card-title">Order history</span></div>
+    {ordersRes.rows.length === 0 ? (
+      <div class="adm-empty">No orders yet.</div>
+    ) : (
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {ordersRes.rows.map(o => (
+              <tr>
+                <td><a href={`/admin/orders/${o.id}`} style="font-weight:700;color:var(--blue);text-decoration:none">{ref(o.id)}</a></td>
+                <td style="color:var(--ink-60)">{fmtDate(o.created_at)}</td>
+                <td style="color:var(--ink-60)">{o.item_count}</td>
+                <td style="font-weight:700">{fmt(o.total)}</td>
+                <td><span class={`adm-badge adm-badge--${BADGE[o.status]??'pending'}`}>{o.status}</span></td>
+                <td><a href={`/admin/orders/${o.id}`} class="adm-btn adm-btn--ghost adm-btn--sm">View →</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</AdminLayout>

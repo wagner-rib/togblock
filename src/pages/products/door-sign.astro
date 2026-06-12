@@ -1,13 +1,40 @@
 ---
 import Base from '../../layouts/Base.astro';
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Personalised Door & Room Sign",
+  "description": "A personalised brick baseplate door sign with your name raised in contrasting brick letters. Compatible with standard building bricks including LEGO®. 3D printed in Ireland, ships in 3 days.",
+  "image": "https://togblocks.ie/products/charlie-sign.jpg",
+  "brand": { "@type": "Brand", "name": "TógBlocks" },
+  "sku": "DOOR-SIGN",
+  "offers": {
+    "@type": "Offer",
+    "url": "https://togblocks.ie/products/door-sign",
+    "priceCurrency": "EUR",
+    "price": "12.00",
+    "priceValidUntil": "2027-12-31",
+    "availability": "https://schema.org/InStock",
+    "seller": { "@type": "Organization", "name": "TógBlocks" }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "600"
+  }
+};
 ---
 
 <Base
-  title="Door / Room Sign — TógBlocks"
-  description="Personalised LEGO-compatible door signs. A wide baseplate with your name raised in the centre. 3D printed in Ireland, ships in 3 days."
+  title="Door & Room Sign — TógBlocks"
+  description="Personalised brick door signs, compatible with LEGO® and standard building bricks. Your name raised in the centre of a wide baseplate. 3D printed in Ireland, ships in 3 days."
   currentPage="/products/door-sign"
   ogImage="/products/charlie-sign.jpg"
 >
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
+  </Fragment>
 
   <article>
     <!-- ============ BREADCRUMB + HERO ============ -->
@@ -27,7 +54,7 @@ import Base from '../../layouts/Base.astro';
             <div class="pdp-main-photo">
               <img
                 src="/products/charlie-sign.jpg"
-                alt="Red LEGO baseplate door sign with Charlie in yellow raised letters and decorative bricks"
+                alt="Red brick baseplate door sign with Charlie in yellow raised letters and decorative bricks"
                 loading="eager" decoding="async"
                 id="main-photo"
               />
@@ -51,7 +78,7 @@ import Base from '../../layouts/Base.astro';
               <span class="muted" style="font-size:var(--fs-sm)">€12 base + €2 per letter</span>
             </div>
             <p class="pdp-desc">
-              A wide rectangular LEGO baseplate with the name raised in contrasting brick-font letters in the centre.
+              A wide rectangular brick baseplate with the name raised in contrasting brick-font letters in the centre.
               Decorative 2×1 bricks on the edges complete the look. Designed to lean against a door, hang on a wall,
               or sit on a shelf.
             </p>
@@ -125,7 +152,7 @@ import Base from '../../layouts/Base.astro';
               </svg>
             </div>
             <h3>Sturdy baseplate</h3>
-            <p class="muted">A single solid LEGO-compatible baseplate. Not going anywhere, but the decorative bricks can be swapped any time.</p>
+            <p class="muted">A single solid brick baseplate, compatible with standard building bricks. Not going anywhere, but the decorative bricks can be swapped any time.</p>
           </div>
           <div class="card" style="text-align:center">
             <div class="feat-icon" aria-hidden="true">
@@ -149,7 +176,7 @@ import Base from '../../layouts/Base.astro';
         </div>
         <div class="pdp-gallery-grid">
           <div class="pdp-gal-item pdp-gal-item--wide">
-            <img src="/products/charlie-sign.jpg" alt="Red LEGO baseplate door sign with Charlie in yellow raised letters" loading="lazy" decoding="async" />
+            <img src="/products/charlie-sign.jpg" alt="Red brick baseplate door sign with Charlie in yellow raised letters" loading="lazy" decoding="async" />
           </div>
           <div class="pdp-gal-item">
             <img src="/products/finn-letters.jpg" alt="Blue toned brick letters FINN — shows the stud detail" loading="lazy" decoding="async" />

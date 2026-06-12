@@ -1,0 +1,579 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../lib/adminAuth';
+import { query } from '../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin');
+
+// All stats in one query
+const statsRes = await query<{
+  orders_today: string; revenue_today: string; orders_yesterday: string;
+  pending_print: string; in_progress: string;
+  revenue_week: string; orders_week: string;
+  revenue_month: string; orders_total: string;
+}>(`
+  SELECT
+    COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE AND status != 'pending_payment')                                    AS orders_today,
+    COALESCE(SUM(total) FILTER (WHERE DATE(created_at) = CURRENT_DATE AND status != 'pending_payment'), 0)                    AS revenue_today,
+    COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE - 1 AND status != 'pending_payment')                               AS orders_yesterday,
+    COUNT(*) FILTER (WHERE status = 'paid')                                                                                    AS pending_print,
+    COUNT(*) FILTER (WHERE status = 'printing')                                                                                AS in_progress,
+    COALESCE(SUM(total) FILTER (WHERE DATE_TRUNC('week',  created_at) = DATE_TRUNC('week',  NOW()) AND status != 'pending_payment'), 0) AS revenue_week,
+    COUNT(*) FILTER (WHERE DATE_TRUNC('week',  created_at) = DATE_TRUNC('week',  NOW()) AND status != 'pending_payment')      AS orders_week,
+    COALESCE(SUM(total) FILTER (WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW()) AND status != 'pending_payment'), 0) AS revenue_month,
+    COUNT(*) FILTER (WHERE status != 'pending_payment')                                                                        AS orders_total
+  FROM orders
+`);
+const s = statsRes.rows[0];
+
+// 7-day revenue chart data
+const chartRes = await query<{ day: string; revenue: string; orders: string }>(`
+  SELECT DATE(created_at) AS day,
+    COALESCE(SUM(total) FILTER (WHERE status != 'pending_payment'), 0) AS revenue,
+    COUNT(*)              FILTER (WHERE status != 'pending_payment')    AS orders
+  FROM orders
+  WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+  GROUP BY DATE(created_at)
+  ORDER BY day ASC
+`);
+
+// Fill in all 7 days (including days with no orders)
+const chartDays: { label: string; revenue: number; orders: number }[] = [];
+for (let i = 6; i >= 0; i--) {
+  const d   = new Date();
+  d.setDate(d.getDate() - i);
+  const key = d.toISOString().slice(0, 10);
+  const row = chartRes.rows.find(r => r.day.toString().slice(0, 10) === key);
+  chartDays.push({
+    label:   i === 0 ? 'Today' : i === 1 ? 'Yest.' : d.toLocaleDateString('en-IE', { weekday: 'short' }),
+    revenue: Number(row?.revenue ?? 0),
+    orders:  Number(row?.orders ?? 0),
+  });
+}
+const maxRevenue = Math.max(...chartDays.map(d => d.revenue), 1);
+
+// Order pipeline counts
+const pipelineRes = await query<{ status: string; count: string }>(`
+  SELECT status, COUNT(*) AS count FROM orders
+  WHERE status NOT IN ('pending_payment','cancelled','refunded')
+  GROUP BY status
+`);
+const pipeline: Record<string, number> = {};
+for (const r of pipelineRes.rows) pipeline[r.status] = Number(r.count);
+
+// Needs attention (paid, not yet printing)
+const attentionRes = await query<{
+  id: number; total: number; created_at: Date; customer_name: string;
+  names: string[]; colours: string[][];
+}>(`
+  SELECT o.id, o.total, o.created_at,
+    COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
+    ARRAY_AGG(oi.custom_name ORDER BY oi.id) AS names,
+    ARRAY_AGG(oi.colours    ORDER BY oi.id) AS colours
+  FROM orders o
+  LEFT JOIN users u ON u.id = o.user_id
+  JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status = 'paid'
+  GROUP BY o.id, u.name, o.guest_email
+  ORDER BY o.created_at ASC
+  LIMIT 8
+`);
+
+// Top custom names
+const namesRes = await query<{ custom_name: string; count: string }>(`
+  SELECT custom_name, COUNT(*) AS count
+  FROM order_items
+  WHERE custom_name IS NOT NULL AND custom_name != ''
+  GROUP BY custom_name ORDER BY count DESC LIMIT 8
+`);
+const maxNameCount = Math.max(...namesRes.rows.map(r => Number(r.count)), 1);
+
+// Recent orders (with items + colours)
+const recentRes = await query<{
+  id: number; status: string; total: number; created_at: Date;
+  customer_name: string; names: string[]; colours: string[][];
+}>(`
+  SELECT o.id, o.status, o.total, o.created_at,
+    COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
+    ARRAY_AGG(oi.custom_name ORDER BY oi.id) AS names,
+    ARRAY_AGG(oi.colours     ORDER BY oi.id) AS colours
+  FROM orders o
+  LEFT JOIN users u       ON u.id  = o.user_id
+  LEFT JOIN order_items oi ON oi.order_id = o.id
+  WHERE o.status != 'pending_payment'
+  GROUP BY o.id, u.name, u.email, o.guest_email
+  ORDER BY o.created_at DESC LIMIT 10
+`);
+
+// Helpers
+function fmt(cents: number | string) { return `€${(Number(cents) / 100).toFixed(2)}`; }
+function ref(id: number)             { return `#TB${String(id).padStart(5, '0')}`; }
+function ago(d: Date) {
+  const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+function fmtTime(d: Date) {
+  return new Date(d).toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+}
+function fmtDate(d: Date) {
+  return new Date(d).toLocaleDateString('en-IE', { day:'2-digit', month:'short' });
+}
+
+const hour = new Date().getHours();
+const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+const todayVsYesterday = Number(s.orders_today) - Number(s.orders_yesterday);
+
+const BADGE: Record<string, string> = {
+  paid:'paid', printing:'printing', dispatched:'dispatched',
+  delivered:'delivered', cancelled:'cancelled', refunded:'refunded',
+};
+
+const PIPELINE_STEPS = [
+  { key: 'paid',       label: 'Awaiting print', color: '#d97706', bg: '#fef3c7' },
+  { key: 'printing',   label: 'Printing',        color: '#2563eb', bg: '#dbeafe' },
+  { key: 'dispatched', label: 'Dispatched',       color: '#7c3aed', bg: '#f3e8ff' },
+  { key: 'delivered',  label: 'Delivered',        color: '#16a34a', bg: '#dcfce7' },
+];
+---
+
+<AdminLayout title="Dashboard" currentPage="dashboard" admin={admin}>
+
+  <!-- Greeting -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px">
+    <div>
+      <h1 style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-xl);color:var(--ink);margin:0">{greeting}, {admin.name.split(' ')[0]} 👋</h1>
+      <p style="font-size:var(--fs-sm);color:var(--ink-60);margin:3px 0 0">{new Date().toLocaleDateString('en-IE',{weekday:'long',day:'numeric',month:'long'})}</p>
+    </div>
+    <button onclick="window.location.reload()" class="adm-btn adm-btn--ghost adm-btn--sm">↻ Refresh</button>
+  </div>
+
+  <!-- Needs attention banner (only when orders waiting) -->
+  {attentionRes.rows.length > 0 && (
+    <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fbbf24;border-radius:var(--r);padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;background:#f59e0b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🖨️</div>
+        <div>
+          <div style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-md);color:#92400e">
+            {attentionRes.rows.length} order{attentionRes.rows.length > 1 ? 's' : ''} waiting to print
+          </div>
+          <div style="font-size:var(--fs-xs);color:#a16207">Oldest: {ago(attentionRes.rows[0].created_at)}</div>
+        </div>
+      </div>
+      <a href="/admin/print-queue" class="adm-btn" style="background:#f59e0b;color:#fff">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Open Print Queue
+      </a>
+    </div>
+  )}
+
+  <!-- Stat cards -->
+  <div class="db-stats">
+    <!-- Orders today -->
+    <div class="db-stat-card" style="--accent:#2563eb;--accent-soft:#dbeafe">
+      <div class="db-stat-icon" style="background:var(--accent-soft);color:var(--accent)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      </div>
+      <div class="db-stat-body">
+        <div class="db-stat-label">Orders today</div>
+        <div class="db-stat-value" style="color:var(--accent)">{s.orders_today}</div>
+        <div class="db-stat-sub">
+          {fmt(s.revenue_today)} revenue
+          {todayVsYesterday !== 0 && (
+            <span style={`color:${todayVsYesterday > 0 ? '#16a34a' : '#dc2626'};margin-left:6px;font-weight:700`}>
+              {todayVsYesterday > 0 ? '▲' : '▼'} {Math.abs(todayVsYesterday)} vs yesterday
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <!-- This week -->
+    <div class="db-stat-card" style="--accent:#16a34a;--accent-soft:#dcfce7">
+      <div class="db-stat-icon" style="background:var(--accent-soft);color:var(--accent)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div class="db-stat-body">
+        <div class="db-stat-label">This week</div>
+        <div class="db-stat-value" style="color:var(--accent)">{fmt(s.revenue_week)}</div>
+        <div class="db-stat-sub">{s.orders_week} orders · {fmt(s.revenue_month)} this month</div>
+      </div>
+    </div>
+
+    <!-- Awaiting print -->
+    <div class="db-stat-card" style={`--accent:#d97706;--accent-soft:#fef3c7;${Number(s.pending_print) > 0 ? 'border-color:#fbbf24' : ''}`}>
+      <div class="db-stat-icon" style="background:var(--accent-soft);color:var(--accent)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </div>
+      <div class="db-stat-body">
+        <div class="db-stat-label">Awaiting print</div>
+        <div class="db-stat-value" style="color:var(--accent)">{s.pending_print}</div>
+        <div class="db-stat-sub">paid, not started</div>
+      </div>
+    </div>
+
+    <!-- Printing now -->
+    <div class="db-stat-card" style="--accent:#7c3aed;--accent-soft:#f3e8ff">
+      <div class="db-stat-icon" style="background:var(--accent-soft);color:var(--accent)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="db-stat-body">
+        <div class="db-stat-label">Printing now</div>
+        <div class="db-stat-value" style="color:var(--accent)">{s.in_progress}</div>
+        <div class="db-stat-sub">{s.orders_total} orders all time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Revenue chart + Pipeline -->
+  <div class="db-row2">
+
+    <!-- 7-day revenue chart -->
+    <div class="adm-card" style="flex:2">
+      <div class="adm-card-hd"><span class="adm-card-title">Revenue — last 7 days</span></div>
+      <div style="padding:20px 16px 10px">
+        <div style="display:flex;align-items:flex-end;gap:6px;height:120px">
+          {chartDays.map(day => {
+            const pct = maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0;
+            const isToday = day.label === 'Today';
+            return (
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">
+                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+                  <div
+                    title={`${day.label}: ${fmt(day.revenue)} (${day.orders} orders)`}
+                    style={`width:100%;height:${Math.max(pct,2)}%;background:${isToday ? '#2563eb' : '#bfdbfe'};border-radius:4px 4px 0 0;transition:opacity .15s;cursor:default`}
+                  ></div>
+                </div>
+                <div style={`font-size:0.6rem;font-weight:${isToday?'800':'600'};color:${isToday?'var(--blue)':'var(--ink-60)'};white-space:nowrap`}>{day.label}</div>
+                {day.revenue > 0 && <div style="font-size:0.58rem;color:var(--ink-60)">{fmt(day.revenue)}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    <!-- Order pipeline -->
+    <div class="adm-card" style="flex:1;min-width:200px">
+      <div class="adm-card-hd"><span class="adm-card-title">Order pipeline</span></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        {PIPELINE_STEPS.map(step => {
+          const count = pipeline[step.key] ?? 0;
+          const total = Object.values(pipeline).reduce((a,b) => a+b, 0) || 1;
+          const pct   = Math.round((count / total) * 100);
+          return (
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style={`font-size:var(--fs-xs);font-weight:700;color:${step.color}`}>{step.label}</span>
+                <span style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-md)">{count}</span>
+              </div>
+              <div style="height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden">
+                <div style={`height:100%;width:${pct}%;background:${step.color};border-radius:999px;transition:width .3s`}></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Print queue + Popular names -->
+  <div class="db-row2" style="margin-bottom:18px">
+
+    <!-- Print queue -->
+    <div class="adm-card" style="flex:2">
+      <div class="adm-card-hd">
+        <div>
+          <span class="adm-card-title">
+            {attentionRes.rows.length > 0 ? `🖨️ Needs printing` : 'Print queue'}
+          </span>
+          {attentionRes.rows.length > 0 && (
+            <div style="font-size:var(--fs-xs);color:#a16207;margin-top:2px">{attentionRes.rows.length} order{attentionRes.rows.length > 1 ? 's' : ''} waiting</div>
+          )}
+        </div>
+        <a href="/admin/print-queue" class="adm-btn adm-btn--ghost adm-btn--sm">Full queue →</a>
+      </div>
+
+      {attentionRes.rows.length === 0 ? (
+        <div class="pq-empty">
+          <div class="pq-empty-icon">🎉</div>
+          <div class="pq-empty-title">All caught up!</div>
+          <div class="pq-empty-sub">Nothing waiting to be printed.</div>
+        </div>
+      ) : (
+        <div>
+          {attentionRes.rows.map(o => {
+            const allColours = (o.colours ?? []).flatMap((c: string[]) => Array.isArray(c) ? c : []);
+            const uniqueColours = [...new Set(allColours)].slice(0, 8);
+            return (
+              <div class="pq-row">
+                <div class="pq-row-main">
+                  <div class="pq-row-top">
+                    <a href={`/admin/orders/${o.id}`} class="pq-ref">{ref(o.id)}</a>
+                    <span class="pq-customer">{o.customer_name}</span>
+                    <span class="pq-age">{ago(o.created_at)}</span>
+                  </div>
+                  <div class="pq-names">{o.names.filter(Boolean).join(' · ')}</div>
+                  {uniqueColours.length > 0 && (
+                    <div class="pq-swatches">
+                      {uniqueColours.map((c: string) => (
+                        <span class="pq-swatch" style={`background:${c}`} title={c}></span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <form method="POST" action={`/api/admin/orders/${o.id}/status`}>
+                  <input type="hidden" name="status" value="printing" />
+                  <button type="submit" class="adm-btn adm-btn--green adm-btn--sm">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Start Printing
+                  </button>
+                </form>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+
+    <!-- Popular names -->
+    <div class="adm-card" style="flex:1;min-width:200px">
+      <div class="adm-card-hd"><span class="adm-card-title">Popular names</span></div>
+      {namesRes.rows.length === 0 ? (
+        <div class="adm-empty" style="padding:32px">No orders yet.</div>
+      ) : (
+        <div class="names-list">
+          {namesRes.rows.map((n, i) => {
+            const medals = ['🥇', '🥈', '🥉'];
+            const barColors = ['#2563eb', '#16a34a', '#7c3aed', '#d97706', '#0891b2', '#db2777', '#64748b', '#0f172a'];
+            const pct = Math.round((Number(n.count) / maxNameCount) * 100);
+            return (
+              <div class="name-row">
+                <div class="name-rank">{medals[i] ?? <span class="name-rank-num">{i + 1}</span>}</div>
+                <div class="name-body">
+                  <div class="name-row-top">
+                    <span class="name-text">{n.custom_name}</span>
+                    <span class="name-count">{n.count}×</span>
+                  </div>
+                  <div class="name-bar-track">
+                    <div class="name-bar-fill" style={`width:${pct}%;background:${barColors[i] ?? '#94a3b8'}`}></div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- Recent orders (full width) -->
+  <div class="adm-card">
+    <div class="adm-card-hd">
+      <span class="adm-card-title">Recent orders</span>
+      <a href="/admin/orders" class="adm-btn adm-btn--ghost adm-btn--sm">All orders →</a>
+    </div>
+    {recentRes.rows.length === 0 ? (
+      <div class="adm-empty" style="padding:40px">No orders yet.</div>
+    ) : (
+      <div class="ro-table-wrap">
+        <table class="ro-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Colours</th>
+              <th>Total</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentRes.rows.map(o => {
+              const cfg = {
+                paid:       { color: '#92400e', bg: '#fef3c7', dot: '#d97706', label: 'Awaiting print' },
+                printing:   { color: '#1e40af', bg: '#dbeafe', dot: '#2563eb', label: 'Printing'       },
+                dispatched: { color: '#5b21b6', bg: '#f3e8ff', dot: '#7c3aed', label: 'Dispatched'     },
+                delivered:  { color: '#166534', bg: '#dcfce7', dot: '#16a34a', label: 'Delivered'      },
+                cancelled:  { color: '#991b1b', bg: '#fee2e2', dot: '#dc2626', label: 'Cancelled'      },
+                refunded:   { color: '#92400e', bg: '#fef3c7', dot: '#d97706', label: 'Refunded'       },
+              }[o.status] ?? { color:'#64748b', bg:'#f1f5f9', dot:'#94a3b8', label: o.status };
+              const allColours = (o.colours ?? []).flatMap((c: string[]) => Array.isArray(c) ? c : []);
+              const uniqueColours = [...new Set(allColours)].slice(0, 6);
+              return (
+                <tr class="ro-tr">
+                  <td>
+                    <a href={`/admin/orders/${o.id}`} class="ro-ref">{ref(o.id)}</a>
+                  </td>
+                  <td>
+                    <span class="ro-customer">{o.customer_name}</span>
+                  </td>
+                  <td>
+                    <span class="ro-names">{(o.names ?? []).filter(Boolean).join(' · ')}</span>
+                  </td>
+                  <td>
+                    <div class="ro-swatches">
+                      {uniqueColours.map((c: string) => (
+                        <span class="ro-swatch" style={`background:${c}`} title={c}></span>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="ro-total">{fmt(o.total)}</span>
+                  </td>
+                  <td>
+                    <span class="ro-time">{fmtDate(o.created_at)}</span>
+                    <span class="ro-time-sub">{fmtTime(o.created_at)}</span>
+                  </td>
+                  <td>
+                    <span class="ro-pill" style={`background:${cfg.bg};color:${cfg.color}`}>
+                      <span style={`width:6px;height:6px;border-radius:50%;background:${cfg.dot};flex-shrink:0;display:inline-block`}></span>
+                      {cfg.label}
+                    </span>
+                  </td>
+                  <td>
+                    <a href={`/admin/orders/${o.id}`} class="adm-btn adm-btn--ghost adm-btn--sm">View →</a>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</AdminLayout>
+
+<style>
+.db-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+@media (max-width: 1100px) { .db-stats { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 600px)  { .db-stats { grid-template-columns: 1fr 1fr; } }
+
+.db-stat-card {
+  background: var(--aw);
+  border: 1px solid var(--ab);
+  border-radius: var(--r);
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: box-shadow .15s;
+}
+.db-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+.db-stat-icon {
+  width: 42px; height: 42px; border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.db-stat-body { flex: 1; min-width: 0; }
+.db-stat-label { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-60); margin-bottom: 4px; }
+.db-stat-value { font-family: var(--font-d); font-weight: 800; font-size: 1.8rem; line-height: 1; margin-bottom: 4px; }
+.db-stat-sub   { font-size: var(--fs-xs); color: var(--ink-60); }
+
+.db-row2 {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.db-row2 > * { min-width: 0; }
+@media (max-width: 800px) { .db-row2 { flex-direction: column; } }
+
+/* ── Print queue ── */
+.pq-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 44px 24px; text-align: center;
+  background: linear-gradient(135deg, #f0fdf4, #fff);
+}
+.pq-empty-icon  { font-size: 36px; margin-bottom: 10px; }
+.pq-empty-title { font-family: var(--font-d); font-weight: 800; font-size: 1.05rem; color: var(--ink); margin-bottom: 4px; }
+.pq-empty-sub   { font-size: 0.85rem; color: var(--ink-60); }
+
+.pq-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-bottom: 1px solid var(--ab);
+  transition: background .1s;
+}
+.pq-row:last-child { border-bottom: none; }
+.pq-row:hover { background: #fffbeb; }
+.pq-row-main  { flex: 1; min-width: 0; }
+.pq-row-top   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.pq-ref       { font-family: var(--font-d); font-weight: 800; font-size: 0.95rem; color: var(--blue); text-decoration: none; }
+.pq-ref:hover { text-decoration: underline; }
+.pq-customer  { font-size: 0.8rem; color: var(--ink-60); }
+.pq-age       { font-size: 0.75rem; color: var(--ink-60); margin-left: auto; }
+.pq-names     { font-family: var(--font-d); font-weight: 700; font-size: 1rem; color: var(--ink); margin-bottom: 7px; }
+.pq-swatches  { display: flex; flex-wrap: wrap; gap: 4px; }
+.pq-swatch    { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,.12); display: inline-block; flex-shrink: 0; }
+
+/* ── Popular names ── */
+.names-list { padding: 8px 0; }
+.name-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ab);
+  transition: background .1s;
+}
+.name-row:last-child { border-bottom: none; }
+.name-row:hover { background: #f8fafc; }
+.name-rank { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.name-rank-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #f1f5f9; font-size: 0.7rem; font-weight: 800; color: var(--ink-60);
+}
+.name-body { flex: 1; min-width: 0; }
+.name-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.name-text  { font-family: var(--font-d); font-weight: 800; font-size: 1rem; color: var(--ink); }
+.name-count { font-size: 0.78rem; font-weight: 700; color: var(--ink-60); }
+.name-bar-track { height: 5px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+.name-bar-fill  { height: 100%; border-radius: 999px; transition: width .4s ease; }
+
+/* ── Recent orders table ── */
+.ro-table-wrap { overflow-x: auto; }
+.ro-table {
+  width: 100%; border-collapse: collapse;
+}
+.ro-table thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-60);
+  background: #f8fafc;
+  border-bottom: 1.5px solid var(--ab);
+  white-space: nowrap;
+}
+.ro-table thead th:first-child { padding-left: 20px; }
+.ro-table thead th:last-child  { padding-right: 20px; }
+.ro-tr { border-bottom: 1px solid var(--ab); transition: background .1s; }
+.ro-tr:last-child { border-bottom: none; }
+.ro-tr:hover { background: #f8fafc; }
+.ro-tr td { padding: 13px 16px; vertical-align: middle; }
+.ro-tr td:first-child { padding-left: 20px; }
+.ro-tr td:last-child  { padding-right: 20px; }
+
+.ro-ref      { font-family: var(--font-d); font-weight: 800; font-size: 0.97rem; color: var(--blue); text-decoration: none; white-space: nowrap; }
+.ro-ref:hover { text-decoration: underline; }
+.ro-customer { font-size: 0.88rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.ro-names    { font-family: var(--font-d); font-weight: 700; font-size: 0.9rem; color: var(--ink); }
+.ro-swatches { display: flex; flex-wrap: wrap; gap: 3px; max-width: 90px; }
+.ro-swatch   { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); display: inline-block; flex-shrink: 0; }
+.ro-total    { font-family: var(--font-d); font-weight: 800; font-size: 1rem; color: var(--ink); white-space: nowrap; }
+.ro-time     { display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.ro-time-sub { display: block; font-size: 0.72rem; color: var(--ink-60); margin-top: 1px; }
+.ro-pill     { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+</style>

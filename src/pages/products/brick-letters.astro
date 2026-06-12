@@ -1,13 +1,40 @@
 ---
 import Base from '../../layouts/Base.astro';
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Personalised Brick Name Letters",
+  "description": "Chunky personalised 3D brick name letters, compatible with standard building brick systems including LEGO®. 3D printed in Ireland, ships in 3 days.",
+  "image": "https://togblocks.ie/products/luca-letters.jpg",
+  "brand": { "@type": "Brand", "name": "TógBlocks" },
+  "sku": "BRICK-LETTERS",
+  "offers": {
+    "@type": "Offer",
+    "url": "https://togblocks.ie/products/brick-letters",
+    "priceCurrency": "EUR",
+    "price": "7.00",
+    "priceValidUntil": "2027-12-31",
+    "availability": "https://schema.org/InStock",
+    "seller": { "@type": "Organization", "name": "TógBlocks" }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "600"
+  }
+};
 ---
 
 <Base
   title="Brick Name Letters — TógBlocks"
-  description="Personalised 3D LEGO-compatible brick name letters. Each letter a chunky solid block in your chosen colour. 3D printed in Ireland, ships in 3 days."
+  description="Personalised 3D brick name letters, compatible with LEGO® and standard building bricks. Each letter a chunky solid block in your chosen colour. 3D printed in Ireland, ships in 3 days."
   currentPage="/products/brick-letters"
   ogImage="/products/luca-letters.jpg"
 >
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
+  </Fragment>
 
   <article>
     <!-- ============ BREADCRUMB + HERO ============ -->
@@ -54,7 +81,7 @@ import Base from '../../layouts/Base.astro';
               <span class="muted" style="font-size:var(--fs-sm)">€7 first letter · €5 each additional</span>
             </div>
             <p class="pdp-desc">
-              Chunky 3D letters built from genuine LEGO-compatible bricks. Each letter stands freely on any surface
+              Chunky 3D letters built with standard stud spacing. Each letter stands freely on any surface
               — nursery shelf, bedroom desk, cake topper. Tap any letter in the builder to recolour just that one.
             </p>
             <ul class="spec-list">

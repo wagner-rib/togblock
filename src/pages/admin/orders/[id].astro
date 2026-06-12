@@ -1,0 +1,696 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../../lib/adminAuth';
+import { query } from '../../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin/orders');
+
+const orderId = Number(Astro.params.id);
+if (!orderId || isNaN(orderId)) return Astro.redirect('/admin/orders');
+
+const flash = Astro.url.searchParams.get('flash');
+
+const orderRes = await query<{
+  id: number; status: string; total: number; subtotal: number; shipping_cost: number;
+  created_at: Date; updated_at: Date; tracking_number: string | null;
+  tracking_carrier: string | null; admin_notes: string | null;
+  guest_email: string | null; stripe_pi_id: string | null;
+  customer_name: string; customer_email: string | null; user_id: number | null;
+}>(`
+  SELECT o.id, o.status, o.total, o.subtotal, o.shipping_cost, o.created_at, o.updated_at,
+    o.tracking_number, o.tracking_carrier, o.admin_notes, o.guest_email, o.stripe_pi_id,
+    COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
+    COALESCE(u.email, o.guest_email)         AS customer_email,
+    u.id AS user_id
+  FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = $1
+`, [orderId]);
+
+if (!orderRes.rows.length) return Astro.redirect('/admin/orders');
+const order = orderRes.rows[0];
+
+const [itemsRes, addrRes, logRes, msgRes] = await Promise.all([
+  query<{ product_type: string; custom_name: string; colours: string[]; quantity: number; unit_price: number }>(
+    'SELECT product_type, custom_name, colours, quantity, unit_price FROM order_items WHERE order_id = $1 ORDER BY id',
+    [orderId]
+  ),
+  query<{ name: string; line1: string; line2: string | null; city: string; county: string | null; postcode: string | null; country: string }>(
+    'SELECT a.name, a.line1, a.line2, a.city, a.county, a.postcode, a.country FROM orders o JOIN addresses a ON a.id = o.address_id WHERE o.id = $1',
+    [orderId]
+  ),
+  query<{ from_status: string | null; to_status: string; note: string | null; created_at: Date; admin_name: string | null }>(`
+    SELECT sl.from_status, sl.to_status, sl.note, sl.created_at, u.name AS admin_name
+    FROM order_status_log sl LEFT JOIN users u ON u.id = sl.changed_by
+    WHERE sl.order_id = $1 ORDER BY sl.created_at DESC
+  `, [orderId]),
+  query<{ id: number; subject: string | null; body: string; sent_at: Date; admin_name: string | null }>(`
+    SELECT m.id, m.subject, m.body, m.sent_at, u.name AS admin_name
+    FROM order_messages m LEFT JOIN users u ON u.id = m.sent_by
+    WHERE m.order_id = $1 ORDER BY m.sent_at ASC
+  `, [orderId]),
+]);
+
+const addr  = addrRes.rows[0];
+const items = itemsRes.rows;
+
+function fmt(c: number) { return `€${(c / 100).toFixed(2)}`; }
+function ref(id: number) { return `#TB${String(id).padStart(5,'0')}`; }
+function fmtDt(d: Date)  { return new Date(d).toLocaleString('en-IE', { dateStyle:'medium', timeStyle:'short' }); }
+function fmtDate(d: Date){ return new Date(d).toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
+
+const orderRef = ref(order.id);
+
+const STEPS = [
+  { key: 'paid',       label: 'Payment',    sub: 'Received',    icon: '💳' },
+  { key: 'printing',   label: 'Printing',   sub: 'In progress', icon: '🖨️' },
+  { key: 'dispatched', label: 'Dispatched', sub: 'On its way',  icon: '📦' },
+  { key: 'delivered',  label: 'Delivered',  sub: 'Complete',    icon: '✅' },
+];
+const stepIdx = STEPS.findIndex(s => s.key === order.status);
+
+const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string; dot: string }> = {
+  paid:       { color: '#92400e', bg: '#fef3c7', border: '#fbbf24', dot: '#d97706', label: 'Awaiting Print' },
+  printing:   { color: '#1e40af', bg: '#dbeafe', border: '#93c5fd', dot: '#2563eb', label: 'Printing'       },
+  dispatched: { color: '#5b21b6', bg: '#f3e8ff', border: '#c4b5fd', dot: '#7c3aed', label: 'Dispatched'     },
+  delivered:  { color: '#166534', bg: '#dcfce7', border: '#86efac', dot: '#16a34a', label: 'Delivered'      },
+  cancelled:  { color: '#991b1b', bg: '#fee2e2', border: '#fca5a5', dot: '#dc2626', label: 'Cancelled'      },
+  refunded:   { color: '#92400e', bg: '#fef3c7', border: '#fbbf24', dot: '#d97706', label: 'Refunded'       },
+};
+const sc = STATUS_CONFIG[order.status] ?? { color:'#64748b', bg:'#f1f5f9', border:'#cbd5e1', dot:'#94a3b8', label: order.status };
+
+const CARRIER_LABELS: Record<string, string> = { an_post:'An Post', dhl:'DHL', ups:'UPS', other:'Other' };
+
+const FLASH_MSGS: Record<string, { msg: string; ok: boolean }> = {
+  status_updated: { msg: '✓ Status updated.',                           ok: true  },
+  dispatched:     { msg: '✓ Order dispatched — customer emailed.',      ok: true  },
+  message_sent:   { msg: '✓ Message sent to customer.',                 ok: true  },
+  notes_saved:    { msg: '✓ Notes saved.',                              ok: true  },
+  error:          { msg: '✗ Something went wrong. Please try again.',   ok: false },
+};
+const flashData = flash ? FLASH_MSGS[flash] : null;
+
+const addrCopyText = addr
+  ? [addr.name, addr.line1, addr.line2, addr.city, addr.county, addr.postcode, addr.country].filter(Boolean).join('\n')
+  : '';
+
+const isClosed = order.status === 'cancelled' || order.status === 'refunded';
+---
+
+<AdminLayout title={`Order ${orderRef}`} currentPage="orders" admin={admin}>
+  <div slot="actions" style="display:flex;gap:8px">
+    <a href="/admin/orders" class="adm-btn adm-btn--ghost adm-btn--sm">← Back to orders</a>
+    {order.stripe_pi_id && (
+      <a href={`https://dashboard.stripe.com/payments/${order.stripe_pi_id}`} target="_blank" rel="noopener" class="adm-btn adm-btn--ghost adm-btn--sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Stripe
+      </a>
+    )}
+  </div>
+
+  <!-- Flash -->
+  {flashData && (
+    <div class={`adm-flash adm-flash--${flashData.ok ? 'ok' : 'err'}`}>{flashData.msg}</div>
+  )}
+
+  <!-- ════ ORDER HERO ════ -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-ref">{orderRef}</div>
+      <div class="hero-meta">
+        <span class="hero-pill" style={`background:${sc.bg};color:${sc.color};border-color:${sc.border}`}>
+          <span style={`width:7px;height:7px;border-radius:50%;background:${sc.dot};flex-shrink:0;display:inline-block`}></span>
+          {sc.label}
+        </span>
+        <span class="hero-sep">·</span>
+        <span class="hero-date">{fmtDate(order.created_at)}</span>
+        <span class="hero-sep">·</span>
+        <span class="hero-who">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          {order.customer_name}
+        </span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-total">{fmt(order.total)}</div>
+      <div class="hero-total-label">{items.length} item{items.length !== 1 ? 's' : ''}</div>
+    </div>
+  </div>
+
+  <!-- ════ STATUS STEPPER ════ -->
+  {!isClosed ? (
+    <div class="adm-card stepper-card">
+      <div class="stepper">
+        {STEPS.map((step, i) => {
+          const done    = i < stepIdx;
+          const current = i === stepIdx;
+          const future  = i > stepIdx;
+          return (
+            <div class={`step ${done ? 'step--done' : current ? 'step--current' : 'step--future'}`}>
+              {i > 0 && <div class={`step-track ${(done || current) ? 'step-track--filled' : ''}`}></div>}
+              <div class="step-body">
+                <div class="step-node">
+                  {done
+                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <span class="step-icon">{step.icon}</span>}
+                </div>
+                <div class="step-text">
+                  <div class="step-label">{step.label}</div>
+                  <div class="step-sub">{step.sub}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <!-- CTA row -->
+      <div class="stepper-actions">
+        {order.status === 'paid' && (
+          <form method="POST" action={`/api/admin/orders/${order.id}/status`}>
+            <input type="hidden" name="status" value="printing" />
+            <button type="submit" class="adm-btn adm-btn--green">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Start Printing
+            </button>
+          </form>
+        )}
+        {order.status === 'dispatched' && (
+          <form method="POST" action={`/api/admin/orders/${order.id}/status`}>
+            <input type="hidden" name="status" value="delivered" />
+            <button type="submit" class="adm-btn adm-btn--green">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Mark as Delivered
+            </button>
+          </form>
+        )}
+        {(order.status === 'paid' || order.status === 'printing') && (
+          <form method="POST" action={`/api/admin/orders/${order.id}/status`}
+            onsubmit="return confirm('Cancel this order? This cannot be undone.')">
+            <input type="hidden" name="status" value="cancelled" />
+            <button type="submit" class="adm-btn adm-btn--ghost" style="color:#dc2626;border-color:#fca5a5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Cancel Order
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div class="closed-banner" style={`background:${sc.bg};border-color:${sc.border}`}>
+      <div class="closed-icon">{order.status === 'cancelled' ? '✕' : '↩'}</div>
+      <div>
+        <div class="closed-title" style={`color:${sc.color}`}>Order {order.status}</div>
+        <div class="closed-sub">Last updated {fmtDt(order.updated_at)}</div>
+      </div>
+    </div>
+  )}
+
+  <!-- ════ MAIN GRID ════ -->
+  <div class="od-grid">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div class="od-main">
+
+      <!-- Items -->
+      <div class="adm-card section-card">
+        <div class="section-hd">
+          <div class="section-title">Items ordered</div>
+          <div class="section-badge">{items.length}</div>
+        </div>
+        <div class="items-list">
+          {items.map((item, idx) => (
+            <div class={`item-row ${idx < items.length - 1 ? 'item-row--border' : ''}`}>
+              <div class="item-swatch-bar">
+                {(item.colours || []).map((c: string) => (
+                  <span style={`flex:1;background:${c}`} title={c}></span>
+                ))}
+              </div>
+              <div class="item-body">
+                <div class="item-name">{item.custom_name}</div>
+                <div class="item-meta">
+                  {item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'}
+                  {item.quantity > 1 && <span class="item-qty">× {item.quantity}</span>}
+                </div>
+                <div class="item-colours">
+                  {(item.colours || []).map((c: string) => (
+                    <span class="colour-chip" style={`background:${c}`} title={c}></span>
+                  ))}
+                  <span class="colour-count">{(item.colours||[]).length} colour{(item.colours||[]).length !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <div class="item-price">
+                <div class="item-price-total">{fmt(item.unit_price * item.quantity)}</div>
+                {item.quantity > 1 && <div class="item-price-each">{fmt(item.unit_price)} each</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <!-- Totals -->
+        <div class="order-totals">
+          <div class="total-row">
+            <span>Subtotal</span>
+            <span>{fmt(order.subtotal)}</span>
+          </div>
+          <div class="total-row">
+            <span>Shipping</span>
+            <span>{order.shipping_cost === 0 ? <span class="free-badge">FREE</span> : fmt(order.shipping_cost)}</span>
+          </div>
+          <div class="total-row total-row--grand">
+            <span>Total</span>
+            <span class="grand-amount">{fmt(order.total)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dispatch form (printing only) -->
+      {order.status === 'printing' && (
+        <div class="adm-card section-card dispatch-card">
+          <div class="dispatch-hd">
+            <div class="dispatch-icon">📦</div>
+            <div>
+              <div class="dispatch-title">Ready to dispatch?</div>
+              <div class="dispatch-sub">Adds tracking info and emails the customer automatically.</div>
+            </div>
+          </div>
+          <div class="dispatch-body">
+            <form method="POST" action={`/api/admin/orders/${order.id}/dispatch`}>
+              <div class="dispatch-fields">
+                <div>
+                  <label class="adm-label">Carrier</label>
+                  <select class="adm-input adm-select" name="carrier">
+                    <option value="an_post">🇮🇪 An Post</option>
+                    <option value="dhl">DHL Express</option>
+                    <option value="ups">UPS</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="adm-label">Tracking number <span style="text-transform:none;font-weight:400;letter-spacing:0">(optional)</span></label>
+                  <input class="adm-input" name="tracking_number" placeholder="e.g. IE123456789IE" style="font-family:monospace;font-size:0.95rem" />
+                </div>
+              </div>
+              <button type="submit" class="adm-btn adm-btn--primary dispatch-btn">
+                📦  Mark dispatched &amp; email customer
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <!-- Tracking info (dispatched) -->
+      {order.status === 'dispatched' && order.tracking_number && (
+        <div class="adm-card section-card tracking-card">
+          <div class="section-hd"><div class="section-title">📦 Tracking info</div></div>
+          <div class="tracking-body">
+            <div class="tracking-field">
+              <div class="tracking-label">Carrier</div>
+              <div class="tracking-value">{CARRIER_LABELS[order.tracking_carrier ?? ''] ?? order.tracking_carrier ?? '—'}</div>
+            </div>
+            <div class="tracking-field tracking-field--grow">
+              <div class="tracking-label">Tracking number</div>
+              <div class="tracking-number">{order.tracking_number}</div>
+            </div>
+            <button type="button" class="adm-btn adm-btn--ghost"
+              onclick={`navigator.clipboard.writeText('${order.tracking_number}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1600)})`}>
+              Copy
+            </button>
+          </div>
+        </div>
+      )}
+
+      <!-- Customer messages -->
+      <div class="adm-card section-card">
+        <div class="section-hd">
+          <div class="section-title">✉️ Messages to customer</div>
+          {msgRes.rows.length > 0 && <div class="section-badge">{msgRes.rows.length}</div>}
+        </div>
+
+        {msgRes.rows.length > 0 && (
+          <div class="msgs-list">
+            {msgRes.rows.map(m => (
+              <div class="msg-item">
+                <div class="msg-icon">✉</div>
+                <div class="msg-content">
+                  <div class="msg-subject">{m.subject}</div>
+                  <div class="msg-body">{m.body}</div>
+                  <div class="msg-meta">{fmtDt(m.sent_at)}{m.admin_name ? ` · ${m.admin_name}` : ''}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div class="compose-wrap">
+          <div class="compose-label">Send a message</div>
+          <form method="POST" action={`/api/admin/orders/${order.id}/message`} class="compose-form">
+            <div>
+              <label class="adm-label">Subject</label>
+              <select class="adm-input adm-select" name="subject" id="msg-subject">
+                <option value={`Update on your order ${orderRef}`}>Update on your order {orderRef}</option>
+                <option value={`Your TógBlocks order ${orderRef} — shipping update`}>Shipping update</option>
+                <option value="A quick note about your TógBlocks order">Quick note</option>
+                <option value="__custom__">Custom subject…</option>
+              </select>
+            </div>
+            <div id="custom-subject-wrap" style="display:none">
+              <label class="adm-label">Custom subject</label>
+              <input class="adm-input" name="custom_subject" placeholder="Type subject line…" />
+            </div>
+            <div>
+              <label class="adm-label">Message body</label>
+              <textarea class="adm-input adm-textarea" name="body" rows="5"
+                placeholder={`Hi ${order.customer_name},\n\n`} required style="min-height:120px;line-height:1.6"></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button type="submit" class="adm-btn adm-btn--primary">
+                Send message
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT SIDEBAR ── -->
+    <div class="od-sidebar">
+
+      <!-- Customer card -->
+      <div class="adm-card section-card">
+        <div class="section-hd"><div class="section-title">Customer</div></div>
+        <div class="cust-body">
+          <div class="cust-avatar-row">
+            <div class="cust-avatar">{order.customer_name.charAt(0).toUpperCase()}</div>
+            <div class="cust-info">
+              <div class="cust-name">{order.customer_name}</div>
+              {order.customer_email && (
+                <a href={`mailto:${order.customer_email}`} class="cust-email">{order.customer_email}</a>
+              )}
+              {!order.user_id && <span class="guest-tag">Guest checkout</span>}
+            </div>
+          </div>
+          <div class="cust-actions">
+            {order.user_id && (
+              <a href={`/admin/customers/${order.user_id}`} class="adm-btn adm-btn--ghost" style="flex:1;justify-content:center">
+                View profile →
+              </a>
+            )}
+            {order.customer_email && (
+              <a href={`mailto:${order.customer_email}`} class="adm-btn adm-btn--ghost" style="flex:1;justify-content:center">
+                ✉ Email
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery address -->
+      {addr && (
+        <div class="adm-card section-card">
+          <div class="section-hd">
+            <div class="section-title">Delivery address</div>
+            <button type="button" class="adm-btn adm-btn--ghost adm-btn--sm"
+              onclick={`navigator.clipboard.writeText(${JSON.stringify(addrCopyText)}).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1600)})`}>
+              Copy
+            </button>
+          </div>
+          <div class="addr-body">
+            <div class="addr-name">{addr.name}</div>
+            <div class="addr-line">{addr.line1}</div>
+            {addr.line2 && <div class="addr-line">{addr.line2}</div>}
+            <div class="addr-line">{addr.city}{addr.county ? `, ${addr.county}` : ''}</div>
+            {addr.postcode && <div class="addr-line">{addr.postcode}</div>}
+            <div class="addr-country">{addr.country}</div>
+          </div>
+        </div>
+      )}
+
+      <!-- Private notes -->
+      <div class="adm-card section-card">
+        <div class="section-hd">
+          <div class="section-title">🔒 Private notes</div>
+        </div>
+        <div class="notes-body">
+          <form method="POST" action={`/api/admin/orders/${order.id}/notes`}>
+            <textarea class="adm-input adm-textarea" name="notes" rows="4"
+              placeholder="Internal notes — never shown to customer…"
+              style="line-height:1.6;font-size:var(--fs-sm);min-height:90px">{order.admin_notes ?? ''}</textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:8px">
+              <button type="submit" class="adm-btn adm-btn--ghost adm-btn--sm">Save notes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Status history -->
+      <div class="adm-card section-card">
+        <div class="section-hd">
+          <div class="section-title">Order history</div>
+          {logRes.rows.length > 0 && <div class="section-badge">{logRes.rows.length}</div>}
+        </div>
+        <div class="history-body">
+          {logRes.rows.length === 0 ? (
+            <div class="history-empty">No history yet.</div>
+          ) : (
+            <div class="history-list">
+              {logRes.rows.map((l, i) => (
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  {i < logRes.rows.length - 1 && <div class="history-line"></div>}
+                  <div class="history-content">
+                    <div class="history-change">
+                      {l.from_status && <span class="history-from">{l.from_status}</span>}
+                      {l.from_status && <span class="history-arrow">→</span>}
+                      <span class="history-to">{l.to_status}</span>
+                    </div>
+                    <div class="history-time">{fmtDt(l.created_at)}</div>
+                    <div class="history-by">{l.admin_name ?? 'System'}</div>
+                    {l.note && <div class="history-note">{l.note}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+/* ── Flash ── */
+.adm-flash { margin-bottom: 20px; }
+
+/* ── Hero ── */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: #fff;
+  border: 1px solid var(--ab);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(15,23,42,.05);
+}
+.hero-ref {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 12px;
+  letter-spacing: -.01em;
+}
+.hero-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; border: 1.5px solid;
+}
+.hero-sep { color: var(--ab); font-weight: 700; }
+.hero-date { font-size: 0.88rem; color: var(--ink-60); }
+.hero-who { display: inline-flex; align-items: center; gap: 5px; font-size: 0.88rem; color: var(--ink-60); font-weight: 600; }
+.hero-right { text-align: right; flex-shrink: 0; }
+.hero-total { font-family: var(--font-d); font-weight: 800; font-size: 2.4rem; color: #2563eb; line-height: 1; }
+.hero-total-label { font-size: 0.78rem; color: var(--ink-60); margin-top: 5px; }
+
+/* ── Stepper ── */
+.stepper-card { margin-bottom: 20px; }
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  padding: 28px 28px 20px;
+  gap: 0;
+}
+.step { display: flex; align-items: flex-start; flex: 1; }
+.step:first-child { flex: 0 0 auto; }
+.step-track { flex: 1; height: 3px; background: #e2e8f0; margin-top: 20px; border-radius: 2px; }
+.step-track--filled { background: #2563eb; }
+.step-body { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 86px; }
+.step-node {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .2s;
+}
+.step--done .step-node    { background: #2563eb; color: #fff; }
+.step--current .step-node { background: #2563eb; color: #fff; box-shadow: 0 0 0 5px #bfdbfe; }
+.step--future .step-node  { background: #f1f5f9; border: 2px solid #e2e8f0; }
+.step-icon { font-size: 20px; line-height: 1; }
+.step-text { text-align: center; }
+.step-label { font-size: 0.78rem; font-weight: 800; color: var(--ink-60); line-height: 1.2; }
+.step--done .step-label    { color: #2563eb; }
+.step--current .step-label { color: #2563eb; }
+.step--future .step-label  { opacity: .5; }
+.step-sub { font-size: 0.68rem; color: var(--ink-60); margin-top: 2px; opacity: .7; }
+.step--current .step-sub { opacity: 1; color: #2563eb; }
+
+.stepper-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  padding: 0 28px 22px;
+  border-top: 1px solid var(--ab);
+  margin-top: 4px;
+  padding-top: 18px;
+}
+
+/* Closed banner */
+.closed-banner {
+  display: flex; align-items: center; gap: 16px;
+  border: 1.5px solid; border-radius: 12px;
+  padding: 18px 24px; margin-bottom: 20px;
+}
+.closed-icon { font-size: 28px; }
+.closed-title { font-family: var(--font-d); font-weight: 800; font-size: 1.1rem; }
+.closed-sub { font-size: var(--fs-sm); color: var(--ink-60); margin-top: 3px; }
+
+/* ── Grid ── */
+.od-grid { display: grid; grid-template-columns: 1.65fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 960px) { .od-grid { grid-template-columns: 1fr; } }
+
+/* ── Section cards ── */
+.section-card { margin-bottom: 18px; }
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; border-bottom: 1px solid var(--ab);
+}
+.section-title { font-family: var(--font-d); font-weight: 700; font-size: 1.05rem; }
+.section-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 22px; padding: 0 7px;
+  background: #f1f5f9; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700; color: var(--ink-60);
+}
+
+/* ── Items ── */
+.items-list {}
+.item-row { display: flex; align-items: stretch; }
+.item-row--border { border-bottom: 1px solid var(--ab); }
+.item-swatch-bar { display: flex; flex-direction: column; width: 10px; flex-shrink: 0; overflow: hidden; }
+.item-body { flex: 1; padding: 18px 16px 18px 18px; }
+.item-name { font-family: var(--font-d); font-weight: 800; font-size: 1.15rem; color: var(--ink); margin-bottom: 4px; }
+.item-meta { font-size: 0.82rem; color: var(--ink-60); margin-bottom: 10px; }
+.item-qty { display: inline-block; background: #f1f5f9; border-radius: 4px; padding: 1px 7px; font-weight: 700; margin-left: 6px; }
+.item-colours { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.colour-chip { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(0,0,0,.12); flex-shrink: 0; display: inline-block; }
+.colour-count { font-size: 0.75rem; color: var(--ink-60); margin-left: 2px; }
+.item-price { padding: 18px 20px 18px 0; text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding-top: 20px; }
+.item-price-total { font-family: var(--font-d); font-weight: 800; font-size: 1.1rem; }
+.item-price-each { font-size: 0.75rem; color: var(--ink-60); margin-top: 4px; }
+
+.order-totals { padding: 16px 22px; border-top: 1.5px solid var(--ab); display: flex; flex-direction: column; gap: 8px; }
+.total-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--ink-60); }
+.total-row--grand {
+  display: flex; justify-content: space-between;
+  padding-top: 12px; margin-top: 4px;
+  border-top: 1.5px solid var(--ab);
+  font-family: var(--font-d); font-weight: 800; font-size: 1.2rem; color: var(--ink);
+}
+.grand-amount { color: #2563eb; }
+.free-badge { background: #dcfce7; color: #15803d; padding: 2px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+
+/* ── Dispatch card ── */
+.dispatch-card { border: 1.5px solid #93c5fd !important; background: linear-gradient(135deg, #eff6ff 0%, #fff 60%) !important; }
+.dispatch-hd { display: flex; align-items: flex-start; gap: 14px; padding: 20px 24px 16px; border-bottom: 1px solid #dbeafe; }
+.dispatch-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
+.dispatch-title { font-family: var(--font-d); font-weight: 800; font-size: 1.1rem; color: #1d4ed8; }
+.dispatch-sub { font-size: 0.82rem; color: var(--ink-60); margin-top: 3px; }
+.dispatch-body { padding: 20px 24px; }
+.dispatch-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px; }
+.dispatch-btn { width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; gap: 10px; }
+
+/* ── Tracking ── */
+.tracking-card {}
+.tracking-body { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; padding: 18px 22px; }
+.tracking-field { display: flex; flex-direction: column; gap: 4px; }
+.tracking-field--grow { flex: 1; }
+.tracking-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-60); }
+.tracking-value { font-weight: 700; font-size: 1rem; }
+.tracking-number { font-family: monospace; font-weight: 700; font-size: 1.3rem; letter-spacing: .06em; color: var(--ink); }
+
+/* ── Messages ── */
+.msgs-list { padding: 14px 22px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid var(--ab); }
+.msg-item { display: flex; gap: 14px; }
+.msg-icon { width: 34px; height: 34px; border-radius: 50%; background: #f1f5f9; border: 1px solid var(--ab); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.msg-content { flex: 1; background: #f8fafc; border-radius: 0 10px 10px 10px; border: 1px solid var(--ab); padding: 12px 14px; }
+.msg-subject { font-weight: 700; font-size: 0.88rem; margin-bottom: 5px; }
+.msg-body { font-size: 0.85rem; color: var(--ink-60); white-space: pre-wrap; line-height: 1.6; }
+.msg-meta { font-size: 0.72rem; color: var(--ink-60); margin-top: 8px; }
+
+.compose-wrap { padding: 20px 22px; }
+.compose-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-60); margin-bottom: 14px; }
+.compose-form { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Customer card ── */
+.cust-body { padding: 20px 22px; }
+.cust-avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.cust-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-d); font-weight: 800; font-size: 1.4rem; color: #fff;
+  flex-shrink: 0;
+}
+.cust-info { min-width: 0; }
+.cust-name { font-family: var(--font-d); font-weight: 800; font-size: 1.05rem; color: var(--ink); }
+.cust-email { font-size: 0.82rem; color: #2563eb; word-break: break-all; display: block; margin-top: 2px; }
+.guest-tag { display: inline-block; background: #f1f5f9; border-radius: 4px; padding: 2px 7px; font-size: 0.7rem; font-weight: 700; color: var(--ink-60); margin-top: 4px; }
+.cust-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Address ── */
+.addr-body { padding: 16px 22px 20px; line-height: 1.8; }
+.addr-name { font-weight: 700; font-size: 0.95rem; color: var(--ink); }
+.addr-line { font-size: 0.9rem; color: var(--ink-60); }
+.addr-country { font-weight: 700; font-size: 0.9rem; color: var(--ink); margin-top: 2px; }
+
+/* ── Notes ── */
+.notes-body { padding: 16px 22px 20px; }
+
+/* ── History ── */
+.history-body { padding: 16px 22px 20px; }
+.history-empty { font-size: 0.85rem; color: var(--ink-60); }
+.history-list { display: flex; flex-direction: column; }
+.history-item { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
+.history-item:last-child { padding-bottom: 0; }
+.history-dot { width: 24px; height: 24px; border-radius: 50%; background: #2563eb; flex-shrink: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
+.history-dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; display: block; }
+.history-line { position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--ab); }
+.history-content { flex: 1; padding-top: 2px; }
+.history-change { font-size: 0.88rem; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.history-from { color: var(--ink-60); font-weight: 600; font-size: 0.82rem; }
+.history-arrow { color: var(--ink-60); }
+.history-to { color: #2563eb; }
+.history-time { font-size: 0.78rem; color: var(--ink-60); margin-top: 3px; }
+.history-by { font-size: 0.78rem; color: var(--ink-60); }
+.history-note { font-size: 0.78rem; color: var(--ink-60); font-style: italic; margin-top: 3px; }
+</style>
+
+<script>
+const sel  = document.getElementById('msg-subject') as HTMLSelectElement;
+const wrap = document.getElementById('custom-subject-wrap')!;
+sel?.addEventListener('change', () => {
+  wrap.style.display = sel.value === '__custom__' ? 'block' : 'none';
+});
+</script>

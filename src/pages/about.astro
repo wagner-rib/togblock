@@ -3,70 +3,1000 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base
-  title="About — TógBlocks"
-  description="TógBlocks started on a kitchen table in Galway. Custom brick names 3D printed in Ireland. Tóg is Irish for build."
+  title="Our Story — TógBlocks"
+  description="TógBlocks started on a kitchen table in Kildare. A niece, a name, and a 3D printer that never quite switched off. Here's how it happened."
   currentPage="/about"
 >
-  <div class="wrap-narrow">
-    <div class="page-hero">
-      <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Our story</span>
-      <h1>Small maker, big tower of bricks</h1>
-      <p class="lead"><em>Tóg</em> is the Irish for "build". It's also, handily, the start of "together".</p>
+
+  <!-- ═══ HERO ═══ -->
+  <div class="ab-hero">
+    <div class="ab-hero__studs" aria-hidden="true"></div>
+    <div class="ab-hero__body">
+      <p class="ab-eyebrow">❤️ Family made in Ireland</p>
+      <h1 class="ab-hero__title">
+        Built on a kitchen&nbsp;table.<br/>
+        <em>Grown with love.</em>
+      </h1>
+      <p class="ab-hero__sub">
+        <em>Tóg</em> is the Irish for "build." It's also, handily, the start of "together."<br/>
+        That's not a coincidence — it's the whole point.
+      </p>
     </div>
+    <div class="ab-hero__studs" aria-hidden="true"></div>
+
+    <span class="ab-blob ab-blob--1" aria-hidden="true">🏠</span>
+    <span class="ab-blob ab-blob--2" aria-hidden="true">🧱</span>
+    <span class="ab-blob ab-blob--3" aria-hidden="true">❤️</span>
+    <span class="ab-blob ab-blob--4" aria-hidden="true">✨</span>
   </div>
 
-  <section class="section-tight">
-    <div class="wrap-narrow stack">
-      <p style="font-size:var(--fs-md)">
-        TógBlocks started on a kitchen table in <strong>Galway</strong>, the way most good Irish notions do.
-        A niece wanted her name above her bed, the shop-bought one didn't come in her name, and an evening
-        of clicking bricks together turned into something we couldn't stop doing.
-      </p>
-      <p style="font-size:var(--fs-md)">
-        Now we build names for cots, cakes, desks and doors all over Ireland — each one 3D printed,
-        checked, and boxed with a bit of care. No minimum order, no two quite the same.
-      </p>
+  <!-- ═══ ORIGIN STORY ═══ -->
+  <section class="ab-origin">
+    <div class="wrap ab-origin__inner">
 
-      <div class="card" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;text-align:center;background:var(--green-soft);border:none">
-        <div data-about-bricks></div>
-        <p style="font-family:var(--font-display);font-weight:700;color:var(--green-deep);font-size:var(--fs-lg);max-width:24ch">
-          Genuinely compatible. Standard stud spacing means our builds click onto the bricks you already love.
+      <!-- left: decorative -->
+      <div class="ab-origin__visual" aria-hidden="true">
+        <div class="ab-kitchen">
+          <div class="ab-kitchen__roof"></div>
+          <div class="ab-kitchen__house">
+            <div class="ab-kitchen__window"></div>
+            <div class="ab-kitchen__door"></div>
+          </div>
+          <div class="ab-kitchen__table">
+            <div class="ab-bricks-row">
+              <span class="ab-brick ab-brick--red"></span>
+              <span class="ab-brick ab-brick--blue"></span>
+              <span class="ab-brick ab-brick--yellow"></span>
+              <span class="ab-brick ab-brick--red"></span>
+            </div>
+            <div class="ab-bricks-row ab-bricks-row--2">
+              <span class="ab-brick ab-brick--yellow"></span>
+              <span class="ab-brick ab-brick--blue"></span>
+              <span class="ab-brick ab-brick--red"></span>
+            </div>
+          </div>
+          <div class="ab-printer">
+            <div class="ab-printer__body">
+              <div class="ab-printer__head"></div>
+              <div class="ab-printer__bed"></div>
+            </div>
+            <p class="ab-printer__label">3D Printer</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- right: story -->
+      <div class="ab-origin__story">
+        <span class="ab-eyebrow-sm">How it all started</span>
+        <h2 class="ab-origin__h">She wanted her name above her bed.</h2>
+        <p>
+          It started with a niece. She wanted her name above her bed — the kind you see in every kids' shop.
+          But the shop-bought ones didn't come in her name, and the ones that did looked, well, a bit sad.
+        </p>
+        <p>
+          One evening in our kitchen in <strong>Kildare</strong>, we sat down with a 3D printer,
+          a box of second-hand LEGO® baseplates, and a terrible idea that we couldn't let go of.
+          By midnight we'd made five letters. By morning, the whole family wanted a set.
+        </p>
+
+        <blockquote class="ab-pullquote">
+          <span class="ab-pullquote__mark" aria-hidden="true">"</span>
+          <p>One evening on a kitchen table. A niece, a name, and a printer that never quite switched off.</p>
+        </blockquote>
+
+        <p>
+          That was the start of TógBlocks. Now we build names for cots, cakes, desks, and doors
+          all over Ireland — every one printed, checked, and boxed by hand. No factory, no middlemen.
+          Just us, the printer, and a lot of coloured filament.
         </p>
       </div>
+
     </div>
   </section>
 
-  <section class="section" style="background:var(--offwhite)">
+  <!-- ═══ THE PEOPLE ═══ -->
+  <section class="ab-people">
     <div class="wrap">
-      <div class="sec-head"><h2>What we care about</h2></div>
-      <div class="grid grid-3">
-        <div class="card">
-          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem" aria-hidden="true">🖨</div>
-          <h3>3D Printed in Ireland</h3>
-          <p class="muted">Every order is 3D printed in Ireland, by us, not drop-shipped from afar.</p>
+      <div class="sec-head">
+        <span class="eyebrow">The faces behind the parcels</span>
+        <h2>A proper family business —<br/>no corporate nonsense</h2>
+        <p>Every order is touched by someone who cares too much about stud alignment.</p>
+      </div>
+
+      <div class="ab-team">
+
+        <div class="ab-person">
+          <div class="ab-person__avatar" style="--av-bg:#1D4ED8">
+            <span>🖨️</span>
+          </div>
+          <div class="ab-person__badge">The Maker</div>
+          <h3 class="ab-person__name">The 3D Printer Whisperer</h3>
+          <p class="ab-person__bio">
+            Up at 6am calibrating nozzles. Has strong opinions about layer height
+            and knows every brick colour by hex code. Probably needs professional help.
+          </p>
+          <p class="ab-person__fact">🏆 Personal record: 14 letters printed in one sitting</p>
         </div>
-        <div class="card">
-          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem;background:var(--green)" aria-hidden="true">♻</div>
-          <h3>Bricks, not landfill</h3>
-          <p class="muted">A keepsake you can pull apart and rebuild — it's a toy and a memento at once.</p>
+
+        <div class="ab-person">
+          <div class="ab-person__avatar" style="--av-bg:#169B62">
+            <span>📦</span>
+          </div>
+          <div class="ab-person__badge">The Packer</div>
+          <h3 class="ab-person__name">Chief of Getting It Out the Door</h3>
+          <p class="ab-person__bio">
+            Wraps every order like it's going to a birthday party — because it usually is.
+            Writes the little notes by hand. Cried once when a "LUCA" set came out perfectly.
+          </p>
+          <p class="ab-person__fact">✉️ Has written over 200 personal order notes</p>
         </div>
-        <div class="card">
-          <div class="step-num" style="margin:0 0 14px;width:52px;height:52px;font-size:1.4rem;background:var(--sage);color:var(--green-700)" aria-hidden="true">♥</div>
-          <h3>Plain, honest dealing</h3>
-          <p class="muted">Clear pricing, real lead times, and a person on the other end of the email.</p>
+
+        <div class="ab-person">
+          <div class="ab-person__avatar" style="--av-bg:#F59E0B">
+            <span>🔍</span>
+          </div>
+          <div class="ab-person__badge">Quality Control</div>
+          <h3 class="ab-person__name">The Sternest Critic (Age 7)</h3>
+          <p class="ab-person__bio">
+            Self-appointed inspector. Rejects anything that doesn't "click right."
+            Responsible for our zero-tolerance policy on wobbly studs.
+            Works for biscuits and screen time.
+          </p>
+          <p class="ab-person__fact">🍪 Current salary: 2 Hobnobs per inspection</p>
         </div>
+
       </div>
     </div>
   </section>
 
+  <!-- ═══ VALUES ═══ -->
+  <section class="ab-values">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">What we care about</span>
+        <h2>The things we'd never cut corners on</h2>
+      </div>
+
+      <div class="ab-values__grid">
+
+        <div class="ab-value-card ab-value-card--blue">
+          <div class="ab-value-card__icon">🇮🇪</div>
+          <h3>Printed in Ireland, by us</h3>
+          <p>Every single order is printed in our home in Kildare. Not drop-shipped, not outsourced. Us, our printers, your name.</p>
+        </div>
+
+        <div class="ab-value-card ab-value-card--green">
+          <div class="ab-value-card__icon">🧱</div>
+          <h3>Keepsakes, not clutter</h3>
+          <p>A name that clicks apart and rebuilds — it's a toy and a memento in one. Meant to last years, not until the next bin day.</p>
+        </div>
+
+        <div class="ab-value-card ab-value-card--yellow">
+          <div class="ab-value-card__icon">📬</div>
+          <h3>A real person on the email</h3>
+          <p>No bots, no ticket systems. When you write to us, you get a reply from one of the two adults who run this thing.</p>
+        </div>
+
+        <div class="ab-value-card ab-value-card--orange">
+          <div class="ab-value-card__icon">⚡</div>
+          <h3>3 days, no fuss</h3>
+          <p>We print, check, and post within 3 working days. If something's wrong, we fix it. Full stop.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ IRISH CONNECTION ═══ -->
+  <section class="ab-irish">
+    <div class="ab-irish__studs" aria-hidden="true"></div>
+    <div class="wrap ab-irish__inner">
+      <div class="ab-irish__text">
+        <span class="ab-eyebrow-light">A word on the name</span>
+        <h2 class="ab-irish__title">
+          <em>Tóg</em> — Build.<br/>
+          <em>Le chéile</em> — Together.
+        </h2>
+        <p>
+          In Irish, <strong>tóg</strong> means to build, to lift, to raise up.
+          It's the word you'd use for raising a child, building a wall, or putting up a name above a door.
+          We like that — one word that holds all of that weight at once.
+        </p>
+        <p>
+          And <em>le chéile</em> means together. Because every name we build was chosen by someone
+          who loves the person whose name it is. That's the bit that gets us every time.
+        </p>
+      </div>
+      <div class="ab-irish__deco" aria-hidden="true">
+        <div class="ab-shamrock">
+          <span>🍀</span>
+          <p class="ab-shamrock__word">TógBlocks</p>
+          <p class="ab-shamrock__irish">le grá ó Chill Dara</p>
+          <p class="ab-shamrock__english">with love from Kildare</p>
+        </div>
+      </div>
+    </div>
+    <div class="ab-irish__studs" aria-hidden="true"></div>
+  </section>
+
+  <!-- ═══ TIMELINE ═══ -->
+  <section class="ab-timeline-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Our journey</span>
+        <h2>From one niece to Ireland — and beyond</h2>
+      </div>
+      <ol class="ab-timeline">
+        <li class="ab-tl-item">
+          <div class="ab-tl-dot ab-tl-dot--1">🏠</div>
+          <div class="ab-tl-content">
+            <span class="ab-tl-year">The Beginning</span>
+            <h3>One kitchen table, one niece, one name</h3>
+            <p>Five letters, one baseplate, and the realisation that we'd be doing this for a while.</p>
+          </div>
+        </li>
+        <li class="ab-tl-item">
+          <div class="ab-tl-dot ab-tl-dot--2">🖨️</div>
+          <div class="ab-tl-content">
+            <span class="ab-tl-year">First orders</span>
+            <h3>Friends asked. Then their friends asked.</h3>
+            <p>Word spread through WhatsApp, Christmas, and "where did you get that?" moments at birthday parties.</p>
+          </div>
+        </li>
+        <li class="ab-tl-item">
+          <div class="ab-tl-dot ab-tl-dot--3">🌍</div>
+          <div class="ab-tl-content">
+            <span class="ab-tl-year">Growing up</span>
+            <h3>Names across Ireland — and the world</h3>
+            <p>From Donegal to Kerry, Cork to Dublin, and then further — parcels heading to the UK, Europe, and beyond. Irish names, English names, names we'd never heard before. Every one a joy to build.</p>
+          </div>
+        </li>
+        <li class="ab-tl-item">
+          <div class="ab-tl-dot ab-tl-dot--4">❤️</div>
+          <div class="ab-tl-content">
+            <span class="ab-tl-year">Today</span>
+            <h3>Still just us. Still just care.</h3>
+            <p>Same kitchen. Same printer. Same handwritten notes. We haven't outsourced the love.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
   <section class="section-tight">
     <div class="wrap">
       <div class="cta-band">
         <div class="studs-deco" aria-hidden="true"></div>
-        <h2 style="margin-bottom:10px">Build something with your name on it</h2>
-        <p style="color:rgba(255,255,255,.88);max-width:44ch;margin:0 auto 22px">It takes about a minute. We'll take it from there.</p>
-        <a class="btn btn--cta btn--lg" href="/">Open the builder <span aria-hidden="true">→</span></a>
+        <p class="ab-cta-eyebrow">Ready to build something?</p>
+        <h2>Put a name on it.</h2>
+        <p style="color:rgba(255,255,255,.85);max-width:42ch;margin:0 auto 28px;font-size:var(--fs-md)">
+          Takes about a minute. We'll print it, pack it with care, and have it at your door within 3&nbsp;days.
+        </p>
+        <a class="btn btn--cta btn--lg" href="/builder">Start building →</a>
       </div>
     </div>
   </section>
+
 </Base>
+
+<style>
+/* ── HERO ──────────────────────────────────────────────────────────── */
+.ab-hero {
+  position: relative;
+  background: var(--green-deep);
+  color: var(--white);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ab-hero__studs {
+  height: 36px;
+  flex-shrink: 0;
+  background-color: rgba(0,0,0,.20);
+  background-image: radial-gradient(circle at center, var(--orange) 44%, transparent 45%);
+  background-size: 36px 36px;
+  background-position: 18px 4px;
+  background-repeat: repeat-x;
+  position: relative;
+  z-index: 1;
+}
+
+.ab-hero__body {
+  padding: clamp(40px, 7vw, 88px) var(--gutter);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.ab-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--orange);
+  animation: abPopUp .45s var(--ease-pop) both;
+}
+
+.ab-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 1.8rem + 2.5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--white);
+  margin: 0;
+  animation: abPopUp .5s var(--ease-pop) .08s both;
+}
+
+.ab-hero__title em {
+  font-style: normal;
+  color: var(--orange);
+  display: inline-block;
+  animation: gentleWobble 5s ease-in-out infinite 1.5s;
+}
+
+@keyframes gentleWobble {
+  0%, 80%, 100% { transform: none; }
+  85%  { transform: rotate(-2deg) scale(1.03); }
+  92%  { transform: rotate(2deg) scale(1.03); }
+}
+
+.ab-hero__sub {
+  font-size: var(--fs-md);
+  opacity: .85;
+  max-width: 520px;
+  line-height: var(--lh-normal);
+  margin: 0;
+  animation: abPopUp .55s var(--ease-pop) .16s both;
+}
+
+.ab-hero__sub em { color: var(--orange); font-style: normal; font-weight: 700; }
+
+@keyframes abPopUp {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* floating blobs */
+.ab-blob {
+  position: absolute;
+  font-size: 2.2rem;
+  opacity: .15;
+  pointer-events: none;
+  user-select: none;
+}
+.ab-blob--1 { top: 22%; left:  4%; animation: blobDrift 6.0s ease-in-out infinite; }
+.ab-blob--2 { top: 65%; left:  9%; animation: blobDrift 7.5s ease-in-out infinite .7s; }
+.ab-blob--3 { top: 20%; right: 6%; animation: blobDrift 5.5s ease-in-out infinite 1.2s; }
+.ab-blob--4 { top: 72%; right: 4%; animation: blobDrift 8.0s ease-in-out infinite .3s; }
+
+@keyframes blobDrift {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%       { transform: translateY(-16px) rotate(6deg); }
+}
+
+/* ── ORIGIN STORY ─────────────────────────────────────────────────── */
+.ab-origin {
+  padding-block: clamp(52px, 7vw, 96px);
+  background: var(--white);
+}
+
+.ab-origin__inner {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .ab-origin__inner { grid-template-columns: 1fr; }
+  .ab-origin__visual { order: 2; }
+}
+
+/* CSS kitchen scene */
+.ab-kitchen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background: var(--green-soft);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--line);
+  min-height: 360px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ab-kitchen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at center, var(--line) 42%, transparent 43%);
+  background-size: 24px 24px;
+  opacity: .3;
+}
+
+.ab-kitchen__roof {
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-bottom: 50px solid var(--green-deep);
+  opacity: .8;
+  position: relative;
+  z-index: 1;
+}
+
+.ab-kitchen__house {
+  width: 120px;
+  height: 90px;
+  background: var(--white);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.ab-kitchen__window {
+  width: 28px;
+  height: 28px;
+  background: var(--sage);
+  border-radius: var(--radius-xs);
+  border: 2px solid var(--sage);
+  position: absolute;
+  top: 16px;
+  left: 14px;
+}
+
+.ab-kitchen__door {
+  width: 24px;
+  height: 36px;
+  background: var(--orange);
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  position: absolute;
+  bottom: 0;
+  right: 14px;
+}
+
+.ab-kitchen__table {
+  background: var(--cream-deep);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 1;
+}
+
+.ab-bricks-row {
+  display: flex;
+  gap: 6px;
+}
+
+.ab-brick {
+  width: 28px;
+  height: 20px;
+  border-radius: var(--radius-brick);
+  position: relative;
+  display: block;
+  animation: brickBounce 2s ease-in-out infinite;
+}
+
+.ab-brick--red    { background: var(--brick-red);    animation-delay: 0s; }
+.ab-brick--blue   { background: var(--brick-blue);   animation-delay: .2s; }
+.ab-brick--yellow { background: var(--brick-yellow); animation-delay: .4s; }
+
+.ab-brick::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 7px;
+  border-radius: 50% 50% 0 0;
+  background: inherit;
+  filter: brightness(1.1);
+}
+
+@keyframes brickBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.ab-bricks-row--2 { opacity: .7; }
+
+.ab-printer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.ab-printer__body {
+  width: 52px;
+  background: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ab-printer__head {
+  height: 8px;
+  background: var(--sage);
+  border-radius: var(--radius-xs);
+  animation: printerScan 2.5s ease-in-out infinite;
+}
+
+.ab-printer__bed {
+  height: 14px;
+  background: var(--white);
+  border-radius: var(--radius-xs);
+  opacity: .7;
+}
+
+@keyframes printerScan {
+  0%, 100% { transform: translateX(-50%) scaleX(.5); opacity: .6; }
+  50%       { transform: translateX(50%)  scaleX(.5); opacity: 1;  }
+}
+
+.ab-printer__label {
+  font-size: var(--fs-xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-60);
+}
+
+/* story text */
+.ab-eyebrow-sm {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+}
+
+.ab-origin__h {
+  font-size: clamp(1.6rem, 1.3rem + 1.5vw, 2.4rem);
+  margin-bottom: 20px;
+  line-height: var(--lh-snug);
+}
+
+.ab-origin__story p {
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.ab-pullquote {
+  margin: 28px 0;
+  padding: 20px 24px;
+  background: var(--orange-soft);
+  border-left: 4px solid var(--orange);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  position: relative;
+}
+
+.ab-pullquote__mark {
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  font-family: var(--font-display);
+  font-size: 4rem;
+  color: var(--orange);
+  line-height: 1;
+  opacity: .4;
+}
+
+.ab-pullquote p {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--green-deep);
+  line-height: var(--lh-snug);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PEOPLE ────────────────────────────────────────────────────────── */
+.ab-people {
+  padding-block: clamp(48px, 6vw, 88px);
+  background: var(--offwhite);
+}
+
+.ab-team {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2.5vw, 28px);
+}
+
+@media (max-width: 720px) {
+  .ab-team { grid-template-columns: 1fr; max-width: 400px; margin-inline: auto; }
+}
+
+.ab-person {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--line);
+  padding: clamp(20px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  transition: transform .2s var(--ease-pop), box-shadow .2s ease;
+}
+
+.ab-person:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.ab-person__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--av-bg, var(--green-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
+  box-shadow: 0 6px 20px -6px color-mix(in srgb, var(--av-bg) 60%, transparent);
+  animation: floatAvatar 4s ease-in-out infinite;
+}
+
+.ab-person:nth-child(2) .ab-person__avatar { animation-delay: -1.3s; }
+.ab-person:nth-child(3) .ab-person__avatar { animation-delay: -2.6s; }
+
+@keyframes floatAvatar {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.ab-person__badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--ink);
+  align-self: center;
+}
+
+.ab-person__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  color: var(--ink);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+.ab-person__bio {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  line-height: var(--lh-normal);
+  margin: 0;
+}
+
+.ab-person__fact {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--green);
+  padding: 6px 12px;
+  background: var(--green-soft);
+  border-radius: var(--radius-pill);
+}
+
+/* ── VALUES ────────────────────────────────────────────────────────── */
+.ab-values {
+  padding-block: clamp(48px, 6vw, 88px);
+  background: var(--white);
+}
+
+.ab-values__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(14px, 2vw, 24px);
+}
+
+@media (max-width: 620px) {
+  .ab-values__grid { grid-template-columns: 1fr; }
+}
+
+.ab-value-card {
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: var(--radius-xl);
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .2s var(--ease-pop), box-shadow .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ab-value-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; right: -20px;
+  width: 100px; height: 100px;
+  background-image: radial-gradient(circle at center, rgba(255,255,255,.5) 42%, transparent 43%);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+.ab-value-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.ab-value-card--blue   { background: var(--green-soft);  border-color: var(--sage); }
+.ab-value-card--green  { background: #dcfce7;             border-color: #4ade80; }
+.ab-value-card--yellow { background: var(--orange-soft);  border-color: var(--orange); }
+.ab-value-card--orange { background: #fef3c7;             border-color: #fbbf24; }
+
+.ab-value-card__icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  display: block;
+}
+
+.ab-value-card h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0;
+}
+
+.ab-value-card p {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  line-height: var(--lh-normal);
+  margin: 0;
+}
+
+/* ── IRISH SECTION ─────────────────────────────────────────────────── */
+.ab-irish {
+  background: var(--green-deep);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+.ab-irish__studs {
+  height: 36px;
+  flex-shrink: 0;
+  background-color: rgba(0,0,0,.20);
+  background-image: radial-gradient(circle at center, var(--orange) 44%, transparent 45%);
+  background-size: 36px 36px;
+  background-position: 18px 4px;
+  background-repeat: repeat-x;
+}
+
+.ab-irish__inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+  padding-block: clamp(48px, 7vw, 88px);
+}
+
+@media (max-width: 660px) {
+  .ab-irish__inner { grid-template-columns: 1fr; }
+  .ab-irish__deco  { display: none; }
+}
+
+.ab-eyebrow-light {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 14px;
+}
+
+.ab-irish__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 1.4rem + 2vw, 3rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+
+.ab-irish__title em {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.ab-irish__text p {
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+  opacity: .85;
+  margin-bottom: 14px;
+}
+
+.ab-irish__text em {
+  color: var(--orange);
+  font-style: italic;
+}
+
+.ab-shamrock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 32px;
+  background: rgba(255,255,255,.08);
+  border: 1.5px solid rgba(255,255,255,.18);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  min-width: 180px;
+}
+
+.ab-shamrock span {
+  font-size: 3rem;
+  display: block;
+  animation: floatAvatar 4.5s ease-in-out infinite;
+}
+
+.ab-shamrock__word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  color: var(--white);
+  margin: 0;
+}
+
+.ab-shamrock__irish {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--orange);
+  margin: 0;
+  font-style: italic;
+}
+
+.ab-shamrock__english {
+  font-size: var(--fs-xs);
+  color: rgba(255,255,255,.55);
+  margin: 0;
+}
+
+/* ── TIMELINE ──────────────────────────────────────────────────────── */
+.ab-timeline-section {
+  padding-block: clamp(48px, 6vw, 88px);
+  background: var(--offwhite);
+}
+
+.ab-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+.ab-timeline::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 28px;
+  bottom: 28px;
+  width: 3px;
+  background: linear-gradient(180deg, var(--green-deep), var(--sage), var(--orange));
+  border-radius: 99px;
+}
+
+.ab-tl-item {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 0 0 36px 0;
+  position: relative;
+}
+
+.ab-tl-item:last-child { padding-bottom: 0; }
+
+.ab-tl-dot {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  border: 3px solid var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.ab-tl-dot--1 { background: var(--green-deep); }
+.ab-tl-dot--2 { background: var(--green); }
+.ab-tl-dot--3 { background: var(--sage); }
+.ab-tl-dot--4 { background: var(--orange); }
+
+.ab-tl-content {
+  padding-top: 10px;
+  flex: 1;
+}
+
+.ab-tl-year {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--green);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ab-tl-content h3 {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.ab-tl-content p {
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  margin: 0;
+  line-height: var(--lh-normal);
+}
+
+/* ── CTA OVERRIDES ─────────────────────────────────────────────────── */
+.ab-cta-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+
+.cta-band h2 {
+  font-size: clamp(1.8rem, 1.4rem + 2vw, 3rem);
+  margin-bottom: 12px;
+}
+</style>

@@ -1,0 +1,529 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../../lib/adminAuth';
+import { query } from '../../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin/orders');
+
+const status = Astro.url.searchParams.get('status') ?? 'all';
+const q      = Astro.url.searchParams.get('q') ?? '';
+const page   = Math.max(1, Number(Astro.url.searchParams.get('page') ?? '1'));
+const limit  = 20;
+const offset = (page - 1) * limit;
+
+// Status tab counts
+const tabCountsRes = await query<{ status: string; count: string }>(`
+  SELECT status, COUNT(*) AS count FROM orders
+  WHERE status != 'pending_payment'
+  GROUP BY status
+`);
+const tabCounts: Record<string, number> = { all: 0 };
+for (const r of tabCountsRes.rows) {
+  tabCounts[r.status] = Number(r.count);
+  tabCounts.all += Number(r.count);
+}
+
+// Today's stats
+const todayRes = await query<{ count: string; revenue: string }>(`
+  SELECT COUNT(*) AS count, COALESCE(SUM(total), 0) AS revenue
+  FROM orders
+  WHERE status != 'pending_payment'
+    AND created_at >= CURRENT_DATE
+`);
+const todayCount   = Number(todayRes.rows[0]?.count ?? 0);
+const todayRevenue = Number(todayRes.rows[0]?.revenue ?? 0);
+
+// Total revenue across all non-cancelled orders
+const allRevenueRes = await query<{ revenue: string }>(`
+  SELECT COALESCE(SUM(total), 0) AS revenue FROM orders
+  WHERE status NOT IN ('pending_payment','cancelled','refunded')
+`);
+const allRevenue = Number(allRevenueRes.rows[0]?.revenue ?? 0);
+
+// Build WHERE clause
+const conditions: string[] = ["o.status != 'pending_payment'"];
+const params: unknown[] = [];
+
+if (status !== 'all') {
+  params.push(status);
+  conditions.push(`o.status = $${params.length}`);
+}
+if (q) {
+  params.push(`%${q.toLowerCase()}%`);
+  const i = params.length;
+  conditions.push(`(LOWER(COALESCE(u.name,'')) LIKE $${i} OR LOWER(COALESCE(u.email,'')) LIKE $${i} OR LOWER(COALESCE(o.guest_email,'')) LIKE $${i} OR LOWER(CONCAT('tb',LPAD(o.id::text,5,'0'))) LIKE $${i})`);
+}
+const where = `WHERE ${conditions.join(' AND ')}`;
+
+// Count + revenue for current filter
+const summaryRes = await query<{ total: string; revenue: string }>(`
+  SELECT COUNT(*) AS total, COALESCE(SUM(o.total),0) AS revenue
+  FROM orders o LEFT JOIN users u ON u.id = o.user_id ${where}
+`, params);
+const total   = Number(summaryRes.rows[0].total);
+const revenue = Number(summaryRes.rows[0].revenue);
+const pages   = Math.ceil(total / limit);
+
+// Orders with item details + colours
+params.push(limit, offset);
+const ordersRes = await query<{
+  id: number; status: string; total: number; created_at: Date;
+  customer_name: string; customer_email: string | null;
+  names: string[]; colours: string[][];  tracking_number: string | null;
+}>(`
+  SELECT o.id, o.status, o.total, o.created_at, o.tracking_number,
+    COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
+    COALESCE(u.email, o.guest_email)         AS customer_email,
+    ARRAY_AGG(oi.custom_name ORDER BY oi.id) AS names,
+    ARRAY_AGG(oi.colours     ORDER BY oi.id) AS colours
+  FROM orders o
+  LEFT JOIN users u ON u.id = o.user_id
+  LEFT JOIN order_items oi ON oi.order_id = o.id
+  ${where}
+  GROUP BY o.id, u.name, u.email, o.guest_email
+  ORDER BY o.created_at DESC
+  LIMIT $${params.length - 1} OFFSET $${params.length}
+`, params);
+
+function fmt(cents: number | string) { return `€${(Number(cents)/100).toFixed(2)}`; }
+function ref(id: number)             { return `#TB${String(id).padStart(5,'0')}`; }
+function ago(d: Date) {
+  const diff = Date.now() - new Date(d).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(d).toLocaleDateString('en-IE', { day:'2-digit', month:'short' });
+}
+
+function buildUrl(overrides: Record<string, string>) {
+  const p = new URLSearchParams({ status, page: String(page), ...overrides });
+  if (q && !overrides.hasOwnProperty('q')) p.set('q', q);
+  if (!p.get('q')) p.delete('q');
+  if (p.get('page') === '1') p.delete('page');
+  return `/admin/orders?${p.toString()}`;
+}
+
+const TABS = [
+  { key: 'all',        label: 'All' },
+  { key: 'paid',       label: 'Awaiting print' },
+  { key: 'printing',   label: 'Printing' },
+  { key: 'dispatched', label: 'Dispatched' },
+  { key: 'delivered',  label: 'Delivered' },
+  { key: 'cancelled',  label: 'Cancelled' },
+];
+
+const STATUS_CONFIG: Record<string, { color: string; bg: string; dot: string }> = {
+  paid:       { color: '#92400e', bg: '#fef3c7', dot: '#d97706' },
+  printing:   { color: '#1e40af', bg: '#dbeafe', dot: '#2563eb' },
+  dispatched: { color: '#5b21b6', bg: '#f3e8ff', dot: '#7c3aed' },
+  delivered:  { color: '#166534', bg: '#dcfce7', dot: '#16a34a' },
+  cancelled:  { color: '#991b1b', bg: '#fee2e2', dot: '#dc2626' },
+  refunded:   { color: '#92400e', bg: '#fef3c7', dot: '#d97706' },
+};
+
+const quickActionLabel: Record<string, string> = {
+  paid:     '▶ Print',
+  printing: '📦 Dispatch',
+};
+---
+
+<AdminLayout title="Orders" currentPage="orders" admin={admin}>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1 style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-xl);margin:0">Orders</h1>
+      <p style="font-size:var(--fs-sm);color:var(--ink-60);margin:3px 0 0">
+        {total} order{total !== 1 ? 's' : ''} · {fmt(revenue)} revenue
+        {q && <span> matching "<strong>{q}</strong>"</span>}
+      </p>
+    </div>
+    <!-- Search -->
+    <form method="GET" style="display:flex;gap:8px;align-items:center">
+      <input type="hidden" name="status" value={status} />
+      <div style="position:relative">
+        <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ink-60)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="adm-input" name="q" value={q} placeholder="Search ref, name, email…" style="padding-left:30px;width:240px" />
+      </div>
+      <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm">Search</button>
+      {q && <a href={buildUrl({ q: '', page: '1' })} class="adm-btn adm-btn--ghost adm-btn--sm">✕ Clear</a>}
+    </form>
+  </div>
+
+  <!-- ── Status widgets ── -->
+  <div class="status-widgets">
+
+    <!-- Awaiting Print -->
+    <a href="/admin/orders?status=paid" class={`sw-card sw-card--amber ${(tabCounts.paid ?? 0) > 0 ? 'sw-card--urgent' : ''}`}>
+      <div class="sw-top">
+        <div class="sw-icon">🖨️</div>
+        {(tabCounts.paid ?? 0) > 0 && <span class="sw-ping"></span>}
+      </div>
+      <div class="sw-count">{tabCounts.paid ?? 0}</div>
+      <div class="sw-label">Awaiting Print</div>
+      {(tabCounts.paid ?? 0) > 0 && (
+        <div class="sw-action">Start printing →</div>
+      )}
+    </a>
+
+    <!-- Printing -->
+    <a href="/admin/orders?status=printing" class="sw-card sw-card--blue">
+      <div class="sw-top">
+        <div class="sw-icon">⚙️</div>
+      </div>
+      <div class="sw-count">{tabCounts.printing ?? 0}</div>
+      <div class="sw-label">In Production</div>
+      {(tabCounts.printing ?? 0) > 0 && (
+        <div class="sw-action">View printing →</div>
+      )}
+    </a>
+
+    <!-- Dispatched -->
+    <a href="/admin/orders?status=dispatched" class="sw-card sw-card--purple">
+      <div class="sw-top">
+        <div class="sw-icon">📦</div>
+      </div>
+      <div class="sw-count">{tabCounts.dispatched ?? 0}</div>
+      <div class="sw-label">In Transit</div>
+      {(tabCounts.dispatched ?? 0) > 0 && (
+        <div class="sw-action">Track orders →</div>
+      )}
+    </a>
+
+    <!-- Delivered -->
+    <a href="/admin/orders?status=delivered" class="sw-card sw-card--green">
+      <div class="sw-top">
+        <div class="sw-icon">✅</div>
+      </div>
+      <div class="sw-count">{tabCounts.delivered ?? 0}</div>
+      <div class="sw-label">Delivered</div>
+    </a>
+
+    <!-- Today -->
+    <div class="sw-card sw-card--slate sw-card--nolink">
+      <div class="sw-top">
+        <div class="sw-icon">📅</div>
+      </div>
+      <div class="sw-count">{todayCount}</div>
+      <div class="sw-label">Today's orders</div>
+      {todayRevenue > 0 && (
+        <div class="sw-revenue">{fmt(todayRevenue)}</div>
+      )}
+    </div>
+
+    <!-- Total revenue -->
+    <div class="sw-card sw-card--dark sw-card--nolink">
+      <div class="sw-top">
+        <div class="sw-icon">💰</div>
+      </div>
+      <div class="sw-count sw-count--sm">{fmt(allRevenue)}</div>
+      <div class="sw-label">Total revenue</div>
+      <div class="sw-revenue">{tabCounts.all} orders total</div>
+    </div>
+
+  </div>
+
+  <!-- Status tabs -->
+  <div class="ord-tabs">
+    {TABS.map(tab => {
+      const count = tabCounts[tab.key] ?? 0;
+      const active = tab.key === status;
+      return (
+        <a href={buildUrl({ status: tab.key, page: '1' })} class={`ord-tab ${active ? 'ord-tab--active' : ''}`}>
+          {tab.label}
+          {count > 0 && (
+            <span class="ord-tab-count" style={active && tab.key !== 'all' ? `background:${STATUS_CONFIG[tab.key]?.dot ?? '#64748b'};color:#fff` : ''}>
+              {count}
+            </span>
+          )}
+        </a>
+      );
+    })}
+  </div>
+
+  <!-- Orders list -->
+  <div class="adm-card" style="border-top-left-radius:0;border-top-right-radius:0;border-top:none">
+    {ordersRes.rows.length === 0 ? (
+      <div style="padding:48px;text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">📭</div>
+        <div style="font-weight:700;color:var(--ink);margin-bottom:4px">No orders found</div>
+        <div style="font-size:var(--fs-sm);color:var(--ink-60)">
+          {q ? `No results for "${q}"` : `No orders with status "${status}" yet.`}
+        </div>
+      </div>
+    ) : (
+      <div>
+        {ordersRes.rows.map(o => {
+          const cfg = STATUS_CONFIG[o.status];
+          const allColours = (o.colours ?? []).flatMap((c: string[]) => Array.isArray(c) ? c : []);
+          const uniqueColours = [...new Set(allColours)].slice(0, 10);
+          return (
+            <div class="ord-row">
+              <!-- Left: ref + customer -->
+              <div class="ord-row-main">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap">
+                  <a href={`/admin/orders/${o.id}`} class="ord-ref">{ref(o.id)}</a>
+                  {cfg && (
+                    <span class="ord-status-pill" style={`background:${cfg.bg};color:${cfg.color}`}>
+                      <span style={`width:6px;height:6px;border-radius:50%;background:${cfg.dot};display:inline-block;flex-shrink:0`}></span>
+                      {o.status}
+                    </span>
+                  )}
+                  <span class="ord-age">{ago(o.created_at)}</span>
+                </div>
+                <div style="font-weight:700;font-size:var(--fs-md);margin-bottom:3px">{o.names?.filter(Boolean).join(' · ')}</div>
+                <div style="font-size:var(--fs-xs);color:var(--ink-60)">
+                  {o.customer_name}
+                  {o.customer_email && o.customer_name !== o.customer_email && (
+                    <span style="margin-left:6px;opacity:.7">{o.customer_email}</span>
+                  )}
+                </div>
+              </div>
+
+              <!-- Middle: colour swatches -->
+              <div class="ord-row-colours">
+                {uniqueColours.map((c: string) => (
+                  <span style={`width:18px;height:18px;border-radius:4px;background:${c};border:1px solid rgba(0,0,0,.12);flex-shrink:0;display:inline-block`} title={c}></span>
+                ))}
+              </div>
+
+              <!-- Right: price + actions -->
+              <div class="ord-row-right">
+                <span style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-lg);color:var(--ink)">{fmt(o.total)}</span>
+                <div style="display:flex;gap:6px;margin-top:6px">
+                  {o.status === 'paid' && (
+                    <form method="POST" action={`/api/admin/orders/${o.id}/status`}>
+                      <input type="hidden" name="status" value="printing" />
+                      <input type="hidden" name="redirect" value={`/admin/orders?status=${status}${q ? `&q=${encodeURIComponent(q)}` : ''}`} />
+                      <button type="submit" class="adm-btn adm-btn--green adm-btn--sm">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Start Printing
+                      </button>
+                    </form>
+                  )}
+                  <a href={`/admin/orders/${o.id}`} class="adm-btn adm-btn--ghost adm-btn--sm">View →</a>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    <!-- Pagination -->
+    {pages > 1 && (
+      <div style="display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--ab);justify-content:space-between;align-items:center">
+        <span style="font-size:var(--fs-sm);color:var(--ink-60)">Page {page} of {pages}</span>
+        <div style="display:flex;gap:6px">
+          {page > 1 && <a href={buildUrl({ page: String(page-1) })} class="adm-btn adm-btn--ghost adm-btn--sm">← Prev</a>}
+          {Array.from({ length: Math.min(pages, 7) }, (_, i) => {
+            const p = i + 1;
+            return <a href={buildUrl({ page: String(p) })} class={`adm-btn adm-btn--sm ${p === page ? 'adm-btn--primary' : 'adm-btn--ghost'}`}>{p}</a>;
+          })}
+          {pages > 7 && page < pages && <a href={buildUrl({ page: String(page+1) })} class="adm-btn adm-btn--ghost adm-btn--sm">Next →</a>}
+        </div>
+      </div>
+    )}
+  </div>
+</AdminLayout>
+
+<style>
+/* ── Status widgets ── */
+.status-widgets {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media (max-width: 1100px) { .status-widgets { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .status-widgets { grid-template-columns: repeat(2, 1fr); } }
+
+.sw-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1.5px solid var(--ab);
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  overflow: hidden;
+}
+.sw-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+.sw-card:not(.sw-card--nolink):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.09);
+}
+
+/* Accent top bars */
+.sw-card--amber::before  { background: #f59e0b; }
+.sw-card--blue::before   { background: #2563eb; }
+.sw-card--purple::before { background: #7c3aed; }
+.sw-card--green::before  { background: #16a34a; }
+.sw-card--slate::before  { background: #64748b; }
+.sw-card--dark::before   { background: #0f172a; }
+
+/* Urgent pulse for "awaiting print" */
+.sw-card--urgent {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fffbeb 0%, #fff 60%);
+}
+.sw-card--urgent:hover { border-color: #f59e0b; }
+
+.sw-ping {
+  position: relative;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+}
+.sw-ping::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  animation: sw-pulse 1.6s ease-in-out infinite;
+  opacity: .6;
+}
+@keyframes sw-pulse {
+  0%, 100% { transform: scale(1); opacity: .6; }
+  50%       { transform: scale(1.6); opacity: 0; }
+}
+
+.sw-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sw-icon { font-size: 22px; line-height: 1; }
+
+.sw-count {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.sw-count--sm { font-size: 1.3rem; margin-bottom: 6px; }
+
+.sw-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink-60);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.sw-action {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-top: 8px;
+}
+.sw-revenue {
+  font-size: 0.78rem;
+  color: var(--ink-60);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* Status tabs */
+.ord-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--ab);
+  border-bottom: none;
+  border-radius: var(--r) var(--r) 0 0;
+  background: #f8fafc;
+  overflow-x: auto;
+}
+.ord-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-60);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.ord-tab:hover { color: var(--ink); background: #f1f5f9; }
+.ord-tab--active { color: var(--blue); border-bottom-color: var(--blue); background: var(--aw); }
+.ord-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: var(--ink-60);
+}
+
+/* Order rows */
+.ord-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ab);
+  transition: background .1s;
+}
+.ord-row:last-child { border-bottom: none; }
+.ord-row:hover { background: #f8fafc; }
+
+.ord-row-main   { flex: 1; min-width: 0; }
+.ord-row-colours { display: flex; flex-wrap: wrap; gap: 3px; flex-shrink: 0; max-width: 120px; }
+.ord-row-right  { flex-shrink: 0; text-align: right; }
+
+.ord-ref {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  color: var(--blue);
+  text-decoration: none;
+}
+.ord-ref:hover { text-decoration: underline; }
+
+.ord-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.ord-age {
+  font-size: var(--fs-xs);
+  color: var(--ink-60);
+  margin-left: auto;
+}
+
+@media (max-width: 700px) {
+  .ord-row { flex-wrap: wrap; }
+  .ord-row-colours { display: none; }
+  .ord-row-right { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+}
+</style>

@@ -1,0 +1,175 @@
+---
+import Base from '../layouts/Base.astro';
+import { getTokenFromRequest, getSession } from '../lib/auth';
+import { query } from '../lib/db';
+
+const token = getTokenFromRequest(Astro.request);
+const user  = token ? await getSession(token) : null;
+
+if (!user) return Astro.redirect('/checkout');
+
+const ordersRes = await query<{
+  id: number; status: string; total: number; created_at: Date;
+  item_count: number;
+}>(
+  `SELECT o.id, o.status, o.total, o.created_at,
+          COUNT(oi.id)::int AS item_count
+   FROM orders o
+   LEFT JOIN order_items oi ON oi.order_id = o.id
+   WHERE o.user_id = $1
+   GROUP BY o.id
+   ORDER BY o.created_at DESC
+   LIMIT 20`,
+  [user.id]
+);
+
+const orders = ordersRes.rows;
+
+function formatPrice(cents: number) { return `€${(cents / 100).toFixed(2)}`; }
+function fmtDate(d: Date) {
+  return new Date(d).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+---
+
+<Base
+  title="My Account — TógBlocks"
+  description="View your TógBlocks order history."
+  currentPage="/account"
+>
+  <div class="acc-wrap">
+
+    <!-- Profile header -->
+    <div class="acc-profile">
+      {user.pictureUrl && <img src={user.pictureUrl} alt="" class="acc-avatar" />}
+      <div>
+        <h1 class="acc-name">{user.name}</h1>
+        <p class="acc-email">{user.email}</p>
+      </div>
+      <form method="POST" action="/api/auth/logout" style="margin-left:auto;align-self:flex-start">
+        <button type="submit" class="btn btn--sm">Sign out</button>
+      </form>
+    </div>
+
+    <!-- Orders -->
+    <h2 class="acc-section-title">Your orders</h2>
+
+    {orders.length === 0
+      ? (
+        <div class="acc-empty">
+          <p>No orders yet — your first build is one click away.</p>
+          <a class="btn btn--cta" href="/builder">Start building →</a>
+        </div>
+      )
+      : (
+        <div class="acc-orders">
+          {orders.map(o => (
+            <a href={`/orders/${o.id}`} class="acc-order-card">
+              <div class="acc-order-card__icon">🧱</div>
+              <div class="acc-order-card__info">
+                <strong>#TB{String(o.id).padStart(5, '0')}</strong>
+                <span>{o.item_count} item{o.item_count !== 1 ? 's' : ''} · {fmtDate(o.created_at)}</span>
+              </div>
+              <div class="acc-order-card__right">
+                <span class="acc-order-card__price">{formatPrice(o.total)}</span>
+                <span class={`acc-badge ${o.status === 'paid' ? 'acc-badge--paid' : 'acc-badge--pending'}`}>
+                  {o.status === 'paid' ? 'Paid' : 'Pending'}
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+  </div>
+</Base>
+
+<style>
+.acc-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+.acc-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+.acc-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.acc-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+.acc-email { font-size: var(--fs-sm); color: var(--ink-60); margin: 0; }
+
+.acc-section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.acc-empty {
+  background: var(--offwhite);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  text-align: center;
+  color: var(--ink-60);
+}
+.acc-empty p { margin: 0 0 16px; }
+
+.acc-orders { display: flex; flex-direction: column; gap: 10px; }
+.acc-order-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  text-decoration: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.acc-order-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+}
+.acc-order-card__icon {
+  width: 40px; height: 40px;
+  background: var(--offwhite);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.acc-order-card__info { flex: 1; }
+.acc-order-card__info strong { display: block; font-size: var(--fs-sm); color: var(--ink); }
+.acc-order-card__info span   { font-size: var(--fs-xs); color: var(--ink-40); }
+.acc-order-card__right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+}
+.acc-order-card__price { font-weight: 700; font-size: var(--fs-sm); color: var(--ink); }
+
+.acc-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.acc-badge--paid    { background: #dcfce7; color: #15803d; }
+.acc-badge--pending { background: #fef9c3; color: #854d0e; }
+</style>

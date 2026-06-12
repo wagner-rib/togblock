@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 
 const reviews = [
-  { stars: 5, quote: "Ordered FINN for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed — it's the first thing you see walking into his room.", name: 'Aoife O\'Brien', loc: 'Galway', init: 'AO', bg: '#169B62' },
+  { stars: 5, quote: "Ordered FINN for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed — it's the first thing you see walking into his room.", name: 'Aoife O\'Brien', loc: 'Kildare', init: 'AO', bg: '#169B62' },
   { stars: 5, quote: "Clicked straight onto our existing baseplate. The kids now spell out rude words with it, which is on them, not TógBlocks.", name: 'Dara Murphy', loc: 'Cork', init: 'DM', bg: '#E0473A' },
   { stars: 5, quote: "Recoloured each letter to match her room. The little preview made it impossible to get wrong. Will be back at Christmas.", name: 'Niamh Kelly', loc: 'Dublin', init: 'NK', bg: '#2563EB' },
   { stars: 5, quote: "Brilliant quality. The door sign for Charlie's room is the talk of every playdate. Fast delivery too!", name: 'Sarah Connelly', loc: 'Limerick', init: 'SC', bg: '#F58A3C' },
@@ -32,71 +32,38 @@ const allCards = [...sliderCards, ...sliderCards];
   <!-- ═══════════════════════════════════════════════ HERO ═══ -->
   <section class="home-hero" aria-label="Hero">
 
-    <!-- Background slideshow — real <img> tags, grid-stacked so height is image-driven -->
-    <div class="home-hero__slides" aria-hidden="true" data-hero-slides>
-      <div class="hero-slide is-active">
-        <img src="/products/hero-gemini.jpg" alt="" loading="eager" fetchpriority="high" decoding="async"/>
+    <!-- Left: product photo -->
+    <div class="home-hero__visual">
+      <div class="home-hero__slides" aria-hidden="true" data-hero-slides>
+        <div class="hero-slide is-active">
+          <img src="/products/hero-thomas-clean.png" alt="" loading="eager" fetchpriority="high" decoding="async"/>
+        </div>
       </div>
     </div>
-    <div class="home-hero__overlay" aria-hidden="true"></div>
 
-    <!-- Arrow navigation -->
-    <button class="hero-arrow hero-arrow--prev" data-hero-prev aria-label="Previous photo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button class="hero-arrow hero-arrow--next" data-hero-next aria-label="Next photo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-
-    <!-- Dot indicators -->
-    <div class="hero-dots" aria-hidden="true" data-hero-dots>
-      <button class="hero-dot is-active" data-index="0"></button>
-      <button class="hero-dot" data-index="1"></button>
-      <button class="hero-dot" data-index="2"></button>
-      <button class="hero-dot" data-index="3"></button>
-    </div>
-
-    <!-- Content -->
-    <div class="home-hero__content wrap">
-      <h1>Build names they'll love <em class="accent">forever</em></h1>
-      <p class="home-hero__sub">
-        Personalised 3D brick letters &amp; door signs — 3D printed in Ireland, compatible with LEGO®.
-      </p>
-      <div class="home-hero__ctas">
-        <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
-        <a class="btn btn--secondary btn--lg" href="/builder">
-          Start building
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+    <!-- Right: branded content panel -->
+    <div class="home-hero__panel">
+      <div class="hero-studs" aria-hidden="true"></div>
+      <div class="home-hero__content">
+        <h1>Build names they'll love <em class="accent">forever</em></h1>
+        <p class="home-hero__sub">
+          Personalised 3D brick letters &amp; door signs — 3D&nbsp;printed in Ireland, compatible with LEGO®.
+        </p>
+        <div class="home-hero__ctas">
+          <a class="btn btn--cta btn--lg" href="/products">Shop all products</a>
+          <a class="btn btn--white-outline btn--lg" href="/builder">
+            Start building
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </div>
+      <div class="hero-studs" aria-hidden="true"></div>
     </div>
 
   </section>
 
-  <!-- ════════════════════════════════════════ STATS ═══ -->
-  <section class="stats-band" aria-label="By the numbers">
-    <div class="wrap">
-      <div class="stats-grid">
-        {[
-          { num: '600+', label: 'Happy builders' },
-          { num: '★ 4.9', label: 'Average rating' },
-          { num: '3 days', label: 'Ships in' },
-          { num: '100%', label: '3D Printed' },
-        ].map((s, i) => (
-          <div class="stat-card" data-reveal data-delay={String(i + 1)}>
-            <span class="stat-card__num">{s.num}</span>
-            <span class="stat-card__label">{s.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
 
   <!-- ═══════════════════════════ FEATURE SPLIT — LETTERS ═══ -->
   <section class="feature-split" aria-labelledby="feat1">
@@ -142,7 +109,7 @@ const allCards = [...sliderCards, ...sliderCards];
         <div class="feature-split__visual" style="aspect-ratio:1">
           <img
             src="/products/charlie-sign.jpg"
-            alt="Red LEGO baseplate door sign with Charlie in yellow raised letters"
+            alt="Red brick baseplate door sign with Charlie in yellow raised letters"
             loading="lazy"
             decoding="async"
           />
@@ -157,7 +124,7 @@ const allCards = [...sliderCards, ...sliderCards];
           </span>
           <h2 id="feat2" class="product-title">Door &amp; Room Signs</h2>
           <p class="product-subtitle">Make their space officially&nbsp;theirs</p>
-          <p>A colourful LEGO-compatible baseplate with their name raised in contrasting brick letters — with playful decorative bricks on the edges.</p>
+          <p>A colourful brick baseplate, compatible with LEGO® and other standard building bricks, with their name raised in contrasting brick letters — and playful decorative bricks on the edges.</p>
           <ul class="feature-list">
             <li><span class="icon" aria-hidden="true">✓</span> Choose plate colour + text colour</li>
             <li><span class="icon" aria-hidden="true">🧱</span> Decorative edge bricks included</li>

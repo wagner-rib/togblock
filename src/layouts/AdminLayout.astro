@@ -1,0 +1,248 @@
+---
+import type { SessionUser } from '../lib/auth';
+
+interface Props {
+  title: string;
+  currentPage?: string;
+  admin: SessionUser;
+}
+
+const { title, currentPage = '', admin } = Astro.props;
+const initial = admin.name.charAt(0).toUpperCase();
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} — TógBlocks Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sw: 220px;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
+      --sidebar-text: #94a3b8;
+      --sidebar-active-text: #ffffff;
+      --sidebar-accent: #3b82f6;
+      --abg: #f1f5f9;
+      --aw: #ffffff;
+      --ab: #e2e8f0;
+      --ink: #0f172a;
+      --ink-60: #64748b;
+      --green: #16a34a;
+      --orange: #d97706;
+      --red: #dc2626;
+      --blue: #2563eb;
+      --r: 8px;
+      --fs-xs: 0.7rem;
+      --fs-sm: 0.82rem;
+      --fs-base: 0.92rem;
+      --fs-md: 1rem;
+      --fs-lg: 1.15rem;
+      --fs-xl: 1.35rem;
+      --fs-2xl: 1.65rem;
+      --font-d: 'Baloo 2', system-ui, sans-serif;
+      --font-b: 'Nunito', system-ui, sans-serif;
+    }
+    html, body { height: 100%; }
+    body { font-family: var(--font-b); font-size: var(--fs-base); color: var(--ink); background: var(--abg); }
+    a { color: inherit; }
+    button, input, select, textarea { font-family: var(--font-b); }
+
+    /* ── Layout ── */
+    .a-shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .a-sidebar {
+      width: var(--sw); background: var(--sidebar-bg);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      overflow-y: auto; z-index: 100;
+    }
+    .a-logo {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .a-logo a {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: #fff;
+      font-family: var(--font-d); font-weight: 800; font-size: 1rem;
+    }
+    .a-logo .badge {
+      background: var(--sidebar-accent); color: #fff;
+      font-size: 0.58rem; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; letter-spacing: .06em; text-transform: uppercase;
+    }
+
+    /* ── Nav ── */
+    .a-nav { flex: 1; padding: 10px 0; }
+    .a-nav-sec { padding: 14px 16px 4px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: rgba(255,255,255,.22); }
+    .a-nav a {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 16px; color: var(--sidebar-text);
+      text-decoration: none; font-size: var(--fs-sm); font-weight: 600;
+      border-left: 3px solid transparent;
+      transition: background .1s, color .1s;
+    }
+    .a-nav a:hover  { background: var(--sidebar-hover); color: #fff; }
+    .a-nav a.active { color: var(--sidebar-active-text); border-left-color: var(--sidebar-accent); background: rgba(59,130,246,.13); }
+    .a-nav svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .65; }
+    .a-nav a.active svg, .a-nav a:hover svg { opacity: 1; }
+
+    /* ── Footer ── */
+    .a-foot { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.07); }
+    .a-user { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    .a-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--sidebar-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
+    .a-uname { font-size: var(--fs-xs); color: #fff; font-weight: 600; line-height: 1.3; }
+    .a-uemail { font-size: 0.62rem; color: var(--sidebar-text); }
+    .a-signout { display: block; width: 100%; padding: 6px 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r); color: var(--sidebar-text); font-size: var(--fs-xs); font-weight: 600; text-align: center; cursor: pointer; transition: background .1s; }
+    .a-signout:hover { background: rgba(255,255,255,.11); color: #fff; }
+
+    /* ── Main ── */
+    .a-main { margin-left: var(--sw); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .a-topbar { background: var(--aw); border-bottom: 1px solid var(--ab); padding: 0 24px; height: 50px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 16px; }
+    .a-topbar-title { font-family: var(--font-d); font-weight: 700; font-size: var(--fs-md); }
+    .a-content { padding: 24px; flex: 1; }
+
+    /* ── Shared components ── */
+    .adm-card { background: var(--aw); border: 1px solid var(--ab); border-radius: var(--r); }
+    .adm-card-hd { padding: 14px 18px; border-bottom: 1px solid var(--ab); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .adm-card-title { font-family: var(--font-d); font-weight: 700; font-size: var(--fs-md); }
+    .adm-card-bd { padding: 18px; }
+
+    .adm-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+    @media (max-width: 1100px) { .adm-stats { grid-template-columns: repeat(2,1fr); } }
+    .adm-stat { padding: 18px; }
+    .adm-stat-label { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-60); margin-bottom: 6px; }
+    .adm-stat-value { font-family: var(--font-d); font-weight: 800; font-size: var(--fs-2xl); color: var(--ink); line-height: 1; }
+    .adm-stat-sub { font-size: var(--fs-xs); color: var(--ink-60); margin-top: 4px; }
+
+    .adm-table-wrap { overflow-x: auto; }
+    .adm-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+    .adm-table th { text-align: left; padding: 9px 14px; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-60); border-bottom: 1px solid var(--ab); background: #f8fafc; white-space: nowrap; }
+    .adm-table td { padding: 11px 14px; border-bottom: 1px solid var(--ab); vertical-align: middle; }
+    .adm-table tr:last-child td { border-bottom: none; }
+    .adm-table tbody tr:hover td { background: #f8fafc; }
+
+    .adm-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700; white-space: nowrap; }
+    .adm-badge--paid       { background: #dcfce7; color: #15803d; }
+    .adm-badge--printing   { background: #dbeafe; color: #1d4ed8; }
+    .adm-badge--dispatched { background: #f3e8ff; color: #7c3aed; }
+    .adm-badge--delivered  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .adm-badge--cancelled  { background: #fee2e2; color: #991b1b; }
+    .adm-badge--refunded   { background: #fef3c7; color: #92400e; }
+    .adm-badge--pending    { background: #fef9c3; color: #854d0e; }
+
+    .adm-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r); font-family: var(--font-b); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; border: none; text-decoration: none; transition: filter .12s; white-space: nowrap; }
+    .adm-btn:hover { filter: brightness(.9); }
+    .adm-btn--primary { background: var(--blue);   color: #fff; }
+    .adm-btn--green   { background: var(--green);  color: #fff; }
+    .adm-btn--orange  { background: var(--orange); color: #fff; }
+    .adm-btn--red     { background: var(--red);    color: #fff; }
+    .adm-btn--ghost   { background: transparent; border: 1px solid var(--ab); color: var(--ink); }
+    .adm-btn--sm      { padding: 4px 10px; font-size: var(--fs-xs); }
+
+    .adm-input { width: 100%; padding: 8px 11px; border: 1px solid var(--ab); border-radius: var(--r); font-family: var(--font-b); font-size: var(--fs-sm); color: var(--ink); background: #fff; }
+    .adm-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .adm-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+    .adm-label { display: block; font-size: var(--fs-xs); font-weight: 700; color: var(--ink-60); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+    .adm-textarea { resize: vertical; min-height: 80px; }
+    .adm-field { margin-bottom: 14px; }
+
+    .adm-swatches { display: flex; flex-wrap: wrap; gap: 3px; }
+    .adm-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,.13); display: inline-block; flex-shrink: 0; }
+
+    .adm-page-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; gap: 14px; flex-wrap: wrap; }
+    .adm-page-title { font-family: var(--font-d); font-weight: 800; font-size: var(--fs-xl); color: var(--ink); }
+    .adm-page-sub { font-size: var(--fs-sm); color: var(--ink-60); margin-top: 3px; }
+
+    .adm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 900px) { .adm-grid-2 { grid-template-columns: 1fr; } }
+
+    .adm-flash { padding: 11px 14px; border-radius: var(--r); font-size: var(--fs-sm); font-weight: 600; margin-bottom: 18px; }
+    .adm-flash--ok  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .adm-flash--err { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    .adm-tl { display: flex; flex-direction: column; }
+    .adm-tl-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
+    .adm-tl-item:not(:last-child)::before { content:''; position:absolute; left:11px; top:22px; bottom:0; width:1px; background: var(--ab); }
+    .adm-tl-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; font-weight: 800; }
+    .adm-tl-label { font-weight: 700; font-size: var(--fs-sm); color: var(--ink); }
+    .adm-tl-meta { font-size: var(--fs-xs); color: var(--ink-60); margin-top: 1px; }
+
+    .adm-empty { text-align: center; padding: 40px 20px; color: var(--ink-60); font-size: var(--fs-sm); }
+
+    @media (max-width: 768px) {
+      .a-sidebar { transform: translateX(-100%); }
+      .a-main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="a-shell">
+  <!-- Sidebar -->
+  <aside class="a-sidebar">
+    <div class="a-logo">
+      <a href="/admin">
+        <span>TógBlocks</span>
+        <span class="badge">Admin</span>
+      </a>
+    </div>
+
+    <nav class="a-nav">
+      <div class="a-nav-sec">Operations</div>
+      <a href="/admin" class={currentPage === 'dashboard' ? 'active' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="/admin/orders" class={currentPage === 'orders' ? 'active' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Orders
+      </a>
+      <a href="/admin/print-queue" class={currentPage === 'print-queue' ? 'active' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Queue
+      </a>
+      <div class="a-nav-sec">Customers</div>
+      <a href="/admin/customers" class={currentPage === 'customers' ? 'active' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Customers
+      </a>
+      <div class="a-nav-sec">Site</div>
+      <a href="/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site ↗
+      </a>
+    </nav>
+
+    <div class="a-foot">
+      <div class="a-user">
+        <div class="a-avatar">{initial}</div>
+        <div>
+          <div class="a-uname">{admin.name}</div>
+          <div class="a-uemail">{admin.email}</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/auth/logout">
+        <button type="submit" class="a-signout">Sign out</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="a-main">
+    <div class="a-topbar">
+      <span class="a-topbar-title">{title}</span>
+      <slot name="actions" />
+    </div>
+    <div class="a-content">
+      <slot />
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../lib/adminAuth';
+import { query } from '../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin/print-queue');
+
+type QueueItem = {
+  id: number; total: number; created_at: Date; customer_name: string;
+  items: { custom_name: string; product_type: string; colours: string[]; quantity: number }[];
+};
+
+async function fetchQueue(status: string): Promise<QueueItem[]> {
+  const res = await query<{
+    id: number; total: number; created_at: Date; customer_name: string; items: string;
+  }>(`
+    SELECT o.id, o.total, o.created_at,
+      COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
+      JSON_AGG(JSON_BUILD_OBJECT(
+        'custom_name', oi.custom_name,
+        'product_type', oi.product_type,
+        'colours', oi.colours,
+        'quantity', oi.quantity
+      ) ORDER BY oi.id) AS items
+    FROM orders o
+    LEFT JOIN users u ON u.id = o.user_id
+    JOIN order_items oi ON oi.order_id = o.id
+    WHERE o.status = $1
+    GROUP BY o.id, u.name, o.guest_email
+    ORDER BY o.created_at ASC
+  `, [status]);
+
+  return res.rows.map(r => ({
+    ...r,
+    items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+  }));
+}
+
+const [toPrint, printing] = await Promise.all([fetchQueue('paid'), fetchQueue('printing')]);
+
+function ref(id: number)  { return `#TB${String(id).padStart(5, '0')}`; }
+function ago(d: Date) {
+  const diff = Date.now() - new Date(d).getTime();
+  const hrs = Math.floor(diff / 3600000);
+  if (hrs < 1) return `${Math.floor(diff/60000)}m ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs/24)}d ago`;
+}
+---
+
+<AdminLayout title="Print Queue" currentPage="print-queue" admin={admin}>
+  <div class="adm-page-hd">
+    <div>
+      <div class="adm-page-title">Print Queue</div>
+      <div class="adm-page-sub">{toPrint.length} to start · {printing.length} in progress</div>
+    </div>
+    <button onclick="window.location.reload()" class="adm-btn adm-btn--ghost">↻ Refresh</button>
+  </div>
+
+  <!-- TO PRINT -->
+  <div style="margin-bottom:24px">
+    <h2 style="font-family:var(--font-d);font-weight:700;font-size:var(--fs-md);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--orange);display:inline-block"></span>
+      To print
+      {toPrint.length > 0 && <span style="background:var(--orange);color:#fff;border-radius:999px;padding:1px 8px;font-size:var(--fs-xs)">{toPrint.length}</span>}
+    </h2>
+
+    {toPrint.length === 0 ? (
+      <div class="adm-card" style="padding:32px;text-align:center;color:var(--ink-60)">Nothing waiting — all caught up! 🎉</div>
+    ) : (
+      <div style="display:flex;flex-direction:column;gap:10px">
+        {toPrint.map(o => (
+          <div class="adm-card" style="display:flex;align-items:flex-start;gap:16px;padding:16px;border-left:3px solid var(--orange)">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+                <a href={`/admin/orders/${o.id}`} style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-md);color:var(--blue);text-decoration:none">{ref(o.id)}</a>
+                <span style="color:var(--ink-60);font-size:var(--fs-sm)">{o.customer_name}</span>
+                <span style="color:var(--ink-60);font-size:var(--fs-xs);margin-left:auto">ordered {ago(o.created_at)}</span>
+              </div>
+              {o.items.map(item => (
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+                  <span style="font-family:var(--font-d);font-weight:700;font-size:1.1rem">{item.custom_name}</span>
+                  <span style="font-size:var(--fs-xs);color:var(--ink-60);background:#f1f5f9;padding:2px 8px;border-radius:999px">
+                    {item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} × {item.quantity}
+                  </span>
+                  <div class="adm-swatches">
+                    {(item.colours || []).map((c: string) => (
+                      <span class="adm-swatch" style={`background:${c};width:20px;height:20px`} title={c}></span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <form method="POST" action={`/api/admin/orders/${o.id}/status`} style="flex-shrink:0">
+              <input type="hidden" name="status" value="printing" />
+              <input type="hidden" name="redirect" value="/admin/print-queue" />
+              <button type="submit" class="adm-btn adm-btn--green">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Start Printing
+              </button>
+            </form>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- IN PROGRESS -->
+  <div>
+    <h2 style="font-family:var(--font-d);font-weight:700;font-size:var(--fs-md);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block"></span>
+      In progress
+      {printing.length > 0 && <span style="background:var(--blue);color:#fff;border-radius:999px;padding:1px 8px;font-size:var(--fs-xs)">{printing.length}</span>}
+    </h2>
+
+    {printing.length === 0 ? (
+      <div class="adm-card" style="padding:32px;text-align:center;color:var(--ink-60)">Nothing printing right now.</div>
+    ) : (
+      <div style="display:flex;flex-direction:column;gap:10px">
+        {printing.map(o => (
+          <div class="adm-card" style="border-left:3px solid var(--blue)">
+            <div style="display:flex;align-items:flex-start;gap:16px;padding:16px">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+                  <a href={`/admin/orders/${o.id}`} style="font-family:var(--font-d);font-weight:800;font-size:var(--fs-md);color:var(--blue);text-decoration:none">{ref(o.id)}</a>
+                  <span style="color:var(--ink-60);font-size:var(--fs-sm)">{o.customer_name}</span>
+                  <span style="color:var(--ink-60);font-size:var(--fs-xs);margin-left:auto">ordered {ago(o.created_at)}</span>
+                </div>
+                {o.items.map(item => (
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+                    <span style="font-family:var(--font-d);font-weight:700;font-size:1.1rem">{item.custom_name}</span>
+                    <span style="font-size:var(--fs-xs);color:var(--ink-60);background:#f1f5f9;padding:2px 8px;border-radius:999px">
+                      {item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} × {item.quantity}
+                    </span>
+                    <div class="adm-swatches">
+                      {(item.colours || []).map((c: string) => (
+                        <span class="adm-swatch" style={`background:${c};width:20px;height:20px`} title={c}></span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <!-- Dispatch inline form -->
+            <div style="border-top:1px solid var(--ab);padding:12px 16px;background:#f8fafc">
+              <form method="POST" action={`/api/admin/orders/${o.id}/dispatch`} style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                <input type="hidden" name="redirect" value="/admin/print-queue" />
+                <div style="flex:0 0 auto">
+                  <label class="adm-label">Carrier</label>
+                  <select class="adm-input adm-select" name="carrier" style="width:auto">
+                    <option value="an_post">An Post</option>
+                    <option value="dhl">DHL</option>
+                    <option value="ups">UPS</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:180px">
+                  <label class="adm-label">Tracking number (optional)</label>
+                  <input class="adm-input" name="tracking_number" placeholder="e.g. IE123456789" />
+                </div>
+                <button type="submit" class="adm-btn adm-btn--primary">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                  Mark Dispatched &amp; Email Customer
+                </button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</AdminLayout>

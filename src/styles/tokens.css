@@ -79,7 +79,7 @@
   --maxw:        1200px;
   --maxw-narrow: 760px;
   --gutter:      clamp(20px, 5vw, 56px);
-  --header-h:    60px;
+  --header-h:    72px;
 
   /* Focus rings */
   --focus-ring:         0 0 0 3px var(--cream), 0 0 0 6px var(--green-deep);

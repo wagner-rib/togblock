@@ -2,6 +2,15 @@ import { loadCart, saveCart, removeFromCart, cartCount } from '../builder/cart';
 import { FONT } from '../builder/brickfont';
 import type { CartItem } from '../builder/types';
 
+/* ---- header scroll blur ---- */
+function initHeaderScroll(): void {
+  const header = document.querySelector<HTMLElement>('.site-header');
+  if (!header) return;
+  const update = () => header.classList.toggle('is-scrolled', window.scrollY > 10);
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+}
+
 /* ---- mobile menu ---- */
 function initMenu(): void {
   const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
@@ -126,6 +135,43 @@ function initNewsletter(): void {
   });
 }
 
+/* ---- SVG brick name preview (scales to any width) ---- */
+function brickNameSVG(item: CartItem): string {
+  const name    = (item.name || '').toUpperCase();
+  const letters = item.letters || [];
+  const cell    = 5;
+  const gap     = 4;
+  const cols    = 5;
+  const lw      = cols * cell;
+
+  let totalW = 0;
+  for (const ch of name) {
+    totalW += (ch === ' ' ? Math.round(lw * 0.6) : lw) + gap;
+  }
+  totalW = Math.max(totalW - gap, 1);
+  const totalH = 7 * cell;
+
+  let rects = '';
+  let x = 0;
+  let ci = 0;
+  for (const ch of name) {
+    if (ch === ' ') { x += Math.round(lw * 0.6) + gap; continue; }
+    const grid   = FONT[ch];
+    const colour = letters[ci]?.colour || '#1D4ED8';
+    ci++;
+    if (!grid) { x += lw + gap; continue; }
+    grid.forEach((row, ri) => {
+      for (let c = 0; c < row.length; c++) {
+        if (row[c] === '1') {
+          rects += `<rect x="${x + c * cell}" y="${ri * cell}" width="${cell - 1}" height="${cell - 1}" rx="1" fill="${colour}"/>`;
+        }
+      }
+    });
+    x += lw + gap;
+  }
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;max-height:44px" aria-hidden="true">${rects}</svg>`;
+}
+
 /* ---- cart page renderer ---- */
 function renderCart(): void {
   const root = document.querySelector<HTMLElement>('[data-cart-root]');
@@ -148,20 +194,20 @@ function renderCart(): void {
     return;
   }
 
-  const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
+  const total    = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const shipping = total >= 40 ? 0 : 4.95;
 
   root.innerHTML = `
     <div class="cart-layout">
-      <div data-cart-items></div>
+      <div data-cart-items class="cart-items-list"></div>
       <aside class="card summary" aria-label="Order summary">
         <h2 style="font-size:var(--fs-lg);margin-bottom:16px">Summary</h2>
         <div class="summary-row"><span>Subtotal</span><span>€${total.toFixed(2)}</span></div>
         <div class="summary-row"><span>Shipping (Ireland)</span><span>${shipping === 0 ? '<span style="color:var(--green);font-weight:700">Free</span>' : `€${shipping.toFixed(2)}`}</span></div>
         <div class="summary-row total"><span>Total</span><span>€${(total + shipping).toFixed(2)}</span></div>
-        <button class="btn btn--cta btn--block btn--lg" style="margin-top:20px" onclick="alert('Checkout coming soon!')">
+        <a class="btn btn--cta btn--block btn--lg" href="/checkout" style="margin-top:20px;text-align:center;display:block">
           Checkout <span aria-hidden="true">→</span>
-        </button>
+        </a>
         <p class="field-hint center" style="margin-top:12px">Secure checkout · Made in Ireland</p>
       </aside>
     </div>`;
@@ -170,22 +216,25 @@ function renderCart(): void {
   cart.forEach((item) => {
     const article = document.createElement('article');
     article.className = 'cart-item';
+    const themeName = item.theme
+      ? item.theme.charAt(0).toUpperCase() + item.theme.slice(1)
+      : '';
     article.innerHTML = `
-      <div class="ci-preview" data-preview></div>
+      <div class="ci-preview">${brickNameSVG(item)}</div>
       <div class="ci-body">
-        <h3 style="font-size:var(--fs-md)">"${item.name}"</h3>
-        <div class="ci-meta">
-          <span>${item.sizeLabel} bricks</span>
-          <span>${item.theme.charAt(0).toUpperCase() + item.theme.slice(1)} theme</span>
-          <span>${item.brickCount} bricks</span>
+        <div class="ci-row1">
+          <h3 class="ci-name">"${item.name}"</h3>
+          <span class="ci-price">€${item.price * (item.qty || 1)}</span>
         </div>
-        <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <span style="font-family:var(--font-display);font-weight:800;font-size:var(--fs-lg);color:var(--green-deep)">€${item.price}</span>
+        <div class="ci-meta">
+          ${themeName ? `<span>${themeName} theme</span>` : ''}
+          ${item.brickCount ? `<span>${item.brickCount} bricks</span>` : ''}
+          <span>qty ${item.qty || 1}</span>
+        </div>
+        <div class="ci-actions">
           <button class="ci-remove" data-remove="${item.id}">Remove</button>
         </div>
       </div>`;
-    const preview = article.querySelector<HTMLElement>('[data-preview]')!;
-    preview.appendChild(miniPreview(item, 5));
     article.querySelector<HTMLButtonElement>('[data-remove]')!.addEventListener('click', () => {
       removeFromCart(item.id);
       renderCart();
@@ -306,18 +355,83 @@ window.TogToast = showToast;
 window.TogMiniPreview = miniPreview;
 window.TogCart = { load: loadCart, save: saveCart, KEY: 'togblocks_cart' };
 
+async function syncCartWithServer(): Promise<void> {
+  try {
+    const localCart = loadCart();
+    if (!localCart.length) return;
+    // Push local cart to server (server stores normalized shape for order lookup)
+    await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(localCart.map(i => ({
+        product_type: i.type === 'door-sign' ? 'door-sign' : 'letters',
+        custom_name:  i.name ?? '',
+        colours:      (i.letters ?? []).map((l: any) => l.colour),
+        quantity:     i.qty ?? 1,
+        unit_price:   Math.round((i.price ?? 0) * 100),
+      }))),
+    });
+  } catch {
+    // non-critical — continue silently
+  }
+}
+
+/* Restore cart from server when localStorage is empty (e.g. new device after login) */
+async function loadCartFromServer(): Promise<void> {
+  try {
+    if (loadCart().length > 0) return; // local cart takes priority
+    const res = await fetch('/api/cart');
+    if (!res.ok) return;
+    const serverItems: {
+      product_type: string;
+      custom_name: string;
+      colours: string[];
+      quantity: number;
+      unit_price: number;
+    }[] = await res.json();
+    if (!serverItems.length) return;
+
+    const restored: CartItem[] = serverItems.map((s) => ({
+      id: crypto.randomUUID(),
+      type: s.product_type === 'door-sign' ? 'door-sign' : 'custom-name',
+      name: s.custom_name,
+      letters: (s.colours ?? []).map((colour) => ({ char: '', colour })),
+      qty: s.quantity,
+      price: s.unit_price / 100,
+      theme: '',
+      oneColour: null,
+      brickSizePx: 0,
+      sizeLabel: '',
+      brickCount: 0,
+      currency: 'EUR',
+      createdAt: new Date().toISOString(),
+    }));
+    saveCart(restored);
+  } catch {
+    // non-critical
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initHeaderScroll();
   initMenu();
-  updateCount();
   initAccordions();
   initNewsletter();
-  renderCart();
   renderColourSets();
   renderScenes();
   renderAboutBricks();
   document.querySelectorAll('[data-year]').forEach((el) => {
     el.textContent = String(new Date().getFullYear());
   });
+  // Pull server cart first (new device), then render and sync
+  loadCartFromServer().then(() => {
+    updateCount();
+    renderCart();
+    syncCartWithServer();
+  });
 });
 
-document.addEventListener('cart:update', updateCount);
+document.addEventListener('cart:update', () => {
+  updateCount();
+  syncCartWithServer();
+});

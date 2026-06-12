@@ -3,105 +3,188 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base
-  title="Builder — TógBlocks"
+  title="Build Now — TógBlocks"
   description="Personalise your TógBlocks order. Type a name, pick colours, and get an instant 3D preview before adding to basket."
   currentPage="/builder"
 >
-  <section class="builder-page">
-    <div class="wrap builder-page__wrap">
 
-      <div class="builder-page__header">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <ol>
-            <li><a href="/">Home</a></li>
-            <li><a href="/products">Products</a></li>
-            <li aria-current="page" data-builder-bc>Brick Name Letters</li>
-          </ol>
-        </nav>
-        <h1 class="builder-page__title" data-builder-title>Personalise your Brick Name Letters</h1>
-        <p class="builder-page__sub lead" data-builder-sub>
-          Type a name, choose your colours, and get a live 3D preview. We'll build it and post it within 3 days.
-        </p>
-        <div class="builder-page__tabs" role="tablist" aria-label="Product type">
-          <a
-            href="/builder?product=letters"
-            class="builder-tab"
-            data-tab="letters"
-            role="tab"
-            aria-selected="true"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <!-- ═══ SLIM TITLE BAR ═══ -->
+  <div class="bn-bar">
+    <div class="bn-bar__studs" aria-hidden="true"></div>
+    <div class="wrap bn-bar__inner">
+      <span class="bn-bar__label">Your name. Your colours. Your bricks.</span>
+    </div>
+    <div class="bn-bar__studs" aria-hidden="true"></div>
+  </div>
+
+  <!-- ═══ TOOL ═══ -->
+  <section class="bn-tool">
+    <div class="wrap bn-tool__wrap">
+
+      <!-- instruction line -->
+      <p class="bn-hint">
+        type a name &nbsp;·&nbsp; choose colours &nbsp;·&nbsp; instant&nbsp;3D&nbsp;preview
+      </p>
+
+      <!-- card: tabs + builder -->
+      <div class="bn-card">
+
+        <!-- tab header -->
+        <div class="bn-card__tabs" role="tablist" aria-label="Product type">
+          <a href="/builder?product=letters" class="bn-tab" data-tab="letters"
+             role="tab" aria-selected="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <rect x="3" y="6" width="7" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
               <rect x="14" y="6" width="7" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
             </svg>
             Brick Letters
           </a>
-          <a
-            href="/builder?product=sign"
-            class="builder-tab"
-            data-tab="sign"
-            role="tab"
-            aria-selected="false"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <div class="bn-tab-divider" aria-hidden="true"></div>
+          <a href="/builder?product=sign" class="bn-tab" data-tab="sign"
+             role="tab" aria-selected="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <rect x="2" y="7" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
-              <path d="M7 11h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
             Door Sign
           </a>
         </div>
-      </div>
 
-      <!-- Letters builder (default) -->
-      <div id="builder-letters" data-builder-panel="letters">
-        <div data-name-builder data-initial="ADA"></div>
-      </div>
+        <!-- builder panels -->
+        <div id="builder-letters" data-builder-panel="letters">
+          <div data-name-builder data-initial="ADA"></div>
+        </div>
 
-      <!-- Sign builder -->
-      <div id="builder-sign" data-builder-panel="sign" hidden>
-        <div data-sign-builder-host data-initial="CHARLIE"></div>
-      </div>
+        <div id="builder-sign" data-builder-panel="sign" hidden>
+          <div data-sign-builder-host data-initial="CHARLIE"></div>
+        </div>
+
+      </div><!-- /bn-card -->
 
     </div>
   </section>
+
 </Base>
 
 <style>
-.builder-page {
-  padding-block: clamp(28px, 4vw, 52px);
+/* ── SLIM TITLE BAR ───────────────────────────────────────────── */
+.bn-bar {
+  background: var(--green-deep);
+  display: flex;
+  flex-direction: column;
+}
+
+.bn-bar__studs {
+  height: 24px;
+  background-color: rgba(0,0,0,.20);
+  background-image: radial-gradient(circle at center, var(--orange) 44%, transparent 45%);
+  background-size: 24px 24px;
+  background-position: 12px 3px;
+  background-repeat: repeat-x;
+}
+
+.bn-bar__inner {
+  padding-block: 10px;
+}
+
+.bn-bar__label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  color: var(--white);
+}
+
+/* ── TOOL AREA ────────────────────────────────────────────────── */
+.bn-tool {
   background: var(--offwhite);
-  min-height: calc(100vh - var(--header-h));
+  padding-block: clamp(16px, 2.5vw, 28px);
+  min-height: calc(100vh - var(--header-h) - 92px);
 }
-.builder-page__wrap {
-  display: flex; flex-direction: column; gap: clamp(20px, 3vw, 32px);
+
+.bn-tool__wrap {
   max-width: 940px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.builder-page__header {
-  display: flex; flex-direction: column; gap: 10px;
+
+/* ── INSTRUCTION LINE ─────────────────────────────────────────── */
+.bn-hint {
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
+  margin: 0;
+  letter-spacing: .01em;
 }
-.builder-page__title {
-  font-size: clamp(1.6rem, 1.4rem + 1vw, 2.4rem);
-  color: var(--ink);
+
+/* ── CARD WRAPPER ─────────────────────────────────────────────── */
+.bn-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
-.builder-page__sub {
-  max-width: 560px;
+
+/* strip the builder's own card chrome — we provide it via .bn-card */
+.bn-card .builder,
+.bn-card .sign-builder {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
-.builder-page__tabs {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  margin-top: 4px;
+
+/* ── TABS ─────────────────────────────────────────────────────── */
+.bn-card__tabs {
+  display: flex;
+  align-items: stretch;
+  background: var(--offwhite);
+  border-bottom: 1.5px solid var(--line);
 }
-.builder-tab {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm);
-  padding: 10px 18px; border-radius: var(--radius-pill);
-  border: 2px solid var(--line-strong);
-  background: var(--white); color: var(--green-deep);
+
+.bn-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--ink-60);
   text-decoration: none;
-  transition: background .14s, border-color .14s, transform .14s var(--ease-pop);
+  background: transparent;
+  border-bottom: 3px solid transparent;
+  transition: color .15s, background .15s, border-color .15s;
+  white-space: nowrap;
+  justify-content: center;
 }
-.builder-tab:hover { border-color: var(--sage); transform: translateY(-1px); }
-.builder-tab[aria-selected="true"] {
-  background: var(--green-deep); color: var(--white); border-color: var(--green-deep);
+
+.bn-tab:hover {
+  color: var(--green-deep);
+  background: var(--green-soft);
+}
+
+.bn-tab[aria-selected="true"] {
+  color: var(--green-deep);
+  background: var(--white);
+  border-bottom-color: var(--green-deep);
+}
+
+.bn-tab-divider {
+  width: 1.5px;
+  background: var(--line);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* ── MOBILE ───────────────────────────────────────────────────── */
+@media (max-width: 440px) {
+  .bn-hint { font-size: var(--fs-xs); }
+  .bn-tab  { padding: 12px 12px; font-size: var(--fs-xs); }
 }
 </style>
 
@@ -110,18 +193,16 @@ import Base from '../layouts/Base.astro';
   import { DoorSignBuilder } from '../builder/sign-builder.ts';
 
   document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
+    const params  = new URLSearchParams(window.location.search);
     const product = params.get('product') || 'letters';
 
-    // Show/hide panels
     const lettersPanel = document.getElementById('builder-letters');
-    const signPanel = document.getElementById('builder-sign');
-    const tabs = document.querySelectorAll<HTMLAnchorElement>('.builder-tab');
+    const signPanel    = document.getElementById('builder-sign');
+    const tabs         = document.querySelectorAll<HTMLAnchorElement>('.bn-tab');
 
     if (product === 'sign') {
       if (lettersPanel) lettersPanel.hidden = true;
-      if (signPanel) signPanel.hidden = false;
-      // Init sign builder
+      if (signPanel)    signPanel.hidden = false;
       const host = signPanel?.querySelector<HTMLElement>('[data-sign-builder-host]');
       if (host && !host.dataset.sbInit) {
         host.dataset.sbInit = '1';
@@ -129,21 +210,8 @@ import Base from '../layouts/Base.astro';
       }
     }
 
-    // Tab aria-selected
     tabs.forEach(tab => {
-      const tabProduct = tab.dataset.tab;
-      tab.setAttribute('aria-selected', String(tabProduct === product));
+      tab.setAttribute('aria-selected', String(tab.dataset.tab === product));
     });
-
-    // Update header text
-    const bc = document.querySelector('[data-builder-bc]');
-    const title = document.querySelector('[data-builder-title]');
-    const sub = document.querySelector('[data-builder-sub]');
-
-    if (product === 'sign') {
-      if (bc) bc.textContent = 'Door / Room Sign';
-      if (title) title.textContent = 'Personalise your Door / Room Sign';
-      if (sub) sub.textContent = 'Choose a plate colour, text colour, and type your name. A live preview updates instantly.';
-    }
   });
 </script>
