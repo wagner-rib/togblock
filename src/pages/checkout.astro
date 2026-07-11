@@ -843,7 +843,7 @@ function scheduleInit(country) {
   initTimer = setTimeout(() => initStripe(c), 600);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initCheckout() {
   loadCart();
   renderSummary(null);
 
@@ -899,5 +899,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('co-submit-spinner').hidden = true;
     }
   });
-});
+}
+
+// define:vars scripts run after the page HTML, so DOMContentLoaded may already
+// have fired. Handle both cases.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCheckout);
+} else {
+  initCheckout();
+}
 </script>
