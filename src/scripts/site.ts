@@ -232,6 +232,11 @@ function renderCart(): void {
           ${themeName && !item.sizeLabel?.includes('Door') ? `<span>${themeName} theme</span>` : ''}
           <span>qty ${item.qty || 1}</span>
         </div>
+        ${item.addons?.dots || item.addons?.giftBox ? `
+        <div class="ci-addons">
+          ${item.addons.dots ? `<span class="ci-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>` : ''}
+          ${item.addons.giftBox ? `<span class="ci-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>` : ''}
+        </div>` : ''}
         <div class="ci-actions">
           <button class="ci-remove" data-remove="${item.id}">Remove</button>
         </div>

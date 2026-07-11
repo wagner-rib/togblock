@@ -129,6 +129,9 @@
 .cart-item .ci-name   { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-md); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-item .ci-price  { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-md); color: var(--green-deep); white-space: nowrap; }
 .cart-item .ci-meta   { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--ink-60); font-size: var(--fs-sm); margin-bottom: 10px; }
+.cart-item .ci-addons  { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.cart-item .ci-addon   { font-size: var(--fs-xs); color: var(--ink-60); background: var(--offwhite); border-radius: var(--radius-sm); padding: 5px 10px; display: block; }
+.cart-item .ci-addon strong { color: var(--green-deep); }
 .cart-item .ci-actions { display: flex; gap: 12px; align-items: center; }
 .cart-item .ci-remove { background: none; border: none; cursor: pointer; color: var(--ink-40); font-size: var(--fs-sm); padding: 0; text-decoration: underline; text-underline-offset: 2px; }
 .cart-item .ci-remove:hover { color: #dc2626; }
