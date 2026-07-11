@@ -1,4 +1,5 @@
 import { FONT } from './brickfont';
+import { COLOURS, priceDoorSign, type SignShape } from './themes';
 import { addToCart } from './cart';
 import type { CartItem } from './types';
 
@@ -6,33 +7,48 @@ function q<T extends Element = Element>(sel: string, ctx: Element | Document = d
   return (ctx as Element).querySelector<T>(sel) as T;
 }
 
-const PLATE_COLOURS: { label: string; value: string }[] = [
-  { label: 'Red',       value: '#CC3B2A' },
-  { label: 'Blue',      value: '#1D4ED8' },
-  { label: 'Yellow',    value: '#FACC15' },
-  { label: 'Green',     value: '#16A34A' },
-  { label: 'Dark Grey', value: '#374151' },
-  { label: 'White',     value: '#F5F5F5' },
+// 13-colour plate options (subset that works well as plate base colours)
+const PLATE_COLOURS = [
+  { label: COLOURS.red.label,         value: COLOURS.red.hex },
+  { label: COLOURS.blue.label,        value: COLOURS.blue.hex },
+  { label: COLOURS.green.label,       value: COLOURS.green.hex },
+  { label: COLOURS.yellow.label,      value: COLOURS.yellow.hex },
+  { label: COLOURS.black.label,       value: COLOURS.black.hex },
+  { label: COLOURS.white.label,       value: COLOURS.white.hex },
+  { label: COLOURS.terracotta.label,  value: COLOURS.terracotta.hex },
+  { label: COLOURS.sage.label,        value: COLOURS.sage.hex },
 ];
 
-const TEXT_COLOURS: { label: string; value: string }[] = [
-  { label: 'Yellow',    value: '#FACC15' },
-  { label: 'White',     value: '#FFFFFF' },
-  { label: 'Red',       value: '#CC3B2A' },
-  { label: 'Blue',      value: '#1D4ED8' },
-  { label: 'Green',     value: '#16A34A' },
-  { label: 'Dark Grey', value: '#374151' },
+// 13-colour text options (contrasting colours for raised letters)
+const TEXT_COLOURS = [
+  { label: COLOURS.yellow.label,      value: COLOURS.yellow.hex },
+  { label: COLOURS.white.label,       value: COLOURS.white.hex },
+  { label: COLOURS.red.label,         value: COLOURS.red.hex },
+  { label: COLOURS.blue.label,        value: COLOURS.blue.hex },
+  { label: COLOURS.green.label,       value: COLOURS.green.hex },
+  { label: COLOURS.black.label,       value: COLOURS.black.hex },
+  { label: COLOURS.silk_gold.label,   value: COLOURS.silk_gold.hex },
+  { label: COLOURS.silk_silver.label, value: COLOURS.silk_silver.hex },
+  { label: COLOURS.pink.label,        value: COLOURS.pink.hex },
+  { label: COLOURS.sky_blue.label,    value: COLOURS.sky_blue.hex },
 ];
 
-const DECO_COLOURS = ['#CC3B2A','#1D4ED8','#FACC15','#16A34A','#7C3AED','#F97316'];
+const SHAPE_OPTS: { value: SignShape; label: string; price: string; radius: string }[] = [
+  { value: 'rectangle', label: 'Rectangle', price: 'Included',  radius: '8px' },
+  { value: 'arch',      label: 'Arch',      price: '+€5',       radius: '50% 50% 8px 8px / 40% 40% 8px 8px' },
+  { value: 'rounded',   label: 'Rounded',   price: '+€5',       radius: '40px' },
+];
 
-const PLATE_W = 32; // studs wide
-const PLATE_H = 12; // studs tall
+const DECO_COLOURS = [
+  COLOURS.red.hex, COLOURS.blue.hex, COLOURS.yellow.hex,
+  COLOURS.green.hex, COLOURS.pink.hex, COLOURS.sky_blue.hex,
+];
 
 interface SignState {
   text: string;
   plateColour: string;
   textColour: string;
+  shape: SignShape;
 }
 
 export class DoorSignBuilder {
@@ -46,6 +62,7 @@ export class DoorSignBuilder {
       text: host.dataset.initial || 'CHARLIE',
       plateColour: PLATE_COLOURS[0].value,
       textColour: TEXT_COLOURS[0].value,
+      shape: 'rectangle',
     };
     this.build();
     this.render();
@@ -74,7 +91,18 @@ export class DoorSignBuilder {
               <input id="sb-text" class="input" data-sb-input type="text" inputmode="text"
                 maxlength="${this.MAX}" autocomplete="off" placeholder="e.g. Charlie"
                 value="${this.state.text}" />
-              <span class="input-counter" data-sb-counter-abs style="position:absolute;right:14px;top:50%;transform:translateY(-50%)">${this.state.text.length}/${this.MAX}</span>
+            </div>
+            <p class="field-hint">Letters, numbers, spaces and apostrophes (up to ${this.MAX} chars).</p>
+          </div>
+
+          <div class="control-group">
+            <span class="label" id="sb-shape-label">Sign shape</span>
+            <div class="size-selector" role="group" aria-labelledby="sb-shape-label" data-sb-shapes>
+              ${SHAPE_OPTS.map((s) => `
+                <button type="button" class="size-opt" data-shape="${s.value}" aria-pressed="${s.value === 'rectangle' ? 'true' : 'false'}">
+                  <span class="so-label">${s.label}</span>
+                  <span class="so-price">${s.price}</span>
+                </button>`).join('')}
             </div>
           </div>
 
@@ -94,7 +122,7 @@ export class DoorSignBuilder {
             <span class="label" id="sb-text-label">Text colour</span>
             <div class="swatches" role="group" aria-labelledby="sb-text-label" data-sb-text-swatches>
               ${TEXT_COLOURS.map((c, i) => `
-                <button type="button" class="swatch" data-text-c="${c.value}"
+                <button type="button" class="swatch ${c.value === '#F5F5F5' ? 'swatch--outlined' : ''}" data-text-c="${c.value}"
                   style="background:${c.value}"
                   aria-label="${c.label}"
                   aria-pressed="${i === 0 ? 'true' : 'false'}"></button>
@@ -104,8 +132,8 @@ export class DoorSignBuilder {
 
           <div class="builder-checkout">
             <div class="price-block">
-              <span class="pb-now" data-sb-price>€12</span>
-              <span class="pb-break" data-sb-breakdown>€12 base + €2 per letter</span>
+              <span class="pb-now" data-sb-price>€25</span>
+              <span class="pb-break" data-sb-breakdown>€25 base + €4 per letter</span>
             </div>
             <button class="btn btn--cta btn--lg" data-sb-add aria-disabled="false">
               <span>Add to basket</span>
@@ -114,14 +142,28 @@ export class DoorSignBuilder {
         </div>
       </div>`;
 
-    // Events
+    // Input
     const input = q<HTMLInputElement>('[data-sb-input]', this.host);
     input.addEventListener('input', () => {
-      this.state.text = input.value.toUpperCase().slice(0, this.MAX);
-      input.value = this.state.text;
+      // Allow A-Z, 0-9, space, apostrophe
+      const raw = input.value.toUpperCase().replace(/[^A-Z0-9\s']/g, '').slice(0, this.MAX);
+      this.state.text = raw;
+      input.value = raw;
       this.render();
     });
 
+    // Shape selector
+    this.host.querySelectorAll<HTMLButtonElement>('[data-shape]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.state.shape = btn.dataset.shape as SignShape;
+        this.host.querySelectorAll('[data-shape]').forEach((b) =>
+          b.setAttribute('aria-pressed', String((b as HTMLButtonElement).dataset.shape === this.state.shape))
+        );
+        this.render();
+      });
+    });
+
+    // Plate colour
     this.host.querySelectorAll<HTMLButtonElement>('[data-plate-c]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.state.plateColour = btn.dataset.plateC!;
@@ -132,6 +174,7 @@ export class DoorSignBuilder {
       });
     });
 
+    // Text colour
     this.host.querySelectorAll<HTMLButtonElement>('[data-text-c]').forEach((btn) => {
       btn.addEventListener('click', () => {
         this.state.textColour = btn.dataset.textC!;
@@ -150,15 +193,17 @@ export class DoorSignBuilder {
     const textRow = q('[data-sign-text]', this.host);
     const decos = q('[data-sign-decos]', this.host);
 
-    // Update plate colour and stud pattern
+    // Shape → border-radius
+    const shapeOpt = SHAPE_OPTS.find((s) => s.value === this.state.shape)!;
     plate.style.cssText = `
       background-color: ${this.state.plateColour};
-      background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.40) 28%, transparent 32%);
+      background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.38) 28%, transparent 32%);
       background-size: 14px 14px;
+      border-radius: ${shapeOpt.radius};
     `;
 
     // Render name in brick font
-    const cell = 14; // px per brick cell for sign
+    const cell = 14;
     const text = this.state.text.replace(/[^A-Z0-9\s]/g, '');
 
     textRow.innerHTML = '';
@@ -207,13 +252,12 @@ export class DoorSignBuilder {
       textRow.appendChild(g);
     });
 
-    // Decorative bricks on edges
+    // Decorative bricks
     decos.innerHTML = '';
     const decoPositions = [
-      { top: '8px',  left:  '14px', w: 2, h: 1 },
-      { top: '8px',  right: '34px', w: 1, h: 2 },
-      { top: '8px',  left:  '50%',  w: 2, h: 1 },
-      { bottom: '8px', left: '28px', w: 2, h: 1 },
+      { top: '8px',    left:  '14px', w: 2, h: 1 },
+      { top: '8px',    right: '34px', w: 1, h: 2 },
+      { bottom: '8px', left:  '28px', w: 2, h: 1 },
       { bottom: '8px', right: '18px', w: 1, h: 2 },
     ];
     decoPositions.forEach((pos, i) => {
@@ -233,29 +277,36 @@ export class DoorSignBuilder {
       decos.appendChild(brick);
     });
 
-    // Fit text row within the plate using zoom
     this.fitText(textRow, plate);
-
-    // Update price
-    const n = Math.max(1, [...text].filter(c => c !== ' ').length);
-    const price = 12 + 2 * n;
-    const priceEl = q('[data-sb-price]', this.host);
-    const breakdownEl = q('[data-sb-breakdown]', this.host);
-    if (priceEl) priceEl.textContent = `€${price}`;
-    if (breakdownEl) breakdownEl.textContent = `€12 base + €2 × ${n} letter${n !== 1 ? 's' : ''}`;
+    this.updatePrice();
 
     // Counter
     const counter = q('[data-sb-counter]', this.host);
-    const counterAbs = q('[data-sb-counter-abs]', this.host);
     if (counter) counter.textContent = `${this.state.text.length}/${this.MAX}`;
-    if (counterAbs) counterAbs.textContent = `${this.state.text.length}/${this.MAX}`;
+  }
+
+  private updatePrice(): void {
+    const letterCount = Math.max(1, [...this.state.text].filter(c => c !== ' ').length);
+    const hasShapeAddon = this.state.shape !== 'rectangle';
+    const isTwoTone = this.state.plateColour !== this.state.textColour;
+    const price = priceDoorSign(letterCount, hasShapeAddon, isTwoTone);
+
+    const priceEl = q('[data-sb-price]', this.host);
+    const breakdownEl = q('[data-sb-breakdown]', this.host);
+    if (priceEl) priceEl.textContent = `€${price}`;
+
+    if (breakdownEl) {
+      const parts = [`€25 base + €4 × ${letterCount}`];
+      if (hasShapeAddon) parts.push('+ €5 shape');
+      if (isTwoTone) parts.push('+ €3 two-tone');
+      breakdownEl.textContent = parts.join(' ');
+    }
   }
 
   private fitText(textRow: HTMLElement, plate: HTMLElement): void {
-    // Reset zoom to measure natural width
     (textRow.style as CSSStyleDeclaration & { zoom: string }).zoom = '1';
     const natW = textRow.offsetWidth;
-    const avail = plate.clientWidth - 32; // 16px padding each side
+    const avail = plate.clientWidth - 32;
     if (natW <= avail) return;
     const scale = avail / natW;
     (textRow.style as CSSStyleDeclaration & { zoom: string }).zoom = String(scale);
@@ -264,23 +315,28 @@ export class DoorSignBuilder {
   private addToCart(): void {
     const text = this.state.text.trim();
     if (!text) return;
-    const n = Math.max(1, [...text.replace(/\s/g,'')].length);
-    const price = 12 + 2 * n;
+    const letterCount = Math.max(1, [...text.replace(/\s/g, '')].length);
+    const hasShapeAddon = this.state.shape !== 'rectangle';
+    const isTwoTone = this.state.plateColour !== this.state.textColour;
+    const price = priceDoorSign(letterCount, hasShapeAddon, isTwoTone);
 
     const btn = q<HTMLButtonElement>('[data-sb-add]', this.host);
     btn.classList.add('is-loading');
     btn.innerHTML = `<span class="spin" aria-hidden="true"></span><span>Adding…</span>`;
 
+    const shapeLabel = SHAPE_OPTS.find((s) => s.value === this.state.shape)?.label ?? 'Rectangle';
+
     const payload: CartItem = {
       id: 'sign_' + Date.now().toString(36),
       type: 'door-sign',
       name: text,
+      shape: this.state.shape,
       theme: 'sign',
       oneColour: this.state.plateColour,
       brickSizePx: 14,
-      sizeLabel: 'Door Sign',
+      sizeLabel: `Door Sign · ${shapeLabel}`,
       letters: [...text].filter(c => c !== ' ').map((c) => ({ char: c, colour: this.state.textColour })),
-      brickCount: n * 35,
+      brickCount: letterCount * 35,
       price,
       currency: 'EUR',
       qty: 1,

@@ -13,7 +13,7 @@ const productSchema = {
     "@type": "Offer",
     "url": "https://togblocks.ie/products/brick-letters",
     "priceCurrency": "EUR",
-    "price": "7.00",
+    "price": "5.99",
     "priceValidUntil": "2027-12-31",
     "availability": "https://schema.org/InStock",
     "seller": { "@type": "Organization", "name": "TógBlocks" }
@@ -77,31 +77,52 @@ const productSchema = {
             <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> 3D Printed in Ireland</span>
             <h1 class="pdp-title">Brick Name Letters</h1>
             <div class="pdp-price">
-              <span class="price-tag" style="font-size:var(--fs-2xl)">from €7</span>
-              <span class="muted" style="font-size:var(--fs-sm)">€7 first letter · €5 each additional</span>
+              <span class="price-tag" style="font-size:var(--fs-2xl)">from €5.99</span>
+              <span class="muted" style="font-size:var(--fs-sm)">3 sizes (12cm · 15cm · 18cm) · up to 20% off</span>
             </div>
+
+            <!-- Size pricing chips -->
+            <div class="size-price-row" aria-label="Size options">
+              <div class="sp-chip">
+                <span class="sp-name">Small</span>
+                <span class="sp-mm">12cm</span>
+                <span class="sp-val">€5.99<span class="sp-unit">/letter</span></span>
+              </div>
+              <div class="sp-chip sp-chip--mid">
+                <span class="sp-badge">Popular</span>
+                <span class="sp-name">Medium</span>
+                <span class="sp-mm">15cm</span>
+                <span class="sp-val">€7.99<span class="sp-unit">/letter</span></span>
+              </div>
+              <div class="sp-chip">
+                <span class="sp-name">Premium</span>
+                <span class="sp-mm">18cm</span>
+                <span class="sp-val">€9.99<span class="sp-unit">/letter</span></span>
+              </div>
+            </div>
+
             <p class="pdp-desc">
-              Chunky 3D letters built with standard stud spacing. Each letter stands freely on any surface
-              — nursery shelf, bedroom desk, cake topper. Tap any letter in the builder to recolour just that one.
+              Chunky 3D letters built with standard stud spacing — nursery shelf, bedroom desk, cake topper.
+              Pick any size, any colour per letter. Order 3 or more and save up to 20%.
             </p>
             <ul class="spec-list">
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Up to 14 letters per name
+                Up to 12 letters per name (A–Z and 0–9)
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                One standard size (~22mm studs)
+                3 sizes: Small (12cm) · Medium (15cm) · Premium (18cm)
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                7 colour themes or pick individual letter colours
+                13 colours — pick a theme or recolour each letter
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
@@ -113,7 +134,7 @@ const productSchema = {
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Shipped within 3 working days · free over €40
+                Ships within 3 working days · free over €60
               </li>
             </ul>
             <a class="btn btn--cta btn--lg btn--block" href="/builder?product=letters" style="margin-top:8px">
@@ -191,6 +212,100 @@ const productSchema = {
       </div>
     </section>
 
+    <!-- ============ PRICING TABLE ============ -->
+    <section class="section" style="background:var(--offwhite)" aria-labelledby="pricing-heading">
+      <div class="wrap">
+        <div class="sec-head">
+          <h2 id="pricing-heading">Simple, honest pricing</h2>
+          <p>One price per letter — and the more you order, the more you save.</p>
+        </div>
+        <div class="pricing-table">
+          <div class="pt-head">
+            <div></div>
+            <div>Small<br><small style="font-weight:400;opacity:.75">12cm</small></div>
+            <div>Medium<br><small style="font-weight:400;opacity:.75">15cm</small></div>
+            <div>Premium<br><small style="font-weight:400;opacity:.75">18cm</small></div>
+          </div>
+          <div class="pt-row">
+            <div>1 letter</div>
+            <div>€5.99</div>
+            <div>€7.99</div>
+            <div>€9.99</div>
+          </div>
+          <div class="pt-row pt-row--disc">
+            <div>2 letters <span class="disc-tag">5% off</span></div>
+            <div>€11.38</div>
+            <div>€15.18</div>
+            <div>€18.98</div>
+          </div>
+          <div class="pt-row pt-row--disc">
+            <div>3 letters <span class="disc-tag">10% off</span></div>
+            <div>€16.17</div>
+            <div>€21.57</div>
+            <div>€26.97</div>
+          </div>
+          <div class="pt-row pt-row--disc">
+            <div>4–6 letters <span class="disc-tag">15% off</span></div>
+            <div>from €20.37</div>
+            <div>from €27.17</div>
+            <div>from €33.97</div>
+          </div>
+          <div class="pt-row pt-row--disc pt-row--best">
+            <div>7+ letters <span class="disc-tag disc-tag--best">20% off</span></div>
+            <div>from €33.54</div>
+            <div>from €44.74</div>
+            <div>from €55.94</div>
+          </div>
+        </div>
+        <p class="muted center" style="margin-top:16px;font-size:var(--fs-sm)">Discount applied automatically at checkout. No codes needed.</p>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section" aria-labelledby="faq-heading">
+      <div class="wrap">
+        <div class="sec-head">
+          <h2 id="faq-heading">Questions answered</h2>
+        </div>
+        <div class="faq-list" style="max-width:680px;margin-inline:auto">
+          {[
+            {
+              q: "What sizes are available?",
+              a: "Three sizes: Small (12cm — perfect for cake toppers and small shelves), Medium (15cm — our most popular, great for nurseries and desks), and Premium (18cm — makes a real statement on a mantelpiece or bedroom wall)."
+            },
+            {
+              q: "What colours can I choose?",
+              a: "13 filament colours: Blue, Red, Yellow, Green, Black, White, Pink, Sage, Sky Blue, Dusty Pink, Terracotta, Silk Gold, and Silk Silver. You can pick a ready-made theme or tap any individual letter to recolour it in the builder."
+            },
+            {
+              q: "Do the letters stay together?",
+              a: "Each letter is an individual brick that stands on its own. They don't connect to each other, but they sit neatly side-by-side on a shelf or any flat surface. They also click onto any standard LEGO® baseplate."
+            },
+            {
+              q: "How long does production take?",
+              a: "We 3D print and quality-check your order within 2–3 working days, then post it. Most customers in Ireland receive their order within 4–5 days of ordering."
+            },
+            {
+              q: "How much is shipping?",
+              a: "Ireland: €4.95. UK: €7.95. EU: €8.95. Rest of world: €14.95. Orders over €60 ship free anywhere."
+            },
+          ].map(({ q: question, a: answer }) => (
+            <div class="faq-item">
+              <button class="acc-trigger" aria-expanded="false" aria-controls={`faq-${question.slice(0,10).replace(/\W/g,'')}`}>
+                {question}
+                <svg class="acc-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="acc-panel" id={`faq-${question.slice(0,10).replace(/\W/g,'')}`} style="max-height:0;overflow:hidden;transition:max-height .3s ease">
+                <p class="muted" style="padding:12px 0 4px">{answer}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CTA ============ -->
     <section class="section-tight">
       <div class="wrap center">
@@ -261,6 +376,85 @@ const productSchema = {
 @media (max-width: 500px) {
   .pdp-gallery-grid { grid-template-columns: 1fr; }
   .pdp-gal-item--wide { grid-column: span 1; }
+}
+
+/* ── Size pricing chips in hero ── */
+.size-price-row {
+  display: flex; gap: 8px;
+}
+.sp-chip {
+  flex: 1; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 8px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--line); background: var(--offwhite);
+  text-align: center;
+}
+.sp-chip--mid {
+  border-color: var(--green-deep); background: var(--green-soft);
+}
+.sp-badge {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--green-deep); color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.sp-name {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
+}
+.sp-mm {
+  font-size: 11px; font-weight: 600; color: var(--ink-40); letter-spacing: .02em;
+}
+.sp-chip--mid .sp-mm { color: var(--green-deep); opacity: .7; }
+.sp-val {
+  font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); color: var(--green-deep);
+  line-height: 1;
+}
+.sp-unit { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-60); }
+
+/* ── Pricing table ── */
+.pricing-table {
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1.5px solid var(--line); background: #fff;
+}
+.pt-head, .pt-row {
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 0;
+}
+.pt-head {
+  background: var(--green-deep); color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm);
+}
+.pt-head > *, .pt-row > * {
+  padding: 12px 16px; border-right: 1px solid rgba(0,0,0,.07);
+}
+.pt-head > *:last-child, .pt-row > *:last-child { border-right: none; }
+.pt-row { border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--ink); }
+.pt-row:nth-child(even) { background: var(--offwhite); }
+.pt-row--best { background: #fefce8 !important; font-weight: 600; }
+.disc-tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  background: #dcfce7; color: #15803d;
+  padding: 1px 6px; border-radius: var(--radius-pill); margin-left: 4px;
+}
+.disc-tag--best { background: #fef08a; color: #854d0e; }
+
+/* ── FAQ ── */
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-item:first-child { border-top: 1px solid var(--line); }
+.acc-trigger {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 0; text-align: left;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-base); color: var(--ink);
+}
+.acc-icon { flex-shrink: 0; color: var(--ink-60); transition: transform .2s; }
+.acc-trigger[aria-expanded="true"] .acc-icon { transform: rotate(180deg); }
+
+@media (max-width: 600px) {
+  .pricing-table { font-size: var(--fs-xs); }
+  .pt-head > *, .pt-row > * { padding: 10px 8px; }
+  .sp-val { font-size: var(--fs-base); }
 }
 </style>
 

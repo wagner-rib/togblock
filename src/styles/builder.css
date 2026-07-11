@@ -47,10 +47,8 @@
   display: flex; align-items: flex-end; gap: var(--cell);
   width: max-content; max-width: none;
   transform-origin: bottom center; will-change: transform;
-  /* 3D perspective tilt — letters standing on a surface */
-  transform: perspective(1200px) rotateX(14deg);
-  /* Photography drop shadow across the whole name */
-  filter: drop-shadow(0 24px 32px rgba(0,0,0,.40));
+  transform: perspective(1400px) rotateX(3deg);
+  filter: drop-shadow(0 14px 18px rgba(0,0,0,.50));
 }
 
 .brick-letter {
@@ -58,7 +56,7 @@
   display: grid;
   grid-template-columns: repeat(5, var(--cell));
   grid-template-rows: repeat(7, var(--cell));
-  gap: var(--cell-gap);
+  gap: 0;
   padding: 6px; margin: -6px;
   border: none; background: none; cursor: pointer;
   border-radius: var(--radius-sm);
@@ -68,30 +66,32 @@
 .brick-letter:focus-visible { box-shadow: var(--focus-ring); }
 .brick-letter.is-active     { box-shadow: 0 0 0 3px var(--cream), 0 0 0 6px var(--orange); }
 
-/* ---- 3D extruded brick cell ---- */
-.brick-cell       { width: var(--cell); height: var(--cell); border-radius: 2px; }
+/* ---- Brick cell ---- */
+.brick-cell { width: var(--cell); height: var(--cell); }
 .brick-cell.is-on {
   background: var(--bc);
-  border-radius: var(--radius-brick);
-  /* Stacked offset box-shadows simulate depth/extrusion */
+  border-radius: 0;
   box-shadow:
-    inset 0 3px 0 rgba(255,255,255,.50),
-    inset 0 -5px 0 rgba(0,0,0,.30),
-    4px 4px 0 color-mix(in srgb, var(--bc) 60%, #000),
-    8px 8px 0 color-mix(in srgb, var(--bc) 40%, #000);
+    /* top edge highlight — bright strip where top face meets front face */
+    inset 0 calc(var(--cell) * .16) 0 rgba(255,255,255,.60),
+    /* bottom edge shadow — gives the face depth and weight */
+    inset 0 calc(var(--cell) * -.22) 0 rgba(0,0,0,.32),
+    /* left edge highlight — subtle rim on left side */
+    inset calc(var(--cell) * .10) 0 0 rgba(255,255,255,.18);
   position: relative;
 }
-/* Stud on top of each brick */
+/* Stud — large dome matching product appearance */
 .brick-cell.is-on::after {
   content: ""; position: absolute; inset: 0; margin: auto;
-  width: 54%; height: 54%; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%,
-    color-mix(in srgb, #fff 60%, var(--bc)),
-    color-mix(in srgb, #000 8%, var(--bc)) 72%);
+  width: 72%; height: 72%; border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%,
+    color-mix(in srgb, #fff 82%, var(--bc)) 0%,
+    color-mix(in srgb, #fff 24%, var(--bc)) 36%,
+    color-mix(in srgb, #fff  8%, var(--bc)) 56%,
+    color-mix(in srgb, #000 16%, var(--bc)) 100%);
   box-shadow:
-    inset 0 1px 2px rgba(255,255,255,.60),
-    inset 0 -1px 2px rgba(0,0,0,.32),
-    0 1px 1px rgba(0,0,0,.16);
+    inset 0 -2px 4px rgba(0,0,0,.24),
+    0 1px 3px rgba(0,0,0,.20);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -158,6 +158,147 @@
   .builder-checkout .btn { width: 100%; }
   .builder-checkout { flex-direction: column; align-items: stretch; }
   .price-block { align-items: center; text-align: center; }
+}
+
+/* ---- Size selector ---- */
+.size-selector {
+  display: flex;
+  gap: 8px;
+}
+.size-opt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--line);
+  background: var(--offwhite);
+  cursor: pointer;
+  transition: border-color .14s, background .14s;
+}
+.size-opt:hover { border-color: var(--green); }
+.size-opt[aria-pressed="true"] {
+  border-color: var(--green-deep);
+  background: var(--green-soft);
+}
+.so-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+}
+.so-dim {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-40);
+  letter-spacing: .02em;
+}
+.size-opt[aria-pressed="true"] .so-dim { color: var(--green-deep); opacity: .75; }
+.so-price {
+  font-size: var(--fs-xs);
+  color: var(--ink-60);
+}
+.size-opt[aria-pressed="true"] .so-price { color: var(--green-deep); }
+
+@media (max-width: 480px) {
+  .size-selector { gap: 6px; }
+  .size-opt { padding: 8px 4px; }
+  .so-label { font-size: var(--fs-xs); }
+}
+
+/* ── Extras / Add-ons ───────────────────────────────────────────── */
+.extras-sub {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  color: var(--ink-40);
+  letter-spacing: .02em;
+  margin-left: 4px;
+}
+.extras-list { display: flex; flex-direction: column; gap: 8px; }
+
+.extra-card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--line);
+  background: var(--offwhite);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.extra-card:hover {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green-soft) 60%, #fff);
+}
+.extra-card[aria-pressed="true"] {
+  border-color: var(--green-deep);
+  background: var(--green-soft);
+  box-shadow: 0 0 0 3px rgba(22,155,98,.14);
+}
+
+.ec-icon {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  display: grid; place-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,.10);
+  color: var(--green-deep);
+  transition: background .15s, color .15s;
+}
+.extra-card[aria-pressed="true"] .ec-icon {
+  background: var(--green-deep);
+  color: #fff;
+}
+
+.ec-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ec-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: var(--fs-sm); color: var(--ink);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.ec-desc { font-size: var(--fs-xs); color: var(--ink-60); }
+
+.ec-rec {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  background: var(--orange); color: #3a1d05;
+  padding: 2px 7px; border-radius: var(--radius-pill); white-space: nowrap;
+}
+
+.ec-price {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--fs-sm); color: var(--green-deep); white-space: nowrap;
+}
+
+.ec-toggle {
+  min-width: 70px; text-align: center;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xs);
+  padding: 7px 12px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--line);
+  background: var(--white); color: var(--ink);
+  transition: all .14s; white-space: nowrap;
+}
+.extra-card:hover .ec-toggle { border-color: var(--green-deep); color: var(--green-deep); }
+.extra-card[aria-pressed="true"] .ec-toggle {
+  background: var(--green-deep); border-color: var(--green-deep); color: #fff;
+}
+
+.ect-add   { display: block; }
+.ect-added { display: none; }
+.extra-card[aria-pressed="true"] .ect-add   { display: none; }
+.extra-card[aria-pressed="true"] .ect-added { display: block; }
+
+@media (max-width: 480px) {
+  .extra-card { grid-template-columns: 38px 1fr; grid-template-rows: auto auto; gap: 8px 10px; }
+  .ec-icon    { width: 38px; height: 38px; }
+  .ec-price   { grid-column: 2; font-size: var(--fs-xs); }
+  .ec-toggle  { grid-column: 2; justify-self: start; padding: 5px 10px; }
 }
 
 /* ---- Door Sign Builder ---- */

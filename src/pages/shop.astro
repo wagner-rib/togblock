@@ -4,69 +4,100 @@ import Base from '../layouts/Base.astro';
 
 <Base
   title="Shop — TógBlocks"
-  description="Choose your brick size, display or play thickness, and colour theme. Simple honest pricing — €7 first letter, €5 each after."
+  description="Choose your brick letter size and colours. Three sizes — Small €5.99, Medium €7.99, Premium €9.99 — with multi-letter discounts up to 20%."
   currentPage="/shop"
 >
   <div class="wrap">
     <div class="page-hero">
       <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Shop · options</span>
       <h1>Pick your perfect build</h1>
-      <p class="lead">Same simple price — €7 first letter, €5 each after. Choose how big, how chunky, and which colours.</p>
+      <p class="lead">Three sizes, 13 colours, multi-letter discounts. Use the builder to see your name live before you order.</p>
       <div style="margin-top:20px">
-        <a class="btn btn--cta btn--lg" href="/">Open the builder <span aria-hidden="true">→</span></a>
+        <a class="btn btn--cta btn--lg" href="/builder">Open the builder <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>
 
-  <!-- SIZE -->
+  <!-- SIZES -->
   <section class="section-tight" aria-labelledby="sizes">
     <div class="wrap">
-      <div class="sec-head"><h2 id="sizes">One perfect size</h2><p>We've picked the sweet spot — chunky enough to look great on a shelf, light enough to post easily.</p></div>
-      <div style="max-width:540px;margin-inline:auto">
-        <div class="card size-card" style="border:2px solid var(--green)">
-          <span class="badge" style="margin-bottom:12px">Standard</span>
+      <div class="sec-head"><h2 id="sizes">Three letter sizes</h2><p>Same 3D brick construction, same 13 colour options — just a different scale.</p></div>
+      <div class="grid grid-3">
+        <div class="card size-card">
           <div class="sc-vis" aria-hidden="true">
-            <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
-            <span class="sc-brick" style="height:74px;background:var(--orange)"></span>
-            <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:34px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:42px;background:var(--sage)"></span>
+            <span class="sc-brick" style="height:34px;background:var(--sage)"></span>
           </div>
-          <h3>~22mm studs</h3>
-          <p class="muted">The everyday hero — perfect for nursery names, desk signs, cake toppers, and gifts. Snaps onto any standard baseplate.</p>
-          <p class="price-tag" style="margin-top:12px">from €7</p>
+          <h3>Small · <span style="color:var(--ink-60);font-size:.85em">12cm</span></h3>
+          <p class="muted">Compact and light — ideal for cake toppers, small shelves, and little hands.</p>
+          <p class="price-tag" style="margin-top:12px">€5.99/letter</p>
+        </div>
+        <div class="card size-card" style="border:2px solid var(--green)">
+          <span class="badge" style="margin-bottom:12px">Most popular</span>
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:48px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
+            <span class="sc-brick" style="height:48px;background:var(--orange)"></span>
+          </div>
+          <h3>Medium · <span style="color:var(--ink-60);font-size:.85em">15cm</span></h3>
+          <p class="muted">The sweet spot — great for nurseries, bedroom desks, and gifts. Snaps onto any standard baseplate.</p>
+          <p class="price-tag" style="margin-top:12px">€7.99/letter</p>
+        </div>
+        <div class="card size-card">
+          <div class="sc-vis" aria-hidden="true">
+            <span class="sc-brick" style="height:62px;background:var(--blue)"></span>
+            <span class="sc-brick" style="height:76px;background:var(--blue)"></span>
+            <span class="sc-brick" style="height:62px;background:var(--blue)"></span>
+          </div>
+          <h3>Premium · <span style="color:var(--ink-60);font-size:.85em">18cm</span></h3>
+          <p class="muted">Bold and commanding — makes a real impact on a mantelpiece or bedroom wall.</p>
+          <p class="price-tag" style="margin-top:12px">€9.99/letter</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- THICKNESS -->
-  <section class="section" style="background:var(--offwhite)" aria-labelledby="thick">
+  <!-- MULTI-LETTER DISCOUNTS -->
+  <section class="section" style="background:var(--offwhite)" aria-labelledby="discounts">
     <div class="wrap">
-      <div class="sec-head"><h2 id="thick">Display or play thickness</h2><p>Two builds, two jobs. Pick the one that suits where it's going.</p></div>
-      <div class="grid grid-2">
-        <div class="card">
-          <div style="display:flex;align-items:flex-end;gap:8px;height:70px;margin-bottom:18px">
-            <span style="width:54px;height:9px;background:var(--green);border-radius:var(--radius-brick);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.18)" aria-hidden="true"></span>
-            <span class="badge badge--cream">3&nbsp;mm</span>
+      <div class="sec-head"><h2 id="discounts">Multi-letter discounts</h2><p>The more letters in the name, the more you save — automatically, no codes needed.</p></div>
+      <div style="max-width:560px;margin-inline:auto">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="disc-table">
+            <div class="dt-row dt-head">
+              <span>Letter count</span>
+              <span>Discount</span>
+              <span>Example (Medium)</span>
+            </div>
+            <div class="dt-row">
+              <span>1 letter</span>
+              <span>—</span>
+              <span>€7.99</span>
+            </div>
+            <div class="dt-row dt-row--disc">
+              <span>2 letters</span>
+              <span class="dt-badge">5% off</span>
+              <span>€15.18</span>
+            </div>
+            <div class="dt-row dt-row--disc">
+              <span>3 letters</span>
+              <span class="dt-badge">10% off</span>
+              <span>€21.57</span>
+            </div>
+            <div class="dt-row dt-row--disc">
+              <span>4–6 letters</span>
+              <span class="dt-badge">15% off</span>
+              <span>from €27.17</span>
+            </div>
+            <div class="dt-row dt-row--best">
+              <span>7+ letters</span>
+              <span class="dt-badge dt-badge--best">20% off</span>
+              <span>from €44.74</span>
+            </div>
           </div>
-          <h3>Display thickness · 3mm</h3>
-          <p class="muted" style="margin-top:8px">A slim, single-layer panel. Light, flush against a wall or fridge, and the cheapest to post. Best left to look pretty rather than be played with.</p>
-          <ul class="spec-list" style="margin-top:16px">
-            <li><span class="si-ico" aria-hidden="true">✓</span> Wall art, fridge letters, framing</li>
-            <li><span class="si-ico" aria-hidden="true">✓</span> Lightest to post</li>
-          </ul>
         </div>
-        <div class="card" style="border:2px solid var(--green)">
-          <div style="display:flex;align-items:flex-end;gap:8px;height:70px;margin-bottom:18px">
-            <span style="width:54px;height:38px;background:var(--orange);border-radius:var(--radius-brick);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -5px 0 rgba(0,0,0,.18)" aria-hidden="true"></span>
-            <span class="badge badge--orange">11.5&nbsp;mm</span>
-          </div>
-          <h3>Play thickness · 11.5mm</h3>
-          <p class="muted" style="margin-top:8px">A proper brick depth that clicks onto any standard baseplate. Sturdy in small hands, fully re-buildable, plays nicely with the bricks you already own.</p>
-          <ul class="spec-list" style="margin-top:16px">
-            <li><span class="si-ico" aria-hidden="true">✓</span> Clicks onto standard baseplates</li>
-            <li><span class="si-ico" aria-hidden="true">✓</span> Built to be pulled apart &amp; rebuilt</li>
-          </ul>
-        </div>
+        <p class="muted center" style="margin-top:12px;font-size:var(--fs-sm)">Discount applied automatically in the builder. Door signs don't have the multi-letter discount but do offer shape and two-tone add-ons.</p>
       </div>
     </div>
   </section>
@@ -95,12 +126,13 @@ import Base from '../layouts/Base.astro';
         <div class="card">
           <h3 style="margin-bottom:14px">Shipping</h3>
           <div class="summary-row"><span>Ireland</span><span class="price-tag">€4.95 · 1–3 days</span></div>
-          <div class="summary-row"><span>Ireland over €40</span><span class="price-tag" style="color:var(--green)">Free</span></div>
-          <div class="summary-row"><span>UK</span><span class="price-tag">€4.95 · 3–5 days</span></div>
-          <div class="summary-row"><span>EU</span><span class="price-tag">€4.95 · 4–7 days</span></div>
-          <div class="summary-row"><span>USA</span><span class="price-tag">€6.99 · 5–10 days</span></div>
+          <div class="summary-row"><span>UK</span><span class="price-tag">€7.95 · 3–5 days</span></div>
+          <div class="summary-row"><span>Europe</span><span class="price-tag">€8.95 · 4–7 days</span></div>
+          <div class="summary-row"><span>Rest of world</span><span class="price-tag">€14.95 · 7–14 days</span></div>
+          <div class="summary-row" style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px">
+            <span>Orders over €60</span><span class="price-tag" style="color:var(--green);font-weight:700">Free worldwide</span>
+          </div>
           <p class="field-hint" style="margin-top:12px">Tracked where available. Builds are boxed snugly so studs don't pop in transit.</p>
-          <p class="field-hint" style="margin-top:6px">Somewhere else in the world? <a href="mailto:hello@togblocks.com" style="color:var(--green-deep);font-weight:700">Drop us a line</a> — we'll sort it.</p>
         </div>
       </div>
     </div>
@@ -132,8 +164,41 @@ import Base from '../layouts/Base.astro';
         <div class="studs-deco" aria-hidden="true"></div>
         <h2 style="margin-bottom:10px">Right, let's build it</h2>
         <p style="color:rgba(255,255,255,.88);max-width:46ch;margin:0 auto 22px">Type a name, choose a size and colours, and watch it click together.</p>
-        <a class="btn btn--cta btn--lg" href="/">Start building <span aria-hidden="true">→</span></a>
+        <a class="btn btn--cta btn--lg" href="/builder">Start building <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
 </Base>
+
+<style>
+.size-card { text-align: center; }
+.sc-vis {
+  display: flex; align-items: flex-end; justify-content: center; gap: 6px;
+  height: 96px; margin-bottom: 16px;
+}
+.sc-brick {
+  width: 36px; border-radius: var(--radius-brick);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.5), inset 0 -4px 0 rgba(0,0,0,.18), 3px 3px 0 rgba(0,0,0,.12);
+}
+
+/* Discount table */
+.disc-table { width: 100%; }
+.dt-row {
+  display: grid; grid-template-columns: 1.5fr 1fr 1.5fr;
+  padding: 10px 16px; font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--line);
+}
+.dt-row:last-child { border-bottom: none; }
+.dt-head {
+  background: var(--green-deep); color: #fff;
+  font-family: var(--font-display); font-weight: 700;
+}
+.dt-row--disc { background: var(--offwhite); }
+.dt-row--best { background: #fefce8; font-weight: 600; }
+.dt-badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  background: #dcfce7; color: #15803d;
+  padding: 2px 7px; border-radius: var(--radius-pill);
+}
+.dt-badge--best { background: #fef08a; color: #854d0e; }
+</style>

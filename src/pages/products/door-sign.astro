@@ -74,44 +74,58 @@ const productSchema = {
             <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> 3D Printed in Ireland</span>
             <h1 class="pdp-title">Door / Room Sign</h1>
             <div class="pdp-price">
-              <span class="price-tag" style="font-size:var(--fs-2xl)">from €12</span>
-              <span class="muted" style="font-size:var(--fs-sm)">€12 base + €2 per letter</span>
+              <span class="price-tag" style="font-size:var(--fs-2xl)">from €29</span>
+              <span class="muted" style="font-size:var(--fs-sm)">€25 base + €4 per letter</span>
             </div>
+
+            <!-- Add-on chips -->
+            <div class="addon-row" aria-label="Optional add-ons">
+              <div class="ao-chip">
+                <span class="ao-name">Shape add-on</span>
+                <span class="ao-price">+€5</span>
+                <span class="ao-desc">Arch or rounded</span>
+              </div>
+              <div class="ao-chip">
+                <span class="ao-name">Two-tone letters</span>
+                <span class="ao-price">+€3</span>
+                <span class="ao-desc">Name in contrast colour</span>
+              </div>
+            </div>
+
             <p class="pdp-desc">
-              A wide rectangular brick baseplate with the name raised in contrasting brick-font letters in the centre.
-              Decorative 2×1 bricks on the edges complete the look. Designed to lean against a door, hang on a wall,
-              or sit on a shelf.
+              A wide brick baseplate with the name raised in the centre. Pick your plate colour,
+              letter colour, and sign shape. Designed to lean against a door, hang on a wall, or sit on a shelf.
             </p>
             <ul class="spec-list">
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                32×12 stud landscape baseplate
+                Up to 12 characters (letters, numbers, spaces)
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Name centred in 5×7 raised brick font
+                3 shapes: Rectangle · Arch · Rounded
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                6 plate colours · 6 text colours
+                8 plate colours · 10 text colours
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Decorative 2×1 bricks on edges included
+                Decorative edge bricks included
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Compatible with all standard LEGO® bricks
+                Ships within 3 working days · free over €60
               </li>
             </ul>
             <a class="btn btn--cta btn--lg btn--block" href="/builder?product=sign" style="margin-top:8px">
@@ -188,6 +202,51 @@ const productSchema = {
       </div>
     </section>
 
+    <!-- ============ FAQ ============ -->
+    <section class="section" aria-labelledby="ds-faq-heading">
+      <div class="wrap">
+        <div class="sec-head">
+          <h2 id="ds-faq-heading">Questions answered</h2>
+        </div>
+        <div class="faq-list" style="max-width:680px;margin-inline:auto">
+          {[
+            {
+              q: "How is the price calculated?",
+              a: "€25 base + €4 per letter. Add €5 for Arch or Rounded shape. Add €3 for two-tone letters (when your text colour differs from the plate colour). So a 6-letter name, standard rectangle, two-tone = €25 + €24 + €3 = €52."
+            },
+            {
+              q: "What shapes are available?",
+              a: "Three shapes: Rectangle (standard, included), Arch (rounded curved top, +€5), and Rounded (very rounded corners like a name plate, +€5). The shape affects the outline of the printed baseplate."
+            },
+            {
+              q: "Can I use spaces in the name?",
+              a: "Yes — spaces are included for free and don't count towards the letter cost. So 'MAX & MIA' would count as 6 letters plus a space."
+            },
+            {
+              q: "How do I hang or display it?",
+              a: "The sign is designed to lean against a door or sit on a shelf by itself. For wall-mounting, a couple of small adhesive strips on the back work well. It can also be hung from a door with a ribbon threaded through decorative edge bricks."
+            },
+            {
+              q: "How long does it take?",
+              a: "2–3 working days to print and quality-check, then posted. Most customers in Ireland receive their order within 4–5 days total. Orders over €60 ship free."
+            },
+          ].map(({ q: question, a: answer }) => (
+            <div class="faq-item">
+              <button class="acc-trigger" aria-expanded="false" aria-controls={`ds-faq-${question.slice(0,10).replace(/\W/g,'')}`}>
+                {question}
+                <svg class="acc-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="acc-panel" id={`ds-faq-${question.slice(0,10).replace(/\W/g,'')}`} style="max-height:0;overflow:hidden;transition:max-height .3s ease">
+                <p class="muted" style="padding:12px 0 4px">{answer}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CTA ============ -->
     <section class="section-tight">
       <div class="wrap center">
@@ -259,6 +318,35 @@ const productSchema = {
   .pdp-gallery-grid { grid-template-columns: 1fr; }
   .pdp-gal-item--wide { grid-column: span 1; }
 }
+
+/* ── Add-on chips ── */
+.addon-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ao-chip {
+  flex: 1; min-width: 130px;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--line); background: var(--offwhite);
+}
+.ao-name {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
+}
+.ao-price {
+  font-family: var(--font-display); font-weight: 800; font-size: var(--fs-base);
+  color: var(--green-deep);
+}
+.ao-desc { font-size: var(--fs-xs); color: var(--ink-60); }
+
+/* ── FAQ ── */
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-item:first-child { border-top: 1px solid var(--line); }
+.acc-trigger {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 0; text-align: left;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--fs-base); color: var(--ink);
+}
+.acc-icon { flex-shrink: 0; color: var(--ink-60); transition: transform .2s; }
+.acc-trigger[aria-expanded="true"] .acc-icon { transform: rotate(180deg); }
 </style>
 
 <script>

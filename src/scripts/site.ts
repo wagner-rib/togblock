@@ -195,7 +195,7 @@ function renderCart(): void {
   }
 
   const total    = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
-  const shipping = total >= 40 ? 0 : 4.95;
+  const shipping = total >= 60 ? 0 : 4.95;
 
   root.innerHTML = `
     <div class="cart-layout">
@@ -204,6 +204,7 @@ function renderCart(): void {
         <h2 style="font-size:var(--fs-lg);margin-bottom:16px">Summary</h2>
         <div class="summary-row"><span>Subtotal</span><span>€${total.toFixed(2)}</span></div>
         <div class="summary-row"><span>Shipping (Ireland)</span><span>${shipping === 0 ? '<span style="color:var(--green);font-weight:700">Free</span>' : `€${shipping.toFixed(2)}`}</span></div>
+        ${shipping > 0 ? `<p style="font-size:var(--fs-xs);color:var(--ink-60);margin:4px 0 0;text-align:right">Free delivery over €60</p>` : ''}
         <div class="summary-row total"><span>Total</span><span>€${(total + shipping).toFixed(2)}</span></div>
         <a class="btn btn--cta btn--block btn--lg" href="/checkout" style="margin-top:20px;text-align:center;display:block">
           Checkout <span aria-hidden="true">→</span>
@@ -227,8 +228,8 @@ function renderCart(): void {
           <span class="ci-price">€${item.price * (item.qty || 1)}</span>
         </div>
         <div class="ci-meta">
-          ${themeName ? `<span>${themeName} theme</span>` : ''}
-          ${item.brickCount ? `<span>${item.brickCount} bricks</span>` : ''}
+          ${item.sizeLabel ? `<span>${item.sizeLabel}</span>` : ''}
+          ${themeName && !item.sizeLabel?.includes('Door') ? `<span>${themeName} theme</span>` : ''}
           <span>qty ${item.qty || 1}</span>
         </div>
         <div class="ci-actions">

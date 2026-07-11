@@ -3,6 +3,9 @@ export interface LetterPayload {
   colour: string;
 }
 
+export type LetterSize = 'small' | 'standard' | 'statement';
+export type SignShape  = 'rectangle' | 'arch' | 'rounded';
+
 export interface CartItem {
   id: string;
   type: 'custom-name' | 'door-sign';
@@ -11,6 +14,8 @@ export interface CartItem {
   oneColour: string | null;
   brickSizePx: number;
   sizeLabel: string;
+  size?: LetterSize;
+  shape?: SignShape;
   letters: LetterPayload[];
   brickCount: number;
   price: number;
@@ -19,4 +24,5 @@ export interface CartItem {
   createdAt: string;
   plateColour?: string;
   textColour?: string;
+  addons?: { dots: boolean; giftBox: boolean };
 }
