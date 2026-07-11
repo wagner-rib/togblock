@@ -495,6 +495,11 @@ const countries = [
   margin-bottom: 10px;
 }
 
+/* Add-ons in order summary */
+.co-item-addons { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.co-item-addon  { font-size: 11px; color: var(--ink-60); background: var(--offwhite); border-radius: var(--radius-sm); padding: 4px 8px; display: block; }
+.co-item-addon strong { color: var(--green-deep); }
+
 /* Controls row */
 .co-item-controls {
   display: flex;
@@ -696,6 +701,10 @@ function renderSummary(country) {
           <span class="co-item-price">${formatCents(eurosToCents(item.price ?? 0) * (item.qty || 1))}</span>
         </div>
         <div class="co-item-type">${isDoorSign(item) ? 'Door Sign' : 'Brick Letters'} &nbsp;·&nbsp; €${item.price ?? 0} each</div>
+        ${(item as any).addons?.dots || (item as any).addons?.giftBox ? `<div class="co-item-addons">
+          ${(item as any).addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>' : ''}
+          ${(item as any).addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>' : ''}
+        </div>` : ''}
         <div class="co-item-controls">
           <div class="co-qty-pill">
             <button class="co-qty-btn" data-action="dec" data-idx="${idx}" aria-label="Decrease quantity">−</button>
