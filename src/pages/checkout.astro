@@ -581,7 +581,7 @@ function classifyCountry(iso) {
 
 function calcShipping(country, subtotalCents) {
   const region = classifyCountry(country);
-  if (region === 'IE' && subtotalCents >= 4000) return 0;
+  if (region === 'IE' && subtotalCents >= 6000) return 0;
   return shippingRates[region] ?? 0;
 }
 
@@ -701,9 +701,9 @@ function renderSummary(country) {
           <span class="co-item-price">${formatCents(eurosToCents(item.price ?? 0) * (item.qty || 1))}</span>
         </div>
         <div class="co-item-type">${isDoorSign(item) ? 'Door Sign' : 'Brick Letters'} &nbsp;·&nbsp; €${item.price ?? 0} each</div>
-        ${(item as any).addons?.dots || (item as any).addons?.giftBox ? `<div class="co-item-addons">
-          ${(item as any).addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>' : ''}
-          ${(item as any).addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>' : ''}
+        ${item.addons?.dots || item.addons?.giftBox ? `<div class="co-item-addons">
+          ${item.addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>' : ''}
+          ${item.addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>' : ''}
         </div>` : ''}
         <div class="co-item-controls">
           <div class="co-qty-pill">
@@ -751,7 +751,7 @@ function renderSummary(country) {
   if (country && shipping !== null) {
     const region = classifyCountry(country);
     badgeTxt.textContent = shipping === 0
-      ? 'Free shipping — over €40 to Ireland!'
+      ? 'Free shipping — over €60 to Ireland!'
       : `Shipping: ${formatCents(shipping)} · ${shippingLabel[region] || ''}`;
     badge.hidden = false;
   } else {
