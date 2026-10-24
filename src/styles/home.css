@@ -772,6 +772,16 @@
   color: var(--ink-40);
 }
 
+.early-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding-inline: var(--gutter);
+}
+
+.early-grid .review-card { width: min(320px, 100%); }
+
 /* ── BIG CTA BAND ───────────────────────────────────────────── */
 .cta-band-full {
   padding-block: clamp(72px, 10vw, 128px);

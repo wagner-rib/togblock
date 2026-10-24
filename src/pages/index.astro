@@ -1,15 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
 
-const reviews = [
-  { stars: 5, quote: "Ordered FINN for the cot. Arrived in three days, colours exactly as the builder showed. Genuinely chuffed — it's the first thing you see walking into his room.", name: 'Aoife O\'Brien', loc: 'Kildare', init: 'AO', bg: '#169B62' },
-  { stars: 5, quote: "Clicked straight onto our existing baseplate. The kids now spell out rude words with it, which is on them, not TógBlocks.", name: 'Dara Murphy', loc: 'Cork', init: 'DM', bg: '#E0473A' },
-  { stars: 5, quote: "Recoloured each letter to match her room. The little preview made it impossible to get wrong. Will be back at Christmas.", name: 'Niamh Kelly', loc: 'Dublin', init: 'NK', bg: '#2563EB' },
-  { stars: 5, quote: "Brilliant quality. The door sign for Charlie's room is the talk of every playdate. Fast delivery too!", name: 'Sarah Connelly', loc: 'Limerick', init: 'SC', bg: '#F58A3C' },
-  { stars: 5, quote: "Perfect birthday gift. Typed the name, picked the colours, it arrived looking exactly like the preview. Magic.", name: 'Pádraic Walsh', loc: 'Sligo', init: 'PW', bg: '#7C3AED' },
-  { stars: 5, quote: "These are SO well made. Solid, heavy, and the studs are perfect. Snapped straight onto a baseplate. 10/10.", name: 'Emma Riordan', loc: 'Waterford', init: 'ER', bg: '#0F766E' },
-];
-
 const sliderCards = [
   { img: '/products/luca-letters.jpg', alt: 'Rainbow LUCA 3D brick letters', cat: 'Brick Letters', name: 'Name Letters', price: 'from €7', href: '/products/brick-letters', badge: 'Best Seller' },
   { img: '/products/finn-letters.jpg', alt: 'Blue FINN letters in a nursery', cat: 'Brick Letters', name: 'Nursery Names', price: 'from €7', href: '/products/brick-letters', badge: null },
@@ -226,36 +217,29 @@ const allCards = [...sliderCards, ...sliderCards];
     </div>
   </section>
 
-  <!-- ═══════════════════════════════ TESTIMONIALS ═══ -->
-  <section class="testimonials-section" aria-labelledby="reviews-heading">
+  <!-- ═══════════════════════════════ EARLY DAYS ═══ -->
+  <!-- Reviews section removed until there are real, photo-backed reviews (FIX-03 / FIX-06). -->
+  <section class="testimonials-section" aria-labelledby="early-heading">
     <div class="section-label" data-reveal>
       <span class="eyebrow">
         <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
-        Real reviews
+        Early days
       </span>
-      <h2 id="reviews-heading">People rather love them</h2>
+      <h2 id="early-heading">Be one of our first builders</h2>
+      <p class="lead">We're a brand-new family workshop, so there's no wall of reviews here yet. Here's what you can count on instead.</p>
     </div>
 
-    <div class="reviews-track-wrap">
-      <div class="reviews-track" aria-label="Customer reviews">
-        {[...reviews, ...reviews].map((r, i) => (
-          <article class="review-card" aria-label={`Review by ${r.name}`}>
-            <div class="review-card__stars" aria-label={`${r.stars} out of 5 stars`}>
-              {'★'.repeat(r.stars)}
-            </div>
-            <blockquote>"{r.quote}"</blockquote>
-            <div class="review-card__by">
-              <div class="review-card__avatar" style={`background:${r.bg}`} aria-hidden="true">
-                {r.init}
-              </div>
-              <div>
-                <p class="review-card__name">{r.name}</p>
-                <p class="review-card__loc">{r.loc}</p>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
+    <div class="early-grid">
+      {[
+        { title: 'What you see is what you get', body: 'The live preview matches the final product. Same letters, same colours, no surprises when the box arrives.' },
+        { title: 'Made by us, in Kildare', body: 'Every order is printed, checked and boxed by hand at home. Not drop-shipped, not outsourced.' },
+        { title: 'A real person answers', body: 'Questions before or after you order? Email togblocks@outlook.com and one of us will reply.' },
+      ].map((c) => (
+        <article class="review-card" data-reveal>
+          <p class="review-card__name">{c.title}</p>
+          <p>{c.body}</p>
+        </article>
+      ))}
     </div>
   </section>
 
