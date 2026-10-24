@@ -331,6 +331,7 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
 .mobile-menu { display: none; }
 @media (max-width: 880px) {
   .nav-links.desktop { display: none; }
+  .nav > nav { display: none; } /* its links are hidden here; the empty <nav> still took a 24px gap and pushed the header 28px past a 390px screen */
   .menu-toggle { display: inline-flex; }
   .nav-cta { display: none; }
   .mobile-menu {
@@ -375,3 +376,11 @@ input[type="range"].slider:active::-webkit-slider-thumb  { transform: scale(1.18
 
 .stud-rule   { height: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--sage); }
 .stud-rule i { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 60%), currentColor; }
+
+/* Smallest phones (320px, e.g. first-gen iPhone SE): shrink the brand so the header row fits */
+@media (max-width: 359px) {
+  .nav { gap: 12px; }
+  .brand { gap: 6px; }
+  .brand-icon { width: 36px; height: 36px; }
+  .brand-word { font-size: 1.25rem; }
+}

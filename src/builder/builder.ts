@@ -6,6 +6,8 @@ import {
 } from './themes';
 import { addToCart } from './cart';
 import type { CartItem } from './types';
+import type { BuilderPreview, ViewMode } from './BuilderPreview';
+import { encodeState, decodeState } from './previewState';
 
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -43,9 +45,16 @@ export class NameBuilder {
   private MAX = 12;
   private activeLetter: number | null = null;
   private ro: ResizeObserver;
+  private preview: BuilderPreview | null = null;  // 3D preview; null until loaded, or if WebGL is unavailable
+  private booting: Promise<void> | null = null;
+  private viewMode: ViewMode = 'top';
+  private linkLive = false;
   private el!: {
     stage: HTMLElement;
     scaler: HTMLElement;
+    canvas: HTMLCanvasElement;
+    skeleton: HTMLElement;
+    views: HTMLElement;
     name: HTMLElement;
     empty: HTMLElement;
     input: HTMLInputElement;
@@ -71,7 +80,7 @@ export class NameBuilder {
     this.state = {
       text: host.dataset.initial || '',
       size: 'standard',
-      theme: 'irish',
+      theme: 'one',
       cell: SIZE_CELL_PX['standard'],
       oneColor: PICKER[3], // green
       overrides: {},
@@ -79,7 +88,10 @@ export class NameBuilder {
     };
     this.ro = new ResizeObserver(() => this.fit());
     this.build();
-    this.setText(this.state.text, false);
+    this.restoreFromLink();
+    this.setText(this.state.text, false, true);
+    this.setup3D();
+    this.linkLive = true; // from now on, edits update the shareable #name=… link
   }
 
   private build(): void {
@@ -87,6 +99,13 @@ export class NameBuilder {
     this.host.innerHTML = `
       <div class="builder" data-builder>
         <div class="builder-stage" data-stage>
+          <canvas class="builder-3d" data-canvas aria-label="3D preview of your letters. Drag to rotate, tap a letter to recolour it."></canvas>
+          <div class="builder-skel" data-skeleton aria-hidden="true"></div>
+          <div class="builder-views" data-views role="group" aria-label="View" hidden>
+            <button type="button" data-view="top" aria-pressed="true">Top</button>
+            <button type="button" data-view="hero" aria-pressed="false">Angle</button>
+            <button type="button" data-view="side" aria-pressed="false">Side</button>
+          </div>
           <div class="brick-scaler" data-scaler>
             <div class="brick-name" data-name role="img" aria-label="Your name in bricks"></div>
           </div>
@@ -193,6 +212,9 @@ export class NameBuilder {
     this.el = {
       stage:       q('[data-stage]',        this.host),
       scaler:      q('[data-scaler]',       this.host),
+      canvas:      q('[data-canvas]',       this.host),
+      skeleton:    q('[data-skeleton]',     this.host),
+      views:       q('[data-views]',        this.host),
       name:        q('[data-name]',         this.host),
       empty:       q('[data-empty]',        this.host),
       input:       q('[data-input]',        this.host),
@@ -219,7 +241,10 @@ export class NameBuilder {
     });
 
     // Theme chips
-    Object.entries(THEMES).forEach(([key, t]) => {
+    // One colour leads and is the default; the rest keep their themes.ts order
+    Object.entries(THEMES)
+      .sort(([a], [b]) => Number(b === 'one') - Number(a === 'one'))
+      .forEach(([key, t]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip';
@@ -232,6 +257,7 @@ export class NameBuilder {
     });
 
     // One-colour picker — all 13 colours
+    this.el.onecolour.hidden = !THEMES[s.theme]?.single;
     PICKER.forEach((c) => {
       const b = swatchBtn(c, () => {
         this.state.oneColor = c;
@@ -241,6 +267,7 @@ export class NameBuilder {
       b.dataset.one = c;
       this.el.onecolour.appendChild(b);
     });
+    this.markOne(s.oneColor);
 
     // Events
     // Extra add-on toggles
@@ -259,19 +286,26 @@ export class NameBuilder {
     document.addEventListener('click', (e) => {
       if (this.el.pop.hidden) return;
       const target = e.target as Element;
-      if (!this.el.pop.contains(target) && !target.closest('.brick-letter')) this.closePop();
+      if (!this.el.pop.contains(target) && !target.closest('.brick-letter') && target !== this.el.canvas) this.closePop();
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closePop(); });
+    qa<HTMLButtonElement>('[data-view]', this.el.views).forEach((b) =>
+      b.addEventListener('click', () => {
+        this.viewMode = b.dataset.view as ViewMode;
+        qa('[data-view]', this.el.views).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        this.closePop();
+        this.preview?.setProps({ viewMode: this.viewMode });
+      }));
     this.ro.observe(this.el.stage);
   }
 
   /* ---- state setters ---- */
-  setText(v: string, animate = true): void {
+  setText(v: string, animate = true, keepColours = false): void {
     // A-Z and 0-9 only (spec: no spaces or special chars for brick letters)
     const up = v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, this.MAX);
     this.state.text = up;
     if (this.el.input.value !== up) this.el.input.value = up;
-    this.state.overrides = {};
+    if (!keepColours) this.state.overrides = {};
     this.el.counter.textContent = `${up.length}/${this.MAX}`;
     this.closePop();
     this.render(animate);
@@ -286,9 +320,9 @@ export class NameBuilder {
     this.render(false);
   }
 
-  setTheme(key: string): void {
+  setTheme(key: string, keepColours = false): void {
     this.state.theme = key;
-    this.state.overrides = {};
+    if (!keepColours) this.state.overrides = {};
     qa<HTMLButtonElement>('.chip', this.el.themes).forEach((c) =>
       c.setAttribute('aria-pressed', String(c.dataset.theme === key))
     );
@@ -374,6 +408,7 @@ export class NameBuilder {
 
     this.updatePrice();
     this.fit();
+    this.sync3D();
   }
 
   private fit(): void {
@@ -435,11 +470,11 @@ export class NameBuilder {
   }
 
   /* ---- per-letter recolour popover ---- */
-  private openPop(idx: number, ch: string, btn: HTMLButtonElement): void {
+  private openPop(idx: number, ch: string, btn: HTMLButtonElement | null, anchor?: DOMRect): void {
     const pop = this.el.pop;
     this.activeLetter = idx;
     qa('.brick-letter', this.el.name).forEach((b) => b.classList.remove('is-active'));
-    btn.classList.add('is-active');
+    btn?.classList.add('is-active');
     this.el.popTitle.textContent = `Recolour "${ch}"`;
 
     this.el.popSwatches.innerHTML = '';
@@ -448,6 +483,7 @@ export class NameBuilder {
         this.state.overrides[idx] = c;
         this.render(false);
         this.reopenActive();
+        navigator.vibrate?.(10);
       });
       if (this.letterColor(idx).toLowerCase() === c.toLowerCase())
         b.setAttribute('aria-pressed', 'true');
@@ -459,7 +495,7 @@ export class NameBuilder {
 
     const builder = q('[data-builder]', this.host);
     const bRect = builder.getBoundingClientRect();
-    const lRect = btn.getBoundingClientRect();
+    const lRect = anchor ?? btn!.getBoundingClientRect();
     const popW = 260;
     let left = lRect.left - bRect.left + lRect.width / 2 - popW / 2;
     left = Math.max(12, Math.min(left, builder.clientWidth - popW - 12));
@@ -529,13 +565,114 @@ export class NameBuilder {
     btn.classList.add('is-loading');
     btn.innerHTML = `<span class="spin" aria-hidden="true"></span><span>Adding…</span>`;
     const payload = this.buildPayload();
-    setTimeout(() => {
+    const minDelay = new Promise((r) => setTimeout(r, 750)); // keep the "Adding…" beat even when capture is instant
+    Promise.all([this.uploadThumbnail(), minDelay]).then(([thumbnailId]) => {
+      if (thumbnailId) payload.thumbnailId = thumbnailId;
       addToCart(payload);
       btn.classList.remove('is-loading');
       btn.innerHTML = `<span data-add-label>Add to basket</span>`;
       this.el.addLabel = q('[data-add-label]', this.host);
       (window as Window & { TogToast?: (p: CartItem) => void }).TogToast?.(payload);
-    }, 750);
+    });
+  }
+
+  /* ---- 3D preview (3D-FIX-02..08) ---- */
+
+  /** Load the 3D preview after the page is up and idle; the pixel preview stays as the fallback. */
+  private setup3D(): void {
+    if (!document.createElement('canvas').getContext('webgl2')) return; // keep the brick preview
+    this.el.stage.classList.add('has-3d', 'is-3d-loading');
+    this.updateSkeleton();
+    const start = () => {
+      // builder.astro hides the letters panel on the door-sign tab after we're constructed
+      if (!this.host.offsetParent) return this.el.stage.classList.remove('has-3d', 'is-3d-loading');
+      this.booting ??= this.boot3D();
+    };
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 200));
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
+  }
+
+  private async boot3D(): Promise<void> {
+    try {
+      const { BuilderPreview } = await import('./BuilderPreview');
+      this.preview = new BuilderPreview(this.el.canvas, {
+        ...this.previewProps(),
+        size: this.state.size,
+        viewMode: this.viewMode,
+        onLetterClick: (i, x, y) => {
+          if (i < 0) return this.closePop();
+          const c = this.el.canvas.getBoundingClientRect();
+          this.openPop(i, this.state.text[i], null, new DOMRect(c.left + x - 10, c.top + y - 10, 20, 20));
+        },
+      }, {
+        onReady: () => {
+          this.el.stage.classList.replace('is-3d-loading', 'is-3d');
+          this.el.views.hidden = false;
+        },
+      });
+    } catch (err) {
+      console.warn('3D preview unavailable, keeping the brick preview.', err);
+      this.preview = null;
+      this.el.stage.classList.remove('has-3d', 'is-3d-loading', 'is-3d');
+    }
+  }
+
+  private previewProps() {
+    return {
+      name: this.state.text,
+      theme: this.state.theme,
+      oneColour: this.state.oneColor,
+      letterColours: { ...this.state.overrides },
+    };
+  }
+
+  private sync3D(): void {
+    this.preview?.setProps({ ...this.previewProps(), size: this.state.size });
+    this.updateSkeleton();
+    if (!this.linkLive || !this.host.offsetParent) return; // not during setup, nor on the door-sign tab
+    history.replaceState(history.state, '', location.pathname + location.search + encodeState({
+      name: this.state.text, theme: this.state.theme,
+      oneColour: this.state.oneColor, letterColours: this.state.overrides,
+    }));
+  }
+
+  /** Grey Russo One name shown until the 3D letters are drawn, sized to the stage. */
+  private updateSkeleton(): void {
+    if (!this.el.stage.classList.contains('is-3d-loading')) return;
+    const text = this.state.text;
+    this.el.skeleton.textContent = text;
+    const w = this.el.stage.clientWidth, h = this.el.stage.clientHeight;
+    this.el.skeleton.style.fontSize = `${Math.min((w * 0.86) / (Math.max(1, text.length) * 0.7), h * 0.34)}px`;
+  }
+
+  /** A shared link (#name=…&theme=…) opens that exact design. */
+  private restoreFromLink(): void {
+    if (!/(?:^#|&)name=/.test(location.hash)) return;
+    const s = decodeState(location.hash, {
+      name: this.state.text, theme: this.state.theme, oneColour: this.state.oneColor, letterColours: {},
+    });
+    this.state.text = s.name;
+    this.state.oneColor = s.oneColour;
+    this.state.overrides = s.letterColours;
+    this.markOne(s.oneColour);
+    if (s.theme !== this.state.theme) this.setTheme(s.theme, true);
+  }
+
+  /** PNG of the design for the order (3D-FIX-08); undefined if 3D isn't available. */
+  private async uploadThumbnail(): Promise<string | undefined> {
+    try {
+      if (!this.el.stage.classList.contains('has-3d')) return undefined;
+      this.booting ??= this.boot3D();
+      await this.booting;
+      if (!this.preview) return undefined;
+      const png = await this.preview.capture();
+      const res = await fetch('/api/thumbnails', { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png });
+      return res.ok ? (await res.json()).id : undefined;
+    } catch (err) {
+      console.warn('Design preview not saved; adding to basket without it.', err);
+      return undefined;
+    }
   }
 }
 

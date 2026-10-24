@@ -354,3 +354,45 @@
     inset 0 -4px 0 rgba(0,0,0,.28),
     2px 3px 0 rgba(0,0,0,.30) !important;
 }
+
+/* ---- 3D preview (3D-FIX-02..08) ----
+   .has-3d: WebGL2 available, so the stage switches to the 3D layout.
+   .is-3d-loading: grey Russo One name until the letters are drawn.
+   .is-3d: canvas live. Without .has-3d the brick preview above is the fallback. */
+.builder-3d, .builder-skel, .builder-views { display: none; }
+.builder-stage.has-3d {
+  display: block;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  padding: 0;
+  background:
+    radial-gradient(ellipse at 50% 110%, rgba(26,40,71,.10) 0%, transparent 55%),
+    linear-gradient(180deg, #faf7ec 0%, #e9e4d4 100%);
+}
+@media (max-width: 640px) { .builder-stage.has-3d { aspect-ratio: 4 / 3; } }
+.builder-stage.has-3d::after,
+.builder-stage.has-3d .brick-scaler,
+.builder-stage.has-3d .builder-empty { display: none; }
+.builder-stage.has-3d .builder-3d {
+  display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+  touch-action: pan-y; cursor: grab;
+}
+.builder-stage.has-3d .builder-3d:active { cursor: grabbing; }
+.builder-stage.is-3d-loading .builder-skel {
+  display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
+  font-family: "Russo One", var(--font-display); line-height: 1; letter-spacing: .02em;
+  color: #c4c9d8; white-space: nowrap; pointer-events: none;
+  animation: builder-skel-pulse 1.4s ease-in-out infinite alternate;
+}
+@keyframes builder-skel-pulse { from { opacity: .45; } to { opacity: .8; } }
+@media (prefers-reduced-motion: reduce) { .builder-stage.is-3d-loading .builder-skel { animation: none; opacity: .6; } }
+.builder-stage.is-3d .builder-views {
+  display: flex; position: absolute; top: 12px; right: 12px; gap: 4px; padding: 4px;
+  background: rgba(255,255,255,.88); border-radius: 10px; box-shadow: 0 1px 4px rgba(26,40,71,.12);
+}
+.builder-views button {
+  font: 700 var(--fs-xs) var(--font-body); color: var(--ink-60); background: none; border: 0;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer;
+}
+.builder-views button[aria-pressed="true"] { background: var(--green-soft); color: var(--green-deep); }
+.builder-views button:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
