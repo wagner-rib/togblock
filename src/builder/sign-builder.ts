@@ -81,6 +81,7 @@ export class DoorSignBuilder {
       <div class="sign-builder" data-sign-builder>
 
         <div class="sign-stage" data-sign-stage>
+          <div class="stage-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="13"/><g><circle cx="17" cy="17" r="5.4"/><circle cx="31" cy="17" r="5.4"/><circle cx="17" cy="31" r="5.4"/><circle cx="31" cy="31" r="5.4"/></g></svg><span>TógBlocks</span></div>
           <canvas class="builder-3d" data-sb-canvas aria-label="3D preview of your door sign. Drag to rotate."></canvas>
           <div class="builder-skel" data-sb-skeleton aria-hidden="true"></div>
           <div class="builder-views" data-sb-views role="group" aria-label="View" hidden>

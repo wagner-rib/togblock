@@ -99,6 +99,7 @@ export class NameBuilder {
     this.host.innerHTML = `
       <div class="builder" data-builder>
         <div class="builder-stage" data-stage>
+          <div class="stage-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="13"/><g><circle cx="17" cy="17" r="5.4"/><circle cx="31" cy="17" r="5.4"/><circle cx="17" cy="31" r="5.4"/><circle cx="31" cy="31" r="5.4"/></g></svg><span>TógBlocks</span></div>
           <canvas class="builder-3d" data-canvas aria-label="3D preview of your letters. Drag to rotate, tap a letter to recolour it."></canvas>
           <div class="builder-skel" data-skeleton aria-hidden="true"></div>
           <div class="builder-views" data-views role="group" aria-label="View" hidden>

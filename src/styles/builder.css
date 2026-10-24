@@ -384,6 +384,17 @@
   touch-action: pan-y; cursor: grab;
 }
 :is(.builder-stage, .sign-stage).has-3d .builder-3d:active { cursor: grabbing; }
+/* Faint TógBlocks mark in the stage corner, under the canvas (letters always draw on top) */
+.stage-mark { display: none; }
+:is(.builder-stage, .sign-stage).is-3d .stage-mark {
+  display: flex; align-items: center; gap: 6px; position: absolute; left: 14px; bottom: 12px;
+  pointer-events: none; opacity: .55;
+  font: 800 1.05rem/1 var(--font-display); letter-spacing: -.02em; color: #fff;
+}
+.stage-mark svg { width: 22px; height: 22px; }
+.stage-mark rect { fill: #fff; }
+.stage-mark g { fill: #a3aebb; }
+@media (max-width: 640px) { :is(.builder-stage, .sign-stage).is-3d .stage-mark { font-size: .85rem; left: 10px; bottom: 9px; } .stage-mark svg { width: 17px; height: 17px; } }
 :is(.builder-stage, .sign-stage).is-3d-loading .builder-skel {
   display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
   font-family: "Russo One", var(--font-display); line-height: 1; letter-spacing: .02em;
