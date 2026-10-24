@@ -2,8 +2,10 @@
 """
 Convert letter_font.py STLs into Draco-compressed GLBs for the 3D builder preview.
 
-    letters/standard/letter_<char>.stl  ->  public/models/letter_<char>.glb
-                                            public/models/manifest.json
+    letters/standard/letter_<char>.stl  ->  src/assets/models/letter_<char>.glb
+                                            src/assets/models/manifest.json
+
+(Under src/ so Vite content-hashes them; src/builder/models.ts imports them.)
 
 Geometry stays in the STL's own frame: millimetres, Z-up, letter centred on
 X/Y, back face at Z=0. The browser tips the group to Y-up itself.
@@ -46,7 +48,7 @@ import trimesh
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 SITE_DIR = os.path.dirname(TOOLS_DIR)
 DEFAULT_SRC = os.path.normpath(os.path.join(SITE_DIR, '..', '..', '3d_letters_final'))
-DEFAULT_OUT = os.path.join(SITE_DIR, 'public', 'models')
+DEFAULT_OUT = os.path.join(SITE_DIR, 'src', 'assets', 'models')
 DRACO_HELPER = os.path.join(TOOLS_DIR, 'draco.mjs')
 
 CHARS = [chr(c) for c in range(ord('A'), ord('Z') + 1)] + [str(d) for d in range(10)]

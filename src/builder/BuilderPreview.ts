@@ -1,24 +1,29 @@
-/* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout, 3D-FIX-04 picking,
- * 3D-FIX-05 touch: one-finger horizontal spin, pinch / ctrl+wheel zoom,
- * 3D-FIX-06 PLA material and soft studio reflections).
+/* Three.js preview of the printed letters.
+ * 3D-FIX-02 scene · 03 layout · 04 picking · 05 touch (spin, pinch / ctrl+wheel zoom)
+ * 06 PLA material and studio reflections · 07 skeletons and motion.
  *
- * Loads the Draco GLBs produced by tools/export_glb.py from /models/. They are
+ * Loads the Draco GLBs produced by tools/export_glb.py (see models.ts). They are
  * in the STL frame (mm, Z-up, top face on +Z) and ship without normals, so each
  * geometry gets creased normals on load. Studs are not in the mesh: the GLB
- * lists their grid cells and every stud is an instance of one smooth shape. The name group is tipped -90° about X
- * so the letters lie flat, studs up, like the visual-target prototype.
+ * lists their grid cells and every stud is an instance of one smooth shape.
+ * The name group is tipped -90° about X so the letters lie flat, studs up.
  *
- * Rendering is on demand: nothing runs per frame except the idle sine sway,
- * which stops for good on the first drag, and pauses off-screen / hidden tab.
+ * Each letter is a slot that survives retyping: unchanged letters glide to
+ * their new place, new ones fade up, and a glyph that isn't downloaded yet
+ * holds its place as a translucent skeleton block.
+ *
+ * Rendering is on demand: frames run only while something moves (idle sway,
+ * tweens, damped spin) and pause off-screen / in a hidden tab.
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import type { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { createPlaMaterial } from './plaMaterial';
 import { themeColor, type LetterSize } from './themes';
 import { previewChars } from './previewState';
+import { manifest as MANIFEST, MODEL_URLS, createDracoLoader } from './models';
 
 export type ViewMode = 'hero' | 'top' | 'side';
 
@@ -42,6 +47,18 @@ interface Manifest {
   letters: Record<string, ManifestLetter>;
 }
 
+interface Glyph { body: THREE.BufferGeometry; studs: number[] }
+
+interface Slot {
+  char: string;
+  group: THREE.Group;                       // userData.letterIndex is the name index
+  material: THREE.MeshStandardMaterial | null;
+  skeleton: THREE.Mesh | null;
+  slide: { from: number; to: number; start: number } | null;
+  appear: { start: number } | null;
+  tint: { from: THREE.Color; to: THREE.Color; start: number } | null;
+}
+
 interface CameraTween {
   fromPos: THREE.Vector3; toPos: THREE.Vector3;
   fromLook: THREE.Vector3; toLook: THREE.Vector3;
@@ -51,21 +68,32 @@ interface CameraTween {
 const CREASE_ANGLE = Math.PI / 6; // must match the note in tools/export_glb.py
 const STUD_SEGMENTS = 20;     // round enough at any zoom; 120 triangles a stud
 const STUD_CHAMFER = 0.2;     // mm, softens the top edge highlight like a printed stud
-const ENV_INTENSITY = 0.35;  // studio reflections: tone and soft speculars, not extra light
-const SWAY_AMPLITUDE = 0.15; // radians
-const SWAY_SPEED = 0.0003;   // radians per ms
-const DRAG_SPEED = 0.008;    // radians per px
-const LETTER_GAP = 10;       // mm between letters, as on a shelf
+const ENV_INTENSITY = 0.35;   // studio reflections: tone and soft speculars, not extra light
+const SWAY_AMPLITUDE = 0.15;  // radians
+const SWAY_SPEED = 0.0003;    // radians per ms
+const DRAG_SPEED = 0.008;     // radians per px
+const SPIN_DAMPING_MS = 70;   // drag spin eases toward the finger with this time constant
+const LETTER_GAP = 10;        // mm between letters, as on a shelf
 const CAMERA_TWEEN_MS = 300;
-const TAP_SLOP_PX = 6;       // pointer travel below this is a tap, not a drag
-const ZOOM_MIN = 0.05;      // camera distance multipliers (smaller = closer; this far in, layer lines resolve)
+const SLIDE_MS = 300;         // existing letters gliding to a new layout
+const APPEAR_MS = 150;        // a letter fading up into place…
+const APPEAR_STAGGER_MS = 50; // …each new letter this much after the previous one
+const APPEAR_RISE_MM = 6;
+const TINT_MS = 200;          // colour changes blend rather than snap
+const SKELETON_COLOUR = 0xd0d4e0;
+const SKELETON_OPACITY = 0.4;
+const TAP_SLOP_PX = 6;        // pointer travel below this is a tap, not a drag
+const ZOOM_MIN = 0.05;        // camera distance multipliers (smaller = closer; this far in, layer lines resolve)
 const ZOOM_MAX = 1.6;
-const FRAME_MARGIN = 1.08;
-const SLOW_FRAME_MS = 40;    // a render slower than this (3x running) is a slow device
+const FRAME_MARGIN = 1.08;    // name fills ~92% of the tighter screen axis
+const SLOW_FRAME_MS = 40;     // a render slower than this (3x running) is a slow device
 const SLOW_FRAME_STREAK = 3;
-const VERY_SLOW_FRAME_MS = 120; // one frame this slow (no GPU / software WebGL): stop animating at once  // name fills ~92% of the tighter screen axis
-const SHADOW_MIN_HALF = 400; // mm; shadow frustum grows past this for long names
+const VERY_SLOW_FRAME_MS = 120; // one frame this slow (no GPU / software WebGL): stop animating at once
+const SHADOW_MIN_HALF = 400;  // mm; shadow frustum grows past this for long names
 
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeOutBack = (t: number) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
+const progress = (start: number, ms: number, now: number) => THREE.MathUtils.clamp((now - start) / ms, 0, 1);
 
 export class BuilderPreview {
   private props: BuilderPreviewProps;
@@ -76,11 +104,19 @@ export class BuilderPreview {
   private nameGroup = new THREE.Group();
   private loader: GLTFLoader;
   private draco: DRACOLoader;
-  private modelsBase: string;
+  private onReady?: () => void;
   private manifest: Promise<Manifest>;
-  private geometries = new Map<string, Promise<{ body: THREE.BufferGeometry; studs: number[] }>>();
+  private geometries = new Map<string, Promise<Glyph>>();
+  private loaded = new Map<string, Glyph>(); // same glyphs, for synchronous cache hits
   private studGeometry: Promise<THREE.BufferGeometry>;
+  private studGeo: THREE.BufferGeometry | null = null;
+  private skeletonMaterial = new THREE.MeshBasicMaterial({
+    color: SKELETON_COLOUR, transparent: true, opacity: SKELETON_OPACITY, depthWrite: false,
+  });
+  private slots: Slot[] = [];
+  private layoutBox = new THREE.Box3();
   private buildToken = 0;
+  private shown = false; // first real letters drawn
   private keyLight!: THREE.DirectionalLight;
   private lookAt = new THREE.Vector3();
   private framed = false;
@@ -88,6 +124,8 @@ export class BuilderPreview {
   private reduceMotion: boolean;
 
   private rotation = 0;
+  private spinTarget = 0;
+  private lastFrame = 0;
   private swaying: boolean;
   private visible = true;
   private frameQueued = false;
@@ -100,7 +138,6 @@ export class BuilderPreview {
   private slowStreak = 0;
   private framesDrawn = 0;
   private quality: 'full' | 'reduced' | 'still' = 'full';
-  private compiled = false;
   private raycaster = new THREE.Raycaster();
   private resizeObs: ResizeObserver;
   private visObs: IntersectionObserver;
@@ -108,11 +145,11 @@ export class BuilderPreview {
   constructor(
     canvas: HTMLCanvasElement,
     props: BuilderPreviewProps,
-    opts: { modelsBase?: string; dracoPath?: string } = {},
+    opts: { onReady?: () => void } = {},
   ) {
     this.canvas = canvas;
     this.props = props;
-    this.modelsBase = opts.modelsBase ?? '/models/';
+    this.onReady = opts.onReady;
     this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.swaying = !this.reduceMotion;
 
@@ -128,12 +165,9 @@ export class BuilderPreview {
     this.scene.add(this.nameGroup);
     this.nameGroup.rotation.x = -Math.PI / 2;
 
-    this.draco = new DRACOLoader().setDecoderPath(opts.dracoPath ?? '/draco/');
+    this.draco = createDracoLoader();
     this.loader = new GLTFLoader().setDRACOLoader(this.draco);
-    this.manifest = fetch(this.modelsBase + 'manifest.json').then((res) => {
-      if (!res.ok) throw new Error(`manifest.json: HTTP ${res.status}`);
-      return res.json();
-    });
+    this.manifest = Promise.resolve(MANIFEST as Manifest);
     this.studGeometry = this.manifest.then(buildStudGeometry);
 
     canvas.addEventListener('pointerdown', this.onPointerDown);
@@ -182,14 +216,19 @@ export class BuilderPreview {
     this.canvas.removeEventListener('pointerup', this.onPointerUp);
     this.canvas.removeEventListener('pointercancel', this.onPointerUp);
     this.canvas.removeEventListener('wheel', this.onWheel);
-    this.nameGroup.traverse((o) => {
-      if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
-    });
+    this.slots.forEach((s) => this.disposeSlot(s));
+    this.skeletonMaterial.dispose();
     this.geometries.forEach((g) => g.then(({ body }) => body.dispose()));
     this.studGeometry.then((g) => g.dispose());
     this.scene.environment?.dispose();
     this.draco.dispose();
     this.renderer.dispose();
+  }
+
+  /** Colour of letter i: per-letter override, else the theme's colour for that position. */
+  letterHex(i: number): string {
+    const { theme, oneColour, letterColours } = this.props;
+    return letterColours[i] ?? themeColor(theme, i, oneColour);
   }
 
   // ── Scene ────────────────────────────────────────────────────────
@@ -223,10 +262,10 @@ export class BuilderPreview {
     this.scene.add(ground);
   }
 
-  private loadGeometry(char: string): Promise<{ body: THREE.BufferGeometry; studs: number[] }> {
+  private loadGeometry(char: string): Promise<Glyph> {
     let p = this.geometries.get(char);
     if (!p) {
-      p = this.loader.loadAsync(`${this.modelsBase}letter_${char}.glb`).then((gltf) => {
+      p = this.loader.loadAsync(MODEL_URLS[char]).then((gltf) => {
         let mesh: THREE.Mesh | null = null;
         gltf.scene.traverse((o) => {
           if (!mesh && o instanceof THREE.Mesh) mesh = o;
@@ -234,8 +273,12 @@ export class BuilderPreview {
         if (!mesh) throw new Error(`letter_${char}.glb has no mesh`);
         const m = mesh as THREE.Mesh;
         // Node extras land in userData: stud cells as a flat [i0, j0, i1, j1, ...] list
-        const studs: number[] = m.userData.studs ?? m.parent?.userData.studs ?? [];
-        return { body: toCreasedNormals(m.geometry, CREASE_ANGLE), studs };
+        const glyph = {
+          body: toCreasedNormals(m.geometry, CREASE_ANGLE),
+          studs: (m.userData.studs ?? m.parent?.userData.studs ?? []) as number[],
+        };
+        this.loaded.set(char, glyph);
+        return glyph;
       });
       p.catch(() => this.geometries.delete(char)); // allow a retry
       this.geometries.set(char, p);
@@ -248,45 +291,111 @@ export class BuilderPreview {
     const token = ++this.buildToken;
     const manifest = await this.manifest;
     const chars = previewChars(this.props.name).filter((c) => manifest.letters[c]);
-    const [geos, studGeo] = await Promise.all([
-      Promise.all(chars.map((c) => this.loadGeometry(c))),
-      this.studGeometry,
-    ]);
+    this.studGeo ??= await this.studGeometry;
+
+    if (!this.shown) {
+      // First load: the page's HTML skeleton is showing, so wait for every glyph and
+      // bring the whole name in together rather than block by block
+      await Promise.all(chars.map((c) => this.loadGeometry(c).catch(() => {}))); // a failed glyph falls back to a skeleton
+    }
     if (token !== this.buildToken) return; // superseded by newer input
 
-    this.nameGroup.traverse((o) => {
-      if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
-      if (o instanceof THREE.InstancedMesh) o.dispose();
-    });
-    this.nameGroup.clear();
-
+    const now = performance.now();
     const metas = chars.map((c) => manifest.letters[c]);
     const total = metas.reduce((w, m) => w + m.width, 0) + LETTER_GAP * Math.max(0, chars.length - 1);
+
+    // Keep slots whose letter is unchanged at that position; replace the rest
+    const old = this.slots;
+    this.slots = chars.map((char, i) => (old[i]?.char === char ? old[i] : this.createSlot(char, i)));
+    old.forEach((s, i) => { if (this.slots[i] !== s) this.disposeSlot(s); });
+
     let cursor = -total / 2;
-    chars.forEach((char, i) => {
-      const material = createPlaMaterial(manifest.bodyDepth + manifest.studHeight);
-      const body = new THREE.Mesh(geos[i].body, material);
-      body.castShadow = true;
-      body.receiveShadow = true;
-      const letter = new THREE.Group();
-      letter.userData = { letterIndex: i, char };
-      letter.position.x = cursor - metas[i].originX; // left edge at cursor
-      letter.add(body, buildStuds(studGeo, material, geos[i].studs, manifest.studPitch));
-      this.nameGroup.add(letter);
+    let stagger = 0;
+    this.slots.forEach((slot, i) => {
+      const x = cursor - metas[i].originX; // left edge at cursor
       cursor += metas[i].width + LETTER_GAP;
+      if (slot.group.parent) {
+        slot.slide = this.reduceMotion || slot.group.position.x === x ? null
+          : { from: slot.group.position.x, to: x, start: now };
+        if (!slot.slide) slot.group.position.x = x;
+        return;
+      }
+      slot.group.position.x = x;
+      this.nameGroup.add(slot.group);
+      const glyph = this.loaded.get(slot.char);
+      const delay = stagger++ * APPEAR_STAGGER_MS;
+      if (glyph) {
+        this.fillSlot(slot, glyph, manifest, now + delay);
+      } else {
+        this.addSkeleton(slot, metas[i], manifest);
+        this.loadGeometry(slot.char).then((g) => {
+          if (this.slots.includes(slot) && !slot.material) {
+            this.fillSlot(slot, g, manifest, performance.now());
+            this.requestRender();
+          }
+        }).catch(() => {}); // the skeleton stays if a glyph can't load
+      }
     });
 
+    // Layout box in world space: X = width, Y = up (print Z), Z = toward the viewer (print -Y)
+    const tallest = Math.max(0, ...metas.map((m) => m.height));
+    const depth = Math.max(0, ...metas.map((m) => m.depth));
+    this.layoutBox.set(new THREE.Vector3(-total / 2, 0, -tallest / 2), new THREE.Vector3(total / 2, depth, tallest / 2));
+    if (!chars.length) this.layoutBox.makeEmpty();
+
     this.fitShadow(total);
-    this.applyColours();
     this.frameCamera(this.framed);
-    if (!this.compiled && chars.length) {
+
+    if (!this.shown && this.slots.some((s) => s.material)) {
       // Compile shaders off the main thread where the browser supports it, before the first frame
-      this.compiled = true;
       await this.renderer.compileAsync(this.scene, this.camera).catch(() => {});
       if (token !== this.buildToken) return;
+      // Start the fade-in cascade now, not before a possibly slow compile
+      const t = performance.now();
+      this.slots.forEach((s, i) => { if (s.appear) s.appear.start = t + i * APPEAR_STAGGER_MS; });
       this.scheduleEnvironment();
     }
     this.requestRender();
+  }
+
+  private createSlot(char: string, index: number): Slot {
+    const group = new THREE.Group();
+    group.userData = { letterIndex: index, char };
+    return { char, group, material: null, skeleton: null, slide: null, appear: null, tint: null };
+  }
+
+  /** Translucent block the size of the glyph, shown until its GLB arrives. */
+  private addSkeleton(slot: Slot, meta: ManifestLetter, manifest: Manifest): void {
+    const box = new THREE.BoxGeometry(meta.width, meta.height, manifest.bodyDepth);
+    box.translate(meta.originX + meta.width / 2, meta.originY + meta.height / 2, manifest.bodyDepth / 2);
+    slot.skeleton = new THREE.Mesh(box, this.skeletonMaterial);
+    slot.group.add(slot.skeleton);
+  }
+
+  private fillSlot(slot: Slot, glyph: Glyph, manifest: Manifest, appearAt: number): void {
+    if (slot.skeleton) {
+      slot.skeleton.geometry.dispose();
+      slot.group.remove(slot.skeleton);
+      slot.skeleton = null;
+    }
+    const material = createPlaMaterial(manifest.bodyDepth + manifest.studHeight);
+    material.color.set(this.letterHex(slot.group.userData.letterIndex));
+    material.transparent = true; // kept on so the fade never forces a shader recompile
+    const body = new THREE.Mesh(glyph.body, material);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    slot.group.add(body, buildStuds(this.studGeo!, material, glyph.studs, manifest.studPitch));
+    slot.material = material;
+    if (this.reduceMotion) return;
+    material.opacity = 0;
+    slot.appear = { start: appearAt };
+  }
+
+  private disposeSlot(slot: Slot): void {
+    slot.material?.dispose();
+    slot.skeleton?.geometry.dispose();
+    slot.group.traverse((o) => { if (o instanceof THREE.InstancedMesh) o.dispose(); });
+    slot.group.removeFromParent();
   }
 
   /** Build the studio environment once the first frame is up, so it never delays it. */
@@ -310,31 +419,24 @@ export class BuilderPreview {
     this.keyLight.shadow.camera.updateProjectionMatrix();
   }
 
-  /** Colour of letter i: per-letter override, else the theme's colour for that position. */
-  letterHex(i: number): string {
-    const { theme, oneColour, letterColours } = this.props;
-    return letterColours[i] ?? themeColor(theme, i, oneColour);
-  }
-
   private applyColours(only?: Set<number>): void {
-    for (const letter of this.nameGroup.children) {
-      const i = letter.userData.letterIndex as number;
-      if (only && !only.has(i)) continue;
-      const hex = this.letterHex(i);
-      letter.traverse((o) => {
-        if (o instanceof THREE.Mesh) (o.material as THREE.MeshStandardMaterial).color.set(hex);
-      });
-    }
+    const now = performance.now();
+    this.slots.forEach((slot, i) => {
+      if (!slot.material || (only && !only.has(i))) return;
+      const to = new THREE.Color(this.letterHex(i));
+      if (this.reduceMotion || slot.appear) {
+        slot.material.color.copy(to);
+        slot.tint = null;
+      } else if (!slot.material.color.equals(to)) {
+        slot.tint = { from: slot.material.color.clone(), to, start: now };
+      }
+    });
     this.requestRender();
   }
 
   /** Point the camera at the name for the current view; eases over 300ms when animate is set. */
   private frameCamera(animate = false): void {
-    // Measure the unrotated layout so the drag/sway doesn't make the camera breathe
-    const spin = this.nameGroup.rotation.z;
-    this.nameGroup.rotation.z = 0;
-    const box = new THREE.Box3().setFromObject(this.nameGroup);
-    this.nameGroup.rotation.z = spin;
+    const box = this.layoutBox; // target layout, not mid-slide positions
     if (box.isEmpty()) return;
 
     const size = box.getSize(new THREE.Vector3());
@@ -351,8 +453,7 @@ export class BuilderPreview {
       side: new THREE.Vector3(1.1, 0.02, 0.01),
     }[this.props.viewMode].normalize();
     this.fit = { center, dir, dist: fitDist };
-    const offset = dir.clone().multiplyScalar(fitDist * this.zoom);
-    const toPos = center.clone().add(offset);
+    const toPos = center.clone().addScaledVector(dir, fitDist * this.zoom);
 
     // Long names put the camera well past the spec's 2000mm far plane
     this.camera.far = Math.max(2000, fitDist * ZOOM_MAX + maxDim * 2);
@@ -384,17 +485,6 @@ export class BuilderPreview {
     this.requestRender();
   }
 
-  private stepTween(now: number): void {
-    const tw = this.tween;
-    if (!tw) return;
-    const t = Math.min(1, (now - tw.start) / CAMERA_TWEEN_MS);
-    const k = 1 - Math.pow(1 - t, 3); // easeOutCubic
-    this.camera.position.lerpVectors(tw.fromPos, tw.toPos, k);
-    this.lookAt.lerpVectors(tw.fromLook, tw.toLook, k);
-    this.camera.lookAt(this.lookAt);
-    if (t === 1) this.tween = null;
-  }
-
   private resize(): void {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -417,19 +507,88 @@ export class BuilderPreview {
   private frame = (t: number): void => {
     this.frameQueued = false;
     if (!this.visible || document.hidden) return; // resumed by observers
-    if (this.swaying) this.rotation = Math.sin(t * SWAY_SPEED) * SWAY_AMPLITUDE;
-    if (this.settle) {
-      const k = Math.min(1, (performance.now() - this.settle.start) / CAMERA_TWEEN_MS);
-      this.rotation = this.settle.from * Math.pow(1 - k, 3); // ease back to square-on
-      if (k === 1) this.settle = null;
-    }
-    this.stepTween(performance.now());
+    const now = performance.now();
+    const dt = this.lastFrame ? Math.min(100, now - this.lastFrame) : 16;
+    this.lastFrame = now;
+
+    let moving = this.stepSpin(t, now, dt);
+    moving = this.stepCamera(now) || moving;
+    moving = this.stepSlots(now) || moving;
+
     this.nameGroup.rotation.z = this.rotation;
     const t0 = performance.now();
     this.renderer.render(this.scene, this.camera);
-    if (this.nameGroup.children.length) this.adaptQuality(performance.now() - t0);
-    if (this.swaying || this.tween || this.settle) this.requestRender();
+    const hasLetters = this.slots.some((s) => s.material);
+    if (hasLetters) this.adaptQuality(performance.now() - t0);
+    if (hasLetters && !this.shown) {
+      this.shown = true;
+      this.onReady?.();
+    }
+    if (moving) this.requestRender();
+    else this.lastFrame = 0;
   };
+
+  /** Idle sway, tap settle, or damped follow of the drag target. Returns true while moving. */
+  private stepSpin(t: number, now: number, dt: number): boolean {
+    if (this.swaying) {
+      this.rotation = this.spinTarget = Math.sin(t * SWAY_SPEED) * SWAY_AMPLITUDE;
+      return true;
+    }
+    if (this.settle) {
+      const k = progress(this.settle.start, CAMERA_TWEEN_MS, now);
+      this.rotation = this.spinTarget = this.settle.from * (1 - easeOutCubic(k)); // ease back to square-on
+      if (k === 1) this.settle = null;
+      return true;
+    }
+    const gap = this.spinTarget - this.rotation;
+    if (Math.abs(gap) < 1e-4) {
+      this.rotation = this.spinTarget;
+      return false;
+    }
+    this.rotation += this.reduceMotion ? gap : gap * (1 - Math.exp(-dt / SPIN_DAMPING_MS));
+    return true;
+  }
+
+  private stepCamera(now: number): boolean {
+    const tw = this.tween;
+    if (!tw) return false;
+    const k = progress(tw.start, CAMERA_TWEEN_MS, now);
+    const e = easeOutCubic(k);
+    this.camera.position.lerpVectors(tw.fromPos, tw.toPos, e);
+    this.lookAt.lerpVectors(tw.fromLook, tw.toLook, e);
+    this.camera.lookAt(this.lookAt);
+    if (k === 1) this.tween = null;
+    return true;
+  }
+
+  private stepSlots(now: number): boolean {
+    let moving = false;
+    for (const slot of this.slots) {
+      if (slot.slide) {
+        const k = progress(slot.slide.start, SLIDE_MS, now);
+        slot.group.position.x = THREE.MathUtils.lerp(slot.slide.from, slot.slide.to, easeOutCubic(k));
+        if (k === 1) slot.slide = null;
+        moving = true;
+      }
+      if (slot.appear && slot.material) {
+        const k = progress(slot.appear.start, APPEAR_MS, now);
+        slot.material.opacity = k;
+        slot.group.position.z = -APPEAR_RISE_MM * (1 - easeOutBack(k)); // rises, overshoots a hair, settles
+        if (k === 1) {
+          slot.appear = null;
+          slot.group.position.z = 0;
+        }
+        moving = true;
+      }
+      if (slot.tint && slot.material) {
+        const k = progress(slot.tint.start, TINT_MS, now);
+        slot.material.color.lerpColors(slot.tint.from, slot.tint.to, k);
+        if (k === 1) slot.tint = null;
+        moving = true;
+      }
+    }
+    return moving;
+  }
 
   /** Step quality down on devices that can't keep up: first pixel ratio, then the idle sway. */
   private adaptQuality(ms: number): void {
@@ -469,7 +628,7 @@ export class BuilderPreview {
     }
     if (this.pointers.size > 2) return;
     this.drag = {
-      id: e.pointerId, startX: e.clientX, startY: e.clientY, startRot: this.rotation,
+      id: e.pointerId, startX: e.clientX, startY: e.clientY, startRot: this.spinTarget,
       moved: false, wasSwaying: this.swaying,
     };
     this.swaying = false;
@@ -487,7 +646,7 @@ export class BuilderPreview {
     const dx = e.clientX - this.drag.startX;
     if (!this.drag.moved && Math.hypot(dx, e.clientY - this.drag.startY) < TAP_SLOP_PX) return;
     this.drag.moved = true;
-    this.rotation = this.drag.startRot + dx * DRAG_SPEED;
+    this.spinTarget = this.drag.startRot + dx * DRAG_SPEED;
     this.requestRender();
   };
 

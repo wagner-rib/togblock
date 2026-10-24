@@ -3,11 +3,13 @@
 // Not linked, not indexed, not in the sitemap. Removed when /builder swaps over.
 import '@fontsource/nunito/600.css';
 import '@fontsource/baloo-2/700.css';
+import '@fontsource/russo-one/400.css';
 import '../styles/tokens.css';
 import { THEMES, COLOURS } from '../builder/themes';
 // Preloaded so the header doesn't re-wrap (and push the stage down) when the fonts swap in
 import balooBold from '@fontsource/baloo-2/files/baloo-2-latin-700-normal.woff2?url';
 import nunitoSemi from '@fontsource/nunito/files/nunito-latin-600-normal.woff2?url';
+import russoOne from '@fontsource/russo-one/files/russo-one-latin-400-normal.woff2?url';
 
 // One colour leads and is the default; the rest keep their themes.ts order
 const themes = Object.entries(THEMES)
@@ -27,6 +29,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preload" href={balooBold} as="font" type="font/woff2" crossorigin />
   <link rel="preload" href={nunitoSemi} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={russoOne} as="font" type="font/woff2" crossorigin />
 </head>
 <body>
   <main class="p3">
@@ -36,6 +39,14 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     </header>
 
     <div class="p3-stage">
+      <!-- First paint: the name in the letters' own typeface (Russo One), until the 3D is ready -->
+      <div class="p3-skel" id="p3-skel" aria-hidden="true">EMMA</div>
+      <script is:inline>
+        (function () {
+          var m = /(?:^#|&)name=([A-Za-z0-9]{0,12})/.exec(location.hash);
+          if (m && m[1]) document.getElementById('p3-skel').textContent = m[1].toUpperCase();
+        })();
+      </script>
       <canvas id="p3-canvas" aria-label="3D preview of your letters"></canvas>
       <div class="p3-views" role="group" aria-label="View">
         <button type="button" data-view="hero" aria-pressed="false">Hero</button>
@@ -111,6 +122,15 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
                   linear-gradient(180deg, #faf7ec 0%, #e9e4d4 100%);
       box-shadow: 0 4px 14px rgba(26,40,71,.08), 0 10px 24px rgba(26,40,71,.06);
     }
+    .p3-skel {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: "Russo One", var(--font-display); font-size: 12vw; line-height: 1; letter-spacing: .02em;
+      color: #c4c9d8; white-space: nowrap; pointer-events: none;
+      transition: opacity .3s ease-out; animation: p3-pulse 1.4s ease-in-out infinite alternate;
+    }
+    .p3-skel.is-gone { opacity: 0; animation: none; }
+    @keyframes p3-pulse { from { opacity: .45; } to { opacity: .8; } }
+    @media (prefers-reduced-motion: reduce) { .p3-skel { animation: none; opacity: .6; transition: none; } }
     #p3-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; }
     #p3-canvas:active { cursor: grabbing; }
     .p3-views { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,.85); border-radius: 10px; }
@@ -173,18 +193,38 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         size: 'standard',
         viewMode,
         onLetterClick: (i, x, y) => (i < 0 ? closePop() : openPop(i, x, y)),
-      });
+      }, { onReady: hideSkeleton });
     }
     const whenIdle = (fn: () => void) =>
       'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200);
     if (document.readyState === 'complete') whenIdle(boot);
     else addEventListener('load', () => whenIdle(boot), { once: true });
 
+    // ── HTML skeleton (first paint) ──
+    const skel = $('p3-skel');
+    let skeletonLive = true;
+    function fitSkeleton(): void {
+      if (!skeletonLive) return;
+      skel.textContent = state.name;
+      const stage = skel.parentElement!.getBoundingClientRect();
+      // Russo One capitals average ~0.7em wide; fill ~86% of the width, cap the height
+      const size = Math.min((stage.width * 0.86) / (Math.max(1, state.name.length) * 0.7), stage.height * 0.34);
+      skel.style.fontSize = `${size}px`;
+    }
+    function hideSkeleton(): void {
+      skeletonLive = false;
+      skel.classList.add('is-gone');
+      setTimeout(() => (skel.hidden = true), 350);
+    }
+    new ResizeObserver(fitSkeleton).observe(skel.parentElement!);
+    fitSkeleton();
+
     /** Apply a state change to the preview, the controls and the URL hash. */
     function update(next: Partial<PreviewState>): void {
       state = { ...state, ...next };
       preview?.setProps(next);
       syncControls();
+      fitSkeleton();
       history.replaceState(null, '', encodeState(state));
     }
 
@@ -270,6 +310,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       state = next;
       preview?.setProps(next);
       syncControls();
+      fitSkeleton();
     });
     syncControls();
   </script>

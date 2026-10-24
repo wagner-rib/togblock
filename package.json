@@ -14,6 +14,7 @@
     "@astrojs/sitemap": "^3.2.1",
     "@fontsource/baloo-2": "^5.1.0",
     "@fontsource/nunito": "^5.1.0",
+    "@fontsource/russo-one": "^5.1.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^8.0.0",
     "arctic": "^3.7.0",
