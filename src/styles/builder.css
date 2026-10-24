@@ -365,9 +365,8 @@
   aspect-ratio: 16 / 9;
   min-height: 0;
   padding: 0;
-  background:
-    radial-gradient(ellipse at 50% 110%, rgba(26,40,71,.10) 0%, transparent 55%),
-    linear-gradient(180deg, #faf7ec 0%, #e9e4d4 100%);
+  /* Mid-tone blue-grey: the one background where white, black and silver letters all stay visible */
+  background: radial-gradient(ellipse at 50% 45%, #b9c3cf 0%, #98a4b3 75%, #8a96a5 100%);
 }
 @media (max-width: 640px) { .builder-stage.has-3d { aspect-ratio: 4 / 3; } }
 .builder-stage.has-3d::after,
@@ -381,7 +380,7 @@
 .builder-stage.is-3d-loading .builder-skel {
   display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
   font-family: "Russo One", var(--font-display); line-height: 1; letter-spacing: .02em;
-  color: #c4c9d8; white-space: nowrap; pointer-events: none;
+  color: rgba(255,255,255,.6); white-space: nowrap; pointer-events: none;
   animation: builder-skel-pulse 1.4s ease-in-out infinite alternate;
 }
 @keyframes builder-skel-pulse { from { opacity: .45; } to { opacity: .8; } }

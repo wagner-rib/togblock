@@ -235,7 +235,7 @@ export class BuilderPreview {
    * Waits for every glyph, snaps running animations to their end, renders once at
    * `size`×`size`, then restores the live view in the same task so nothing flickers.
    */
-  async capture(size = 512, background = '#f6f2e7'): Promise<Blob> {
+  async capture(size = 512, background = '#a7b2bf'): Promise<Blob> {
     let token: number;
     do { // the name may change while glyphs load; wait for the latest layout
       token = this.buildToken;
@@ -680,7 +680,11 @@ export class BuilderPreview {
   private onPointerDown = (e: PointerEvent): void => {
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.canvas.setPointerCapture(e.pointerId);
-    this.settle = null;
+    if (this.settle) {
+      // A touch mid-settle finishes it; cancelling would leave the name stuck at a tilt
+      this.rotation = this.spinTarget = 0;
+      this.settle = null;
+    }
     if (this.pointers.size === 2) {
       // Second finger: switch from spin to pinch, and never treat this gesture as a tap
       this.drag = null;
