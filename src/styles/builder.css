@@ -367,9 +367,13 @@
   min-height: 0;
   padding: 0;
   /* Mid-tone blue-grey: the one background where white, black and silver letters all stay visible.
-     A straight top-to-bottom shade, so the rectangular stage doesn't show an oval spotlight. */
-  background: linear-gradient(180deg, #b6c0cc 0%, #a3aebb 55%, #929eac 100%);
+     A straight top-to-bottom shade, so the rectangular stage doesn't show an oval spotlight.
+     Over it, a faint white tile of kids' doodles (stars, rockets, balloons...) for some fun. */
+  background:
+    url('../assets/stage-doodles.svg') center / 400px repeat,
+    linear-gradient(180deg, #b6c0cc 0%, #a3aebb 55%, #929eac 100%);
 }
+@media (max-width: 640px) { :is(.builder-stage, .sign-stage).has-3d { background-size: 280px, auto; } }
 @media (max-width: 640px) { :is(.builder-stage, .sign-stage).has-3d { aspect-ratio: 4 / 3; } }
 :is(.builder-stage, .sign-stage).has-3d::after,
 .builder-stage.has-3d .brick-scaler,
