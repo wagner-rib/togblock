@@ -49,7 +49,7 @@ export const THEMES: Record<string, Theme> = {
   },
   one: {
     label: 'One colour',
-    swatch: ['#169B62'],
+    swatch: ['#1D4ED8'], // blue: the default letter colour
     single: true,
   },
 };

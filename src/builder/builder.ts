@@ -1,6 +1,6 @@
 import { FONT, isSupported, countFilledCells } from './brickfont';
 import {
-  THEMES, themeColor, PICKER,
+  THEMES, COLOURS, themeColor, PICKER,
   priceLetters, discountPct, addonCost,
   SIZE_LABELS, SIZE_MM, SIZE_CELL_PX, type LetterSize,
 } from './themes';
@@ -82,7 +82,7 @@ export class NameBuilder {
       size: 'standard',
       theme: 'one',
       cell: SIZE_CELL_PX['standard'],
-      oneColor: PICKER[3], // green
+      oneColor: COLOURS.blue.hex, // default letter colour
       overrides: {},
       addons: { dots: false, giftBox: false },
     };

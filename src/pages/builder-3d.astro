@@ -15,7 +15,7 @@ import russoOne from '@fontsource/russo-one/files/russo-one-latin-400-normal.wof
 const themes = Object.entries(THEMES)
   .map(([id, t]) => ({ id, label: t.label, swatch: t.swatch }))
   .sort((a, b) => Number(b.id === 'one') - Number(a.id === 'one'));
-const DEFAULT_ONE = COLOURS.green.hex;
+const DEFAULT_ONE = COLOURS.blue.hex;
 const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
 ---
 
@@ -181,7 +181,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     const pop = $('p3-pop');
     const popTitle = $('p3-pop-title');
 
-    const DEFAULTS: PreviewState = { name: 'EMMA', theme: 'one', oneColour: COLOURS.green.hex, letterColours: {} };
+    const DEFAULTS: PreviewState = { name: 'EMMA', theme: 'one', oneColour: COLOURS.blue.hex, letterColours: {} };
     let state = decodeState(location.hash, DEFAULTS);
     let popIndex = -1;
 
