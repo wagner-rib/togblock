@@ -101,6 +101,7 @@ const returnTo = Astro.url.searchParams.get('returnTo') ?? '/account';
           <span class="auth-btn-label">Create account</span>
           <span class="co-spinner" hidden></span>
         </button>
+        <p class="auth-legal">We use your details to run your account and orders. See our <a href="/privacy">Privacy Policy</a>.</p>
       </form>
 
       <p class="auth-guest">
@@ -227,6 +228,8 @@ const returnTo = Astro.url.searchParams.get('returnTo') ?? '/account';
   margin: 20px 0 0;
 }
 .auth-guest a { color: var(--green-deep); font-weight: 600; }
+.auth-legal { font-size: var(--fs-xs); color: var(--ink-60); text-align: center; margin: 10px 0 0; line-height: 1.5; }
+.auth-legal a { color: var(--green-deep); }
 </style>
 
 <script define:vars={{ returnTo }}>

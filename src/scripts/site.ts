@@ -119,22 +119,6 @@ function initAccordions(): void {
   });
 }
 
-/* ---- newsletter ---- */
-function initNewsletter(): void {
-  document.querySelectorAll<HTMLFormElement>('[data-newsletter]').forEach((form) => {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = form.querySelector<HTMLInputElement>('input');
-      const msg = form.parentElement?.querySelector<HTMLElement>('[data-newsletter-msg]');
-      if (msg && input) {
-        msg.textContent = `Grand — we'll send the good stuff to ${input.value}.`;
-        msg.hidden = false;
-        input.value = '';
-      }
-    });
-  });
-}
-
 /* ---- SVG brick name preview (scales to any width) ---- */
 function brickNameSVG(item: CartItem): string {
   const name    = (item.name || '').toUpperCase();
@@ -440,7 +424,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeaderScroll();
   initMenu();
   initAccordions();
-  initNewsletter();
   renderColourSets();
   renderScenes();
   renderAboutBricks();

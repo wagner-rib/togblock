@@ -47,6 +47,8 @@ const countries = [
   description="Complete your TógBlocks order."
   currentPage="/checkout"
 >
+  <!-- Stripe.js only here: its fraud-prevention cookies are strictly necessary for paying, not for browsing -->
+  <script slot="head" src="https://js.stripe.com/v3/" is:inline></script>
 
   <div class="co-wrap">
 
@@ -188,6 +190,11 @@ const countries = [
           <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
         Secured by Stripe · We never store your card details
+      </p>
+      <p class="co-legal-note">
+        By placing your order you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Sale</a>.
+        Personalised items can't be returned for a change of mind, but you can cancel before we start printing.
+        See how we use your data in our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
       </p>
     </div>
 
@@ -364,6 +371,8 @@ const countries = [
 .co-stripe-lock { font-size: 20px; }
 
 /* ── SUBMIT ───────────────────────────────────────────────── */
+.co-legal-note { font-size: var(--fs-xs); color: var(--ink-60); line-height: 1.5; text-align: center; margin: 10px 0 0; }
+.co-legal-note a { color: var(--green-deep); }
 .co-submit-btn {
   width: 100%;
   justify-content: center;

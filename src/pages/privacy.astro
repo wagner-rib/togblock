@@ -1,0 +1,241 @@
+---
+import Base from '../layouts/Base.astro';
+import { BUSINESS, controllerLine, trackingIds } from '../lib/legal';
+
+const { enabled: tracking } = trackingIds();
+const email = BUSINESS.email;
+---
+
+<Base
+  title="Privacy Policy — TógBlocks"
+  description="How TógBlocks collects, uses and protects your personal data, the cookies we use, and your rights under the GDPR and other privacy laws."
+  currentPage="/privacy"
+>
+  <div class="wrap">
+    <header class="page-hero">
+      <h1>Privacy Policy</h1>
+      <p class="lead">What we collect when you order from TógBlocks, why, who helps us, and how to use your rights.</p>
+    </header>
+    <p class="legal-meta">Last updated {BUSINESS.lastUpdated}</p>
+
+    <article class="legal">
+      <ul class="legal-summary">
+        <li>We collect only what we need to make, send and support your order.</li>
+        <li>Card details go straight to Stripe. We never see or store your card number.</li>
+        <li>We don't sell your personal data, and we don't use the names you personalise for marketing.</li>
+        <li>Analytics and advertising cookies are only used if you say yes, and you can change your mind at any time.</li>
+        <li>You can ask to see, correct, download or delete your data by emailing <a href={`mailto:${email}`}>{email}</a>.</li>
+      </ul>
+
+      <h2 id="contents">Contents</h2>
+      <ol class="legal-toc">
+        <li><a href="#who">Who we are</a></li>
+        <li><a href="#collect">What we collect and why</a></li>
+        <li><a href="#children">Children's names</a></li>
+        <li><a href="#cookies">Cookies and similar technologies</a></li>
+        <li><a href="#sharing">Who we share data with</a></li>
+        <li><a href="#transfers">International transfers</a></li>
+        <li><a href="#retention">How long we keep data</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#rights">Your rights (EU, EEA and UK)</a></li>
+        <li><a href="#us">California and other US states</a></li>
+        <li><a href="#elsewhere">Canada, Australia and elsewhere</a></li>
+        <li><a href="#changes">Changes and contact</a></li>
+      </ol>
+
+      <h2 id="who">1. Who we are</h2>
+      <p>
+        The data controller for this website and your orders is <strong>{controllerLine()}</strong>
+        ("TógBlocks", "we", "us"). We design and 3D print personalised brick letters and door signs.
+      </p>
+      <p>
+        For anything about your personal data, email <a href={`mailto:${email}`}>{email}</a>.
+        We're a small business and haven't appointed a Data Protection Officer, as the law doesn't require one for us;
+        your email reaches the people who handle your data.
+      </p>
+
+      <h2 id="collect">2. What we collect and why</h2>
+      <div class="legal-table-wrap">
+        <table>
+          <thead><tr><th>What</th><th>Why we use it</th><th>Legal basis (GDPR)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Order details:</strong> your name, delivery address, email, and what you ordered</td>
+              <td>To make your order, deliver it, and email you confirmations and dispatch updates</td>
+              <td>Contract (Art. 6(1)(b))</td>
+            </tr>
+            <tr>
+              <td><strong>Personalisation:</strong> the name or text you build, your colours, size, add-ons, and a picture of your design captured from the 3D preview</td>
+              <td>To print exactly what you designed and to show it in your order confirmation, order page and gift card</td>
+              <td>Contract</td>
+            </tr>
+            <tr>
+              <td><strong>Payment:</strong> processed by Stripe; we receive the payment status and a payment reference</td>
+              <td>To take payment and handle refunds. We never receive your full card number</td>
+              <td>Contract; legal obligation (accounting records)</td>
+            </tr>
+            <tr>
+              <td><strong>Account (optional):</strong> email, name and a securely hashed password, or, if you sign in with Google, your name, email and profile picture</td>
+              <td>To let you sign in, see your orders and keep your basket between devices</td>
+              <td>Contract</td>
+            </tr>
+            <tr>
+              <td><strong>Messages:</strong> emails you send us and our replies</td>
+              <td>To answer questions and support your order</td>
+              <td>Contract; legitimate interests (customer service)</td>
+            </tr>
+            <tr>
+              <td><strong>Review request:</strong> one email after delivery asking how we did</td>
+              <td>To hear from customers and improve. Reply "no reviews" and we won't ask again</td>
+              <td>Legitimate interests (Art. 6(1)(f))</td>
+            </tr>
+            <tr>
+              <td><strong>Reviews (optional):</strong> your rating, text, display name, town and an optional photo</td>
+              <td>To publish your review on our website after we check it</td>
+              <td>Consent (Art. 6(1)(a)); you can ask us to remove it at any time</td>
+            </tr>
+            <tr>
+              <td><strong>Technical data:</strong> your IP address, held in memory for up to 10 minutes</td>
+              <td>To stop abuse of the image upload used by the 3D preview. We don't keep web server access logs</td>
+              <td>Legitimate interests (security)</td>
+            </tr>
+            <tr>
+              <td><strong>Analytics and advertising (optional):</strong> pages viewed, basket and purchase events, device and browser details</td>
+              <td>To see which pages and ads bring people to the shop</td>
+              <td>Consent only; see <a href="#cookies">Cookies</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>We don't make decisions about you based solely on automated processing, and we don't build profiles of you.</p>
+
+      <h2 id="children">3. Children's names</h2>
+      <p>
+        Our products are often gifts for children, so the names you personalise may belong to a child.
+        We use them only to make, ship and support that order. They never go into marketing,
+        and order pictures are stored under random, unguessable links that search engines are told not to index.
+      </p>
+      <p>
+        The website is for adults placing orders. We don't knowingly collect personal data directly from anyone under 16.
+        If you believe a child has given us their data, email us and we'll delete it.
+      </p>
+
+      <h2 id="cookies">4. Cookies and similar technologies</h2>
+      <p>
+        We use a few strictly necessary cookies and browser storage items so the shop works. These don't need your consent.
+        Analytics and advertising cookies are only set after you click <strong>Accept</strong> on our cookie banner.
+        {tracking
+          ? <> You can change your choice at any time from <button type="button" class="legal-btn" onclick="window.tbShowConsent && window.tbShowConsent()">Cookie settings</button> (also in the footer).</>
+          : ' We currently have no analytics or advertising cookies switched on, so no banner is shown.'}
+        If your browser sends a <strong>Global Privacy Control</strong> signal, we treat it as a "no" to analytics and advertising.
+      </p>
+      <div class="legal-table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Provider</th><th>Purpose</th><th>Kept for</th></tr></thead>
+          <tbody>
+            <tr><td><code>tb_session</code> (cookie)</td><td>TógBlocks</td><td>Keeps you signed in. Strictly necessary</td><td>30 days, or until you sign out</td></tr>
+            <tr><td><code>oauth_state</code> (cookie)</td><td>TógBlocks</td><td>Protects Google sign-in against forgery. Strictly necessary</td><td>10 minutes</td></tr>
+            <tr><td><code>togblocks_cart</code> (local storage)</td><td>TógBlocks</td><td>Remembers your basket. Strictly necessary</td><td>Until checkout or you clear it</td></tr>
+            <tr><td><code>togblocks_vibe</code> (local storage)</td><td>TógBlocks</td><td>Remembers the site colour style you picked</td><td>Until you clear it</td></tr>
+            <tr><td><code>tb_consent</code> (local storage)</td><td>TógBlocks</td><td>Remembers your cookie choice</td><td>Until you clear it</td></tr>
+            <tr><td><code>__stripe_mid</code>, <code>__stripe_sid</code></td><td>Stripe</td><td>Fraud prevention during payment. Set on the checkout page only. Strictly necessary</td><td>1 year / 30 minutes</td></tr>
+            <tr><td><code>_ga</code>, <code>_ga_*</code></td><td>Google Analytics</td><td>Counting visits and purchases. Only with your consent</td><td>Up to 2 years</td></tr>
+            <tr><td><code>_fbp</code></td><td>Meta (Facebook, Instagram)</td><td>Measuring our ads. Only with your consent</td><td>3 months</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Our fonts are hosted on our own server, so loading a page doesn't contact Google Fonts or other font services.</p>
+
+      <h2 id="sharing">5. Who we share data with</h2>
+      <p>We don't sell your personal data. We share it only with the companies that help us run the shop, each under a contract that limits how they can use it:</p>
+      <ul>
+        <li><strong>Stripe</strong> (Stripe Payments Europe Ltd, Ireland): card, Apple Pay and Google Pay payments, and fraud prevention.</li>
+        <li><strong>Hetzner Online GmbH</strong> (Germany): hosts our website and database in a data centre in Germany.</li>
+        <li><strong>Microsoft</strong> (Outlook): sends our order emails and holds our customer-service mailbox.</li>
+        <li><strong>Google</strong>: only if you choose "Sign in with Google", and Google Analytics only with your consent.</li>
+        <li><strong>Meta Platforms</strong>: only with your consent, to measure our ads.</li>
+        <li><strong>Delivery companies</strong> (such as An Post, DHL or UPS): your name and address to deliver your parcel.</li>
+        <li><strong>Authorities and advisers</strong>: when the law requires it, for example tax records, or to protect our legal rights.</li>
+      </ul>
+
+      <h2 id="transfers">6. International transfers</h2>
+      <p>
+        We keep our own systems in the EU. Some providers above (Stripe, Microsoft, Google and Meta) may process data in the
+        United States or other countries. Where that happens, the transfer is protected by the EU–US Data Privacy Framework
+        (and its UK extension) where the company is certified, or by the European Commission's Standard Contractual Clauses.
+      </p>
+
+      <h2 id="retention">7. How long we keep data</h2>
+      <div class="legal-table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>How long</th></tr></thead>
+          <tbody>
+            <tr><td>Orders, invoices and payment records</td><td>6 years after the order, as Irish tax law requires</td></tr>
+            <tr><td>Design pictures attached to an order</td><td>As long as the order record</td></tr>
+            <tr><td>Design pictures never used in an order</td><td>Deleted automatically after 30 days</td></tr>
+            <tr><td>Your account and saved basket</td><td>Until you ask us to delete your account</td></tr>
+            <tr><td>Sign-in sessions</td><td>30 days, or until you sign out</td></tr>
+            <tr><td>Customer-service emails</td><td>Up to 2 years after your last message</td></tr>
+            <tr><td>Published reviews</td><td>Until you ask us to remove them</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="security">8. Security</h2>
+      <p>
+        The whole site uses HTTPS. Passwords are stored only as secure hashes, payment details stay with Stripe,
+        and only the people who run TógBlocks can access order data. No system is perfectly secure, but if a breach affected
+        your data we would tell you and the Data Protection Commission as the law requires.
+      </p>
+
+      <h2 id="rights">9. Your rights (EU, EEA and UK)</h2>
+      <p>Under the GDPR and the UK GDPR you have the right to:</p>
+      <ul>
+        <li><strong>access</strong> the personal data we hold about you and get a copy;</li>
+        <li><strong>correct</strong> anything that's wrong or incomplete;</li>
+        <li><strong>delete</strong> your data, unless we must keep it, for example tax records;</li>
+        <li><strong>restrict</strong> or <strong>object to</strong> how we use it, including our legitimate-interest uses;</li>
+        <li><strong>data portability</strong>: receive your data in a common, machine-readable format;</li>
+        <li><strong>withdraw consent</strong> at any time, for cookies or reviews, without affecting what happened before.</li>
+      </ul>
+      <p>
+        Email <a href={`mailto:${email}`}>{email}</a>. It's free, and we'll reply within one month.
+        We may ask you to confirm your identity first. You can also complain to the
+        <a href="https://www.dataprotection.ie" rel="noopener">Data Protection Commission</a> in Ireland,
+        the supervisory authority where you live in the EU/EEA, or, in the UK, the
+        <a href="https://ico.org.uk" rel="noopener">Information Commissioner's Office</a>.
+        We'd appreciate the chance to sort it out with you first.
+      </p>
+
+      <h2 id="us">10. California and other US states</h2>
+      <p>
+        If you live in California or another US state with a privacy law (such as Colorado, Connecticut, Virginia or Texas),
+        you have the right to know what personal information we collect and how we use it, and to ask us to access, correct or delete it.
+        The categories we collect, their sources and purposes are listed in <a href="#collect">section 2</a>, and who receives them in
+        <a href="#sharing">section 5</a>.
+      </p>
+      <p>
+        <strong>We do not sell personal information</strong>, and we don't knowingly sell or share the data of anyone under 16.
+        If you accept advertising cookies, using the Meta pixel may count as "sharing" for cross-context behavioural advertising
+        under California law. You can opt out at any time by rejecting those cookies
+        {tracking ? <>in <button type="button" class="legal-btn" onclick="window.tbShowConsent && window.tbShowConsent()">Cookie settings</button></> : 'in Cookie settings'},
+        and we honour Global Privacy Control signals as an opt-out. We don't use sensitive personal information beyond what's needed to
+        fulfil orders, and we won't treat you differently for using your rights. You can use an authorised agent; we'll need to verify the request.
+      </p>
+
+      <h2 id="elsewhere">11. Canada, Australia and elsewhere</h2>
+      <p>
+        Wherever you live, you can ask to access or correct your personal information, or withdraw consent, by emailing us.
+        We apply the same protections described here to every customer. In Canada you can also contact the Office of the
+        Privacy Commissioner of Canada, and in Australia the Office of the Australian Information Commissioner.
+      </p>
+
+      <h2 id="changes">12. Changes and contact</h2>
+      <p>
+        If we change this policy, we'll update the date at the top, and tell customers directly about any significant change.
+        Questions? Email <a href={`mailto:${email}`}>{email}</a> or visit our <a href="/contact">contact page</a>.
+        See also our <a href="/terms">Terms of Sale</a>.
+      </p>
+    </article>
+  </div>
+</Base>

@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import { BUSINESS, controllerLine } from '../lib/legal';
+
+const email = BUSINESS.email;
+---
+
+<Base
+  title="Contact Us — TógBlocks"
+  description="Get in touch with TógBlocks about an order, a custom idea, or your personal data. Email togblocks@outlook.com."
+  currentPage="/contact"
+>
+  <div class="wrap">
+    <header class="page-hero">
+      <h1>Contact us</h1>
+      <p class="lead">We're a small family team in Ireland, and a real person reads every email.</p>
+    </header>
+
+    <article class="legal">
+      <h2>Email</h2>
+      <p style="font-size:var(--fs-md)"><a href={`mailto:${email}`}><strong>{email}</strong></a></p>
+      <p>We usually reply within one or two working days.</p>
+
+      <h2>About an order</h2>
+      <p>Please include your order number (for example <strong>#TB00123</strong>, from your confirmation email) and, if something arrived damaged, a photo. It helps us sort things quickly.</p>
+      <ul>
+        <li>Spotted a typo or changed your mind? Email us straight away. We can fix or cancel your order if we haven't started printing.</li>
+        <li>Damaged or faulty item? We'll replace or refund it. See our <a href="/terms#faulty">Terms of Sale</a>.</li>
+        <li>Shipping questions? See the <a href="/faq#shipping">FAQ</a>.</li>
+      </ul>
+
+      <h2>Your personal data</h2>
+      <p>To access, correct, download or delete your data, or to ask a privacy question, email the same address. Our <a href="/privacy">Privacy Policy</a> explains your rights.</p>
+
+      <h2>Who we are</h2>
+      <p>{controllerLine()}</p>
+    </article>
+  </div>
+</Base>

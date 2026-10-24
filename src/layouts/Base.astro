@@ -16,6 +16,7 @@ import '../styles/pages.css';
 import '../styles/product.css';
 import '../styles/home.css';
 import { getTokenFromRequest, getSession } from '../lib/auth';
+import { trackingIds } from '../lib/legal';
 
 interface Props {
   title: string;
@@ -28,11 +29,7 @@ const { title, description, currentPage = '/', ogImage = '/og.png' } = Astro.pro
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 // FIX-05: tracking IDs come from the runtime env (.env → container). Unset = no tracking, no banner.
-const rawPixel = process.env.META_PIXEL_ID ?? '';
-const rawGa4   = process.env.GA4_MEASUREMENT_ID ?? '';
-const META_PIXEL_ID = /^\d{5,20}$/.test(rawPixel) ? rawPixel : '';
-const GA4_ID        = /^G-[A-Z0-9]{4,15}$/.test(rawGa4) ? rawGa4 : '';
-const trackingEnabled = Boolean(META_PIXEL_ID || GA4_ID);
+const { metaPixelId: META_PIXEL_ID, ga4Id: GA4_ID, enabled: trackingEnabled } = trackingIds();
 
 const token = getTokenFromRequest(Astro.request);
 const user  = token ? await getSession(token) : null;
@@ -127,7 +124,13 @@ const navItems = [
       var enabled = !!(META_PIXEL_ID || GA4_ID);
       var GA_NAMES = { ViewContent: 'view_item', AddToCart: 'add_to_cart', InitiateCheckout: 'begin_checkout', Purchase: 'purchase' };
 
-      function getConsent() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+      // A Global Privacy Control signal counts as "denied" unless the visitor explicitly accepted
+      function getConsent() {
+        var c = null;
+        try { c = localStorage.getItem(KEY); } catch (e) {}
+        if (!c && navigator.globalPrivacyControl === true) return 'denied';
+        return c;
+      }
       function setConsent(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
 
       function load() {
@@ -202,7 +205,6 @@ const navItems = [
   </script>
 
   <!-- Stripe.js — loaded globally so Payment Element mounts fast -->
-  <script src="https://js.stripe.com/v3/" is:inline></script>
 
   <!-- Vibe init: apply saved theme before first paint to avoid flash -->
   <script is:inline>
@@ -359,18 +361,16 @@ const navItems = [
             <li><a href="/about">Our story</a></li>
             <li><a href="/faq">FAQ</a></li>
             <li><a href="/faq#shipping">Shipping</a></li>
-            {trackingEnabled && <li><button type="button" class="footer-link-btn" onclick="tbShowConsent()">Cookie settings</button></li>}
           </ul>
         </div>
         <div>
-          <h4>Stay in touch</h4>
-          <p style="color:rgba(255,255,255,.75);margin-bottom:12px">The odd email, the odd discount.</p>
-          <form class="newsletter-form" data-newsletter>
-            <label class="sr-only" for="nlf">Email</label>
-            <input class="input" id="nlf" type="email" required placeholder="you@example.ie" />
-            <button class="btn btn--cta btn--sm" type="submit">Join</button>
-          </form>
-          <p data-newsletter-msg hidden></p>
+          <h4>Help &amp; legal</h4>
+          <ul>
+            <li><a href="/contact">Contact us</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Sale</a></li>
+            {trackingEnabled && <li><button type="button" class="footer-link-btn" onclick="tbShowConsent()">Cookie settings</button></li>}
+          </ul>
         </div>
       </div>
       <div class="footer-disclaimer">
@@ -388,6 +388,7 @@ const navItems = [
       <p>
         We'd like to use analytics and advertising cookies (Google Analytics, Meta) to see which ads
         bring people here and improve the shop. Nothing is set unless you say yes.
+        <a href="/privacy#cookies">Privacy Policy</a>
       </p>
       <div class="consent__actions">
         <button type="button" class="btn btn--ghost btn--sm" onclick="tbConsent('denied')">Reject</button>
