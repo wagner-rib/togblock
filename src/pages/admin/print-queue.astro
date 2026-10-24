@@ -2,13 +2,14 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getAdminUser } from '../../lib/adminAuth';
 import { query } from '../../lib/db';
+import { describeOptions, type ItemOptions } from '../../lib/pricing';
 
 const admin = await getAdminUser(Astro.request);
 if (!admin) return Astro.redirect('/login?returnTo=/admin/print-queue');
 
 type QueueItem = {
   id: number; total: number; created_at: Date; customer_name: string;
-  items: { custom_name: string; product_type: string; colours: string[]; quantity: number }[];
+  items: { custom_name: string; product_type: string; colours: string[]; quantity: number; options: ItemOptions | null }[];
 };
 
 async function fetchQueue(status: string): Promise<QueueItem[]> {
@@ -21,7 +22,8 @@ async function fetchQueue(status: string): Promise<QueueItem[]> {
         'custom_name', oi.custom_name,
         'product_type', oi.product_type,
         'colours', oi.colours,
-        'quantity', oi.quantity
+        'quantity', oi.quantity,
+        'options', oi.options
       ) ORDER BY oi.id) AS items
     FROM orders o
     LEFT JOIN users u ON u.id = o.user_id
@@ -84,6 +86,7 @@ function ago(d: Date) {
                   <span style="font-size:var(--fs-xs);color:var(--ink-60);background:#f1f5f9;padding:2px 8px;border-radius:999px">
                     {item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} × {item.quantity}
                   </span>
+                  {item.options && <span class="pq-options">{describeOptions(item.options)}</span>}
                   <div class="adm-swatches">
                     {(item.colours || []).map((c: string) => (
                       <span class="adm-swatch" style={`background:${c};width:20px;height:20px`} title={c}></span>
@@ -133,6 +136,7 @@ function ago(d: Date) {
                     <span style="font-size:var(--fs-xs);color:var(--ink-60);background:#f1f5f9;padding:2px 8px;border-radius:999px">
                       {item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} × {item.quantity}
                     </span>
+                    {item.options && <span class="pq-options">{describeOptions(item.options)}</span>}
                     <div class="adm-swatches">
                       {(item.colours || []).map((c: string) => (
                         <span class="adm-swatch" style={`background:${c};width:20px;height:20px`} title={c}></span>
@@ -171,3 +175,7 @@ function ago(d: Date) {
     )}
   </div>
 </AdminLayout>
+
+<style>
+.pq-options { font-size: var(--fs-xs); font-weight: 700; color: var(--ink); background: #fef9c3; padding: 2px 8px; border-radius: 999px; }
+</style>

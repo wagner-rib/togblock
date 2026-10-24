@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getStripe } from '../../../lib/stripe';
 import { query } from '../../../lib/db';
 import { sendOrderConfirmation } from '../../../lib/email';
+import type { ItemOptions } from '../../../lib/pricing';
 
 export const POST: APIRoute = async ({ request }) => {
   const sig     = request.headers.get('stripe-signature');
@@ -40,8 +41,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const itemsRes = await query<{
       product_type: string; custom_name: string; quantity: number; unit_price: number; thumbnail: Buffer | null;
+      options: ItemOptions | null;
     }>(
-      `SELECT oi.product_type, oi.custom_name, oi.quantity, oi.unit_price, t.png AS thumbnail
+      `SELECT oi.product_type, oi.custom_name, oi.quantity, oi.unit_price, oi.options, t.png AS thumbnail
          FROM order_items oi LEFT JOIN design_thumbnails t ON t.id = oi.thumbnail_id
         WHERE oi.order_id = $1 ORDER BY oi.id`,
       [orderId]

@@ -11,6 +11,12 @@ interface NormalisedItem {
   quantity: number;
   unit_price: number; // cents
   thumbnail_id: string | null;
+  options: SavedOptions; // size / add-ons / sign shape + colours, so a restored basket still prices
+}
+
+interface SavedOptions {
+  size?: string; addons?: { dots?: boolean; giftBox?: boolean };
+  shape?: string; plate_colour?: string; text_colour?: string;
 }
 
 // Raw shape the builder stores in localStorage
@@ -21,6 +27,11 @@ interface RawBuilderItem {
   qty?: number;
   price?: number;      // euros (integer)
   thumbnailId?: string;
+  size?: string;
+  addons?: { dots?: boolean; giftBox?: boolean };
+  shape?: string;
+  plateColour?: string;
+  textColour?: string;
   // already-normalised fields (if caller already mapped)
   product_type?: string;
   custom_name?: string;
@@ -28,6 +39,8 @@ interface RawBuilderItem {
   quantity?: number;
   unit_price?: number;
   thumbnail_id?: string | null;
+  plate_colour?: string;
+  text_colour?: string;
 }
 
 function normalise(raw: RawBuilderItem): NormalisedItem {
@@ -41,7 +54,11 @@ function normalise(raw: RawBuilderItem): NormalisedItem {
   const unit_price   = raw.unit_price
     ?? Math.round((raw.price ?? 0) * 100);  // euros → cents
   const thumbnail_id = thumbnailParam(raw.thumbnail_id ?? raw.thumbnailId);
-  return { product_type, custom_name, colours, quantity, unit_price, thumbnail_id };
+  const options: SavedOptions = {
+    size: raw.size, addons: raw.addons, shape: raw.shape,
+    plate_colour: raw.plate_colour ?? raw.plateColour, text_colour: raw.text_colour ?? raw.textColour,
+  };
+  return { product_type, custom_name, colours, quantity, unit_price, thumbnail_id, options };
 }
 
 // GET → return saved cart for logged-in user
@@ -51,7 +68,7 @@ export const GET: APIRoute = async ({ request }) => {
   if (!user) return json([]);
 
   const result = await query<NormalisedItem>(
-    `SELECT product_type, custom_name, colours, quantity, unit_price, thumbnail_id
+    `SELECT product_type, custom_name, colours, quantity, unit_price, thumbnail_id, options
      FROM cart_items WHERE user_id = $1 ORDER BY added_at`,
     [user.id]
   );
@@ -72,10 +89,10 @@ export const POST: APIRoute = async ({ request }) => {
   await query('DELETE FROM cart_items WHERE user_id = $1', [user.id]);
   for (const item of items) {
     await query(
-      `INSERT INTO cart_items (user_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id)
-       VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid))`,
+      `INSERT INTO cart_items (user_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id, options)
+       VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid), $8)`,
       [user.id, item.product_type, item.custom_name,
-       JSON.stringify(item.colours), item.quantity, item.unit_price, item.thumbnail_id]
+       JSON.stringify(item.colours), item.quantity, item.unit_price, item.thumbnail_id, JSON.stringify(item.options)]
     );
   }
   return json({ ok: true, saved: items.length });

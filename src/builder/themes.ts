@@ -91,6 +91,15 @@ export function priceLetters(n: number, size: LetterSize): number {
   return Math.round(base * n * (1 - disc) * 100) / 100;
 }
 
+// Optional extras on a brick-letter set (euros). Shared by the builder and the
+// checkout API, which re-prices every item server-side.
+export const ADDON_PRICES = { dots: 3, giftBox: 4.95 } as const;
+export type Addons = { dots: boolean; giftBox: boolean };
+
+export function addonCost(addons: Partial<Addons> | undefined): number {
+  return (addons?.dots ? ADDON_PRICES.dots : 0) + (addons?.giftBox ? ADDON_PRICES.giftBox : 0);
+}
+
 export function discountPct(n: number): number {
   return n >= 7 ? 20 : n >= 4 ? 15 : n >= 3 ? 10 : n >= 2 ? 5 : 0;
 }

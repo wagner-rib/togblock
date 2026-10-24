@@ -1,7 +1,7 @@
 import { FONT, isSupported, countFilledCells } from './brickfont';
 import {
   THEMES, themeColor, PICKER,
-  priceLetters, discountPct,
+  priceLetters, discountPct, addonCost,
   SIZE_LABELS, SIZE_MM, SIZE_CELL_PX, type LetterSize,
 } from './themes';
 import { addToCart } from './cart';
@@ -400,7 +400,7 @@ export class NameBuilder {
   }
 
   private addonCost(): number {
-    return (this.state.addons.dots ? 3 : 0) + (this.state.addons.giftBox ? 4.95 : 0);
+    return addonCost(this.state.addons);
   }
 
   private updatePrice(): void {

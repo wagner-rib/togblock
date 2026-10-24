@@ -601,6 +601,12 @@ function normalize(item) {
     quantity:     item.qty   ?? 1,
     unit_price:   eurosToCents(item.price ?? 0),
     thumbnail_id: item.thumbnailId ?? null,
+    // Configuration the server re-prices and stores on the order
+    size:         item.size,
+    addons:       item.addons,
+    shape:        item.shape,
+    plate_colour: item.plateColour,
+    text_colour:  item.textColour,
   };
 }
 

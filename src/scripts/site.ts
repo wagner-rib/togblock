@@ -376,6 +376,11 @@ async function syncCartWithServer(): Promise<void> {
         quantity:     i.qty ?? 1,
         unit_price:   Math.round((i.price ?? 0) * 100),
         thumbnail_id: i.thumbnailId ?? null,
+        size:         i.size,
+        addons:       i.addons,
+        shape:        i.shape,
+        plate_colour: i.plateColour,
+        text_colour:  i.textColour,
       }))),
     });
   } catch {
@@ -396,6 +401,10 @@ async function loadCartFromServer(): Promise<void> {
       quantity: number;
       unit_price: number;
       thumbnail_id?: string | null;
+      options?: {
+        size?: CartItem['size']; addons?: { dots?: boolean; giftBox?: boolean };
+        shape?: CartItem['shape']; plate_colour?: string; text_colour?: string;
+      } | null;
     }[] = await res.json();
     if (!serverItems.length) return;
 
@@ -414,6 +423,12 @@ async function loadCartFromServer(): Promise<void> {
       currency: 'EUR',
       createdAt: new Date().toISOString(),
       ...(s.thumbnail_id ? { thumbnailId: s.thumbnail_id } : {}),
+      // Configuration needed for checkout to price the item again
+      size: s.options?.size,
+      addons: s.options?.addons ? { dots: !!s.options.addons.dots, giftBox: !!s.options.addons.giftBox } : undefined,
+      shape: s.options?.shape,
+      plateColour: s.options?.plate_colour,
+      textColour: s.options?.text_colour,
     }));
     saveCart(restored);
   } catch {

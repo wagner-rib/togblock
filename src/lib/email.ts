@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { orderAccessKey } from './auth';
+import { describeOptions, type ItemOptions } from './pricing';
 
 function getTransport() {
   return nodemailer.createTransport({
@@ -22,6 +23,7 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   thumbnail?: Buffer | null; // 3D-FIX-08: 512px PNG of the design, embedded inline
+  options?: ItemOptions | null;
 }
 
 interface OrderEmailData {
@@ -49,6 +51,7 @@ function itemRows(items: OrderItem[]) {
           style="display:block;width:240px;height:240px;border-radius:12px;margin:0 0 10px;background:#f6f2e7">` : ''}
         <strong>${item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'}</strong><br>
         <span style="color:#6b7280;font-size:14px">Name: ${escapeHtml(item.custom_name)}</span>
+        ${item.options ? `<br><span style="color:#6b7280;font-size:14px">${escapeHtml(describeOptions(item.options))}</span>` : ''}
       </td>
       <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right">
         ${item.quantity} × ${money(item.unit_price)}
@@ -60,7 +63,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
   const addressHtml = [
     data.address.name, data.address.line1, data.address.line2,
     data.address.city, data.address.county, data.address.postcode, data.address.country,
-  ].filter(Boolean).join('<br>');
+  ].filter(Boolean).map((line) => escapeHtml(String(line))).join('<br>');
 
   const ref = `#TB${String(data.orderId).padStart(5, '0')}`;
 
@@ -75,7 +78,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
       <p style="color:rgba(255,255,255,.85);margin:8px 0 0;font-size:15px">We're already 3D printing it. 🇮🇪</p>
     </div>
     <div style="padding:32px 40px">
-      <p style="color:#111827;font-size:16px;margin:0 0 24px">Hi ${data.customerName},</p>
+      <p style="color:#111827;font-size:16px;margin:0 0 24px">Hi ${escapeHtml(data.customerName)},</p>
       <p style="color:#374151;line-height:1.6;margin:0 0 24px">
         Thanks for your order — we're buzzing to make this one! Your build will be
         3D printed and quality-checked within 2–3 working days, then posted straight to you.
@@ -137,9 +140,9 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     from: FROM,
     to: 'togblocks@outlook.com',
     subject: `New order ${ref} — ${data.customerName}`,
-    html: `<p>New order from <strong>${data.customerName}</strong> (${data.customerEmail}).</p>
+    html: `<p>New order from <strong>${escapeHtml(data.customerName)}</strong> (${escapeHtml(data.customerEmail)}).</p>
            <p>Total: ${money(data.total)}</p>
-           <p>Items: ${data.items.map(i => i.custom_name).join(', ')}</p>`,
+           <p>Items: ${data.items.map(i => escapeHtml(i.custom_name)).join(', ')}</p>`,
   });
 }
 
@@ -156,10 +159,10 @@ export async function sendDispatchNotification(data: {
   const trackingSection = data.trackingNumber
     ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:24px 0">
          <p style="margin:0 0 4px;font-weight:700;color:#15803d">Tracking number</p>
-         <p style="margin:0;font-size:20px;font-weight:800;letter-spacing:.05em;color:#111827">${data.trackingNumber}</p>
-         <p style="margin:4px 0 0;font-size:14px;color:#6b7280">via ${carrier}</p>
+         <p style="margin:0;font-size:20px;font-weight:800;letter-spacing:.05em;color:#111827">${escapeHtml(data.trackingNumber)}</p>
+         <p style="margin:4px 0 0;font-size:14px;color:#6b7280">via ${escapeHtml(carrier)}</p>
        </div>`
-    : `<p style="color:#374151">We'll send tracking details as soon as they're available from ${carrier}.</p>`;
+    : `<p style="color:#374151">We'll send tracking details as soon as they're available from ${escapeHtml(carrier)}.</p>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -172,7 +175,7 @@ export async function sendDispatchNotification(data: {
       <p style="color:rgba(255,255,255,.85);margin:8px 0 0;font-size:15px">Your TógBlocks order has been dispatched 🚀</p>
     </div>
     <div style="padding:32px 40px">
-      <p style="color:#111827;font-size:16px;margin:0 0 16px">Hi ${data.customerName},</p>
+      <p style="color:#111827;font-size:16px;margin:0 0 16px">Hi ${escapeHtml(data.customerName)},</p>
       <p style="color:#374151;line-height:1.6;margin:0 0 8px">
         Great news — your order <strong>${ref}</strong> has left us and is heading your way!
       </p>
@@ -208,7 +211,7 @@ export async function sendAdminMessage(data: {
   subject: string; body: string;
 }) {
   const ref      = `#TB${String(data.orderId).padStart(5, '0')}`;
-  const bodyHtml = data.body.replace(/\n/g, '<br>');
+  const bodyHtml = escapeHtml(data.body).replace(/\n/g, '<br>');
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -220,7 +223,7 @@ export async function sendAdminMessage(data: {
       <h1 style="color:#fff;margin:0;font-size:20px;font-weight:800">TógBlocks</h1>
     </div>
     <div style="padding:32px 40px">
-      <p style="color:#111827;font-size:16px;margin:0 0 20px">Hi ${data.customerName},</p>
+      <p style="color:#111827;font-size:16px;margin:0 0 20px">Hi ${escapeHtml(data.customerName)},</p>
       <div style="color:#374151;line-height:1.7;margin:0 0 28px">${bodyHtml}</div>
       <div style="text-align:center;margin:24px 0">
         <a href="https://togblocks.com/orders/${data.orderId}?k=${orderAccessKey(data.orderId)}"

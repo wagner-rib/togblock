@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getTokenFromRequest, getSession, verifyOrderAccessKey } from '../../lib/auth';
+import { describeOptions, type ItemOptions } from '../../lib/pricing';
 import { query } from '../../lib/db';
 
 const { id } = Astro.params;
@@ -38,9 +39,9 @@ if (!canView) {
 
 // Items
 const itemsRes = await query<{
-  product_type: string; custom_name: string; quantity: number; unit_price: number; thumbnail_id: string | null;
+  product_type: string; custom_name: string; quantity: number; unit_price: number; thumbnail_id: string | null; options: ItemOptions | null;
 }>(
-  'SELECT product_type, custom_name, quantity, unit_price, thumbnail_id FROM order_items WHERE order_id = $1 ORDER BY id',
+  'SELECT product_type, custom_name, quantity, unit_price, thumbnail_id, options FROM order_items WHERE order_id = $1 ORDER BY id',
   [orderId]
 );
 
@@ -116,6 +117,7 @@ const purchase = success ? {
             <div class="ord-item__info">
               <strong>{item.custom_name}</strong>
               <span>{item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} · qty {item.quantity}</span>
+              {item.options && <span>{describeOptions(item.options)}</span>}
             </div>
             <div class="ord-item__price">{formatPrice(item.unit_price * item.quantity)}</div>
           </div>

@@ -3,13 +3,10 @@ import { getStripe, shippingCost, classifyCountry } from '../../lib/stripe';
 import { query } from '../../lib/db';
 import { getTokenFromRequest, getSession, orderAccessKey } from '../../lib/auth';
 import { thumbnailParam } from '../../lib/thumbnails';
+import { priceItem, type ItemConfig, type Priced } from '../../lib/pricing';
 
-interface CartItem {
-  product_type: 'letters' | 'door-sign';
-  custom_name: string;
+interface CartItem extends ItemConfig {
   colours: string[];
-  quantity: number;
-  unit_price: number;
   thumbnail_id?: string | null; // 3D-FIX-08: design_thumbnails id from Add to basket
 }
 
@@ -42,8 +39,18 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: 'Missing required fields' }, 400);
   }
 
+  // Re-price every item from its configuration; never trust the browser's price
+  const priced = items.map((item) => priceItem(item));
+  const invalid = priced.find((p): p is Extract<Priced, { ok: false }> => !p.ok);
+  if (invalid) return json({ error: `${invalid.error}. Please remove that item and add it again.` }, 400);
+  const prices = priced as Extract<Priced, { ok: true }>[];
+  if (prices.some((p, i) => p.unitPrice !== items[i].unit_price)) {
+    // Shown price and real price disagree (old basket, changed prices, or tampering)
+    return json({ error: 'Prices in your basket have changed. Please refresh the page and try again.' }, 409);
+  }
+
   // Calculate totals (all in cents)
-  const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+  const subtotal = prices.reduce((sum, p, i) => sum + p.unitPrice * items[i].quantity, 0);
   const region   = classifyCountry(address.country);
   const shipping = shippingCost(region, subtotal);
   const total    = subtotal + shipping;
@@ -73,13 +80,13 @@ export const POST: APIRoute = async ({ request }) => {
     const orderId = orderResult.rows[0].id;
 
     // Save order items
-    for (const item of items) {
+    for (const [i, item] of items.entries()) {
       // Unknown/garbage thumbnail ids become NULL rather than failing the order
       await query(
-        `INSERT INTO order_items (order_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id)
-         VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid))`,
-        [orderId, item.product_type, item.custom_name, JSON.stringify(item.colours),
-         item.quantity, item.unit_price, thumbnailParam(item.thumbnail_id)]
+        `INSERT INTO order_items (order_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id, options)
+         VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid), $8)`,
+        [orderId, item.product_type, item.custom_name, JSON.stringify(item.colours ?? []),
+         item.quantity, prices[i].unitPrice, thumbnailParam(item.thumbnail_id), JSON.stringify(prices[i].options)]
       );
     }
 
