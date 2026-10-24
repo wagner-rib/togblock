@@ -5,7 +5,13 @@
  * recoloured; `one` is only written for the one-colour theme.
  */
 import { COLOURS, THEMES, themeColor } from './themes';
-import { previewChars } from './BuilderPreview';
+
+const MAX_LETTERS = 12; // same limit and charset as NameBuilder
+
+/** Same sanitising as NameBuilder.setText, so letter indexes (and colours) line up. */
+export function previewChars(name: string): string[] {
+  return [...name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, MAX_LETTERS)];
+}
 
 export interface PreviewState {
   name: string;

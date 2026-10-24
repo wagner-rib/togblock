@@ -5,6 +5,9 @@ import '@fontsource/nunito/600.css';
 import '@fontsource/baloo-2/700.css';
 import '../styles/tokens.css';
 import { THEMES, COLOURS } from '../builder/themes';
+// Preloaded so the header doesn't re-wrap (and push the stage down) when the fonts swap in
+import balooBold from '@fontsource/baloo-2/files/baloo-2-latin-700-normal.woff2?url';
+import nunitoSemi from '@fontsource/nunito/files/nunito-latin-600-normal.woff2?url';
 
 // One colour leads and is the default; the rest keep their themes.ts order
 const themes = Object.entries(THEMES)
@@ -22,6 +25,8 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   <meta name="robots" content="noindex, nofollow" />
   <title>3D Builder Preview — TógBlocks</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href={balooBold} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={nunitoSemi} as="font" type="font/woff2" crossorigin />
 </head>
 <body>
   <main class="p3">
@@ -50,7 +55,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         </div>
       </div>
     </div>
-    <p class="p3-hint">Tap a letter to change just its colour.</p>
+    <p class="p3-hint">Tap a letter to change just its colour. Pinch to zoom.</p>
 
     <div class="p3-controls">
       <label class="p3-field">
@@ -135,8 +140,8 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   </style>
 
   <script>
-    import { BuilderPreview, previewChars, type ViewMode } from '../builder/BuilderPreview';
-    import { encodeState, decodeState, type PreviewState } from '../builder/previewState';
+    import type { BuilderPreview, ViewMode } from '../builder/BuilderPreview';
+    import { encodeState, decodeState, previewChars, type PreviewState } from '../builder/previewState';
     import { COLOURS } from '../builder/themes';
 
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -152,18 +157,33 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     const pressGroup = (sel: string, active: Element | null) =>
       document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === active)));
     const sameHex = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+    // Light tick on colour changes; no-op where unsupported (iOS Safari, desktop)
+    const buzz = () => navigator.vibrate?.(10);
 
-    const preview = new BuilderPreview(canvas, {
-      ...state,
-      size: 'standard',
-      viewMode: 'top',
-      onLetterClick: (i, x, y) => (i < 0 ? closePop() : openPop(i, x, y)),
-    });
+    let viewMode: ViewMode = 'top';
+    let preview: BuilderPreview | null = null;
+
+    // three.js (~150 KB gzipped) loads only once the page is up and idle, so typing,
+    // scrolling and first paint never wait on WebGL. Controls work meanwhile; the
+    // preview picks up whatever state exists when it starts.
+    async function boot(): Promise<void> {
+      const { BuilderPreview } = await import('../builder/BuilderPreview');
+      preview = new BuilderPreview(canvas, {
+        ...state,
+        size: 'standard',
+        viewMode,
+        onLetterClick: (i, x, y) => (i < 0 ? closePop() : openPop(i, x, y)),
+      });
+    }
+    const whenIdle = (fn: () => void) =>
+      'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200);
+    if (document.readyState === 'complete') whenIdle(boot);
+    else addEventListener('load', () => whenIdle(boot), { once: true });
 
     /** Apply a state change to the preview, the controls and the URL hash. */
     function update(next: Partial<PreviewState>): void {
       state = { ...state, ...next };
-      preview.setProps(next);
+      preview?.setProps(next);
       syncControls();
       history.replaceState(null, '', encodeState(state));
     }
@@ -196,6 +216,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       pop.hidden = true;
     }
     function markPopColour(): void {
+      if (!preview) return;
       const hex = preview.letterHex(popIndex);
       pop.querySelectorAll<HTMLElement>('[data-pick]').forEach((b) =>
         b.setAttribute('aria-pressed', String(sameHex(b.dataset.pick!, hex))));
@@ -203,6 +224,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     pop.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach((b) =>
       b.addEventListener('click', () => {
         if (popIndex < 0) return;
+        buzz();
         update({ letterColours: { ...state.letterColours, [popIndex]: b.dataset.pick! } });
       }));
     $('p3-pop-close').addEventListener('click', closePop);
@@ -223,12 +245,13 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       b.addEventListener('click', () => {
         pressGroup('[data-view]', b);
         closePop();
-        preview.setProps({ viewMode: b.dataset.view as ViewMode });
+        viewMode = b.dataset.view as ViewMode;
+        preview?.setProps({ viewMode });
       }));
     document.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((b) =>
-      b.addEventListener('click', () => update({ theme: b.dataset.theme!, letterColours: {} })));
+      b.addEventListener('click', () => { buzz(); update({ theme: b.dataset.theme!, letterColours: {} }); }));
     document.querySelectorAll<HTMLButtonElement>('[data-hex]').forEach((b) =>
-      b.addEventListener('click', () => update({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} })));
+      b.addEventListener('click', () => { buzz(); update({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} }); }));
 
     const copied = $('p3-copied');
     $('p3-copy').addEventListener('click', async () => {
@@ -245,7 +268,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       closePop();
       const next = decodeState(location.hash, DEFAULTS);
       state = next;
-      preview.setProps(next);
+      preview?.setProps(next);
       syncControls();
     });
     syncControls();

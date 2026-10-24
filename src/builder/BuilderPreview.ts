@@ -1,4 +1,5 @@
-/* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout, 3D-FIX-04 picking).
+/* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout, 3D-FIX-04 picking,
+ * 3D-FIX-05 touch: one-finger horizontal spin, pinch / ctrl+wheel zoom).
  *
  * Loads the Draco GLBs produced by tools/export_glb.py from /models/. They are
  * in the STL frame (mm, Z-up, studs on +Z) and ship without normals, so each
@@ -13,6 +14,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { themeColor, type LetterSize } from './themes';
+import { previewChars } from './previewState';
 
 export type ViewMode = 'hero' | 'top' | 'side';
 
@@ -46,16 +48,16 @@ const SWAY_AMPLITUDE = 0.15; // radians
 const SWAY_SPEED = 0.0003;   // radians per ms
 const DRAG_SPEED = 0.008;    // radians per px
 const LETTER_GAP = 10;       // mm between letters, as on a shelf
-const MAX_LETTERS = 12;      // same limit and charset as NameBuilder
 const CAMERA_TWEEN_MS = 300;
 const TAP_SLOP_PX = 6;       // pointer travel below this is a tap, not a drag
-const FRAME_MARGIN = 1.08;  // name fills ~92% of the tighter screen axis
+const ZOOM_MIN = 0.45;      // camera distance multipliers (smaller = closer)
+const ZOOM_MAX = 1.6;
+const FRAME_MARGIN = 1.08;
+const SLOW_FRAME_MS = 40;    // a render slower than this (3x running) is a slow device
+const SLOW_FRAME_STREAK = 3;
+const VERY_SLOW_FRAME_MS = 120; // one frame this slow (no GPU / software WebGL): stop animating at once  // name fills ~92% of the tighter screen axis
 const SHADOW_MIN_HALF = 400; // mm; shadow frustum grows past this for long names
 
-/** Same sanitising as NameBuilder.setText, so letter indexes (and colours) line up. */
-export function previewChars(name: string): string[] {
-  return [...name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, MAX_LETTERS)];
-}
 
 export class BuilderPreview {
   private props: BuilderPreviewProps;
@@ -80,7 +82,16 @@ export class BuilderPreview {
   private swaying: boolean;
   private visible = true;
   private frameQueued = false;
-  private drag: { id: number; startX: number; startY: number; startRot: number; moved: boolean } | null = null;
+  private drag: { id: number; startX: number; startY: number; startRot: number; moved: boolean; wasSwaying: boolean } | null = null;
+  private pointers = new Map<number, { x: number; y: number }>();
+  private pinch: { startDist: number; startZoom: number } | null = null;
+  private zoom = 1;
+  private fit: { center: THREE.Vector3; dir: THREE.Vector3; dist: number } | null = null;
+  private settle: { from: number; start: number } | null = null;
+  private slowStreak = 0;
+  private framesDrawn = 0;
+  private quality: 'full' | 'reduced' | 'still' = 'full';
+  private compiled = false;
   private raycaster = new THREE.Raycaster();
   private resizeObs: ResizeObserver;
   private visObs: IntersectionObserver;
@@ -119,6 +130,7 @@ export class BuilderPreview {
     canvas.addEventListener('pointermove', this.onPointerMove);
     canvas.addEventListener('pointerup', this.onPointerUp);
     canvas.addEventListener('pointercancel', this.onPointerUp);
+    canvas.addEventListener('wheel', this.onWheel, { passive: false });
     document.addEventListener('visibilitychange', this.onVisibility);
 
     this.resizeObs = new ResizeObserver(() => this.resize());
@@ -159,6 +171,7 @@ export class BuilderPreview {
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
     this.canvas.removeEventListener('pointerup', this.onPointerUp);
     this.canvas.removeEventListener('pointercancel', this.onPointerUp);
+    this.canvas.removeEventListener('wheel', this.onWheel);
     this.nameGroup.traverse((o) => {
       if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
     });
@@ -246,6 +259,12 @@ export class BuilderPreview {
     this.fitShadow(total);
     this.applyColours();
     this.frameCamera(this.framed);
+    if (!this.compiled && chars.length) {
+      // Compile shaders off the main thread where the browser supports it, before the first frame
+      this.compiled = true;
+      await this.renderer.compileAsync(this.scene, this.camera).catch(() => {});
+      if (token !== this.buildToken) return;
+    }
     this.requestRender();
   }
 
@@ -290,16 +309,18 @@ export class BuilderPreview {
     // Fit whichever is tighter: height against the vertical FOV, width against the horizontal one
     const fitDist = Math.max(maxDim / (2 * tanHalf), (size.x * FRAME_MARGIN) / (2 * tanHalf * this.camera.aspect));
 
-    // Spec's view angles; the camera sits exactly fitDist away along each
-    const offset = {
+    // Spec's view angles; the camera sits fitDist (× the user's pinch zoom) away along each
+    const dir = {
       hero: new THREE.Vector3(0, 0.55, 1.1),
       top: new THREE.Vector3(0, 1, 0.001),
       side: new THREE.Vector3(1.1, 0.02, 0.01),
-    }[this.props.viewMode].normalize().multiplyScalar(fitDist);
+    }[this.props.viewMode].normalize();
+    this.fit = { center, dir, dist: fitDist };
+    const offset = dir.clone().multiplyScalar(fitDist * this.zoom);
     const toPos = center.clone().add(offset);
 
     // Long names put the camera well past the spec's 2000mm far plane
-    this.camera.far = Math.max(2000, offset.length() + maxDim * 2);
+    this.camera.far = Math.max(2000, fitDist * ZOOM_MAX + maxDim * 2);
     this.camera.updateProjectionMatrix();
 
     if (animate && !this.reduceMotion) {
@@ -315,6 +336,17 @@ export class BuilderPreview {
       this.camera.lookAt(center);
     }
     this.framed = true;
+  }
+
+  /** Move the camera along the current view direction for a new zoom, without re-measuring. */
+  private setZoom(zoom: number): void {
+    this.zoom = THREE.MathUtils.clamp(zoom, ZOOM_MIN, ZOOM_MAX);
+    if (!this.fit) return;
+    this.tween = null;
+    this.lookAt.copy(this.fit.center);
+    this.camera.position.copy(this.fit.center).addScaledVector(this.fit.dir, this.fit.dist * this.zoom);
+    this.camera.lookAt(this.lookAt);
+    this.requestRender();
   }
 
   private stepTween(now: number): void {
@@ -351,23 +383,71 @@ export class BuilderPreview {
     this.frameQueued = false;
     if (!this.visible || document.hidden) return; // resumed by observers
     if (this.swaying) this.rotation = Math.sin(t * SWAY_SPEED) * SWAY_AMPLITUDE;
+    if (this.settle) {
+      const k = Math.min(1, (performance.now() - this.settle.start) / CAMERA_TWEEN_MS);
+      this.rotation = this.settle.from * Math.pow(1 - k, 3); // ease back to square-on
+      if (k === 1) this.settle = null;
+    }
     this.stepTween(performance.now());
     this.nameGroup.rotation.z = this.rotation;
+    const t0 = performance.now();
     this.renderer.render(this.scene, this.camera);
-    if (this.swaying || this.tween) this.requestRender();
+    if (this.nameGroup.children.length) this.adaptQuality(performance.now() - t0);
+    if (this.swaying || this.tween || this.settle) this.requestRender();
   };
+
+  /** Step quality down on devices that can't keep up: first pixel ratio, then the idle sway. */
+  private adaptQuality(ms: number): void {
+    if (this.quality === 'still' || ++this.framesDrawn <= 2) return; // first frames include shader warm-up
+    this.slowStreak = ms > SLOW_FRAME_MS ? this.slowStreak + 1 : 0;
+    const crawling = ms > VERY_SLOW_FRAME_MS;
+    if (!crawling && this.slowStreak < SLOW_FRAME_STREAK) return;
+    this.slowStreak = 0;
+    if (this.renderer.getPixelRatio() > 1) {
+      this.renderer.setPixelRatio(1);
+      this.resize();
+    }
+    if (this.quality === 'full' && !crawling) {
+      this.quality = 'reduced';
+      return;
+    }
+    this.quality = 'still';
+    if (this.swaying) {
+      this.swaying = false;
+      this.settle = { from: this.rotation, start: performance.now() };
+    }
+  }
 
   private onVisibility = (): void => this.requestRender();
 
   // ── Interaction ──────────────────────────────────────────────────
 
   private onPointerDown = (e: PointerEvent): void => {
-    this.swaying = false;
-    this.drag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, startRot: this.rotation, moved: false };
+    this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.canvas.setPointerCapture(e.pointerId);
+    this.settle = null;
+    if (this.pointers.size === 2) {
+      // Second finger: switch from spin to pinch, and never treat this gesture as a tap
+      this.drag = null;
+      this.pinch = { startDist: this.pointerSpread(), startZoom: this.zoom };
+      return;
+    }
+    if (this.pointers.size > 2) return;
+    this.drag = {
+      id: e.pointerId, startX: e.clientX, startY: e.clientY, startRot: this.rotation,
+      moved: false, wasSwaying: this.swaying,
+    };
+    this.swaying = false;
   };
 
   private onPointerMove = (e: PointerEvent): void => {
+    if (!this.pointers.has(e.pointerId)) return;
+    this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pinch) {
+      const spread = this.pointerSpread();
+      if (spread > 0) this.setZoom(this.pinch.startZoom * (this.pinch.startDist / spread));
+      return;
+    }
     if (!this.drag || e.pointerId !== this.drag.id) return;
     const dx = e.clientX - this.drag.startX;
     if (!this.drag.moved && Math.hypot(dx, e.clientY - this.drag.startY) < TAP_SLOP_PX) return;
@@ -376,12 +456,33 @@ export class BuilderPreview {
     this.requestRender();
   };
 
+  /** Fires on pointerup and on pointercancel (the browser took a vertical swipe for page scroll). */
   private onPointerUp = (e: PointerEvent): void => {
+    this.pointers.delete(e.pointerId);
+    if (this.pointers.size < 2) this.pinch = null;
     if (this.drag?.id !== e.pointerId) return;
-    const tapped = !this.drag.moved && e.type === 'pointerup';
+    const { moved, wasSwaying } = this.drag;
     this.drag = null;
-    if (tapped) this.pick(e);
+    if (moved || e.type !== 'pointerup') return;
+    if (wasSwaying && this.rotation !== 0) {
+      this.settle = { from: this.rotation, start: performance.now() };
+      this.requestRender();
+    }
+    this.pick(e);
   };
+
+  /** Trackpad pinch arrives as ctrl+wheel; a plain wheel is left alone so the page scrolls. */
+  private onWheel = (e: WheelEvent): void => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    this.swaying = false;
+    this.setZoom(this.zoom * Math.exp(e.deltaY * 0.01));
+  };
+
+  private pointerSpread(): number {
+    const [a, b] = [...this.pointers.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  }
 
   /** Raycast a tap into the name and report which letter (index) was hit. */
   private pick(e: PointerEvent): void {
