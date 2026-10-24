@@ -48,7 +48,7 @@ function itemRows(items: OrderItem[]) {
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">
         ${item.thumbnail ? `<img src="cid:${thumbCid(i)}" width="240" height="240" alt="Preview of ${escapeHtml(item.custom_name)}"
-          style="display:block;width:240px;height:240px;border-radius:12px;margin:0 0 10px;background:#a7b2bf">` : ''}
+          style="display:block;width:240px;height:240px;border-radius:12px;margin:0 0 10px;background:#98b4b7">` : ''}
         <strong>${item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'}</strong><br>
         <span style="color:#6b7280;font-size:14px">Name: ${escapeHtml(item.custom_name)}</span>
         ${item.options ? `<br><span style="color:#6b7280;font-size:14px">${escapeHtml(describeOptions(item.options))}</span>` : ''}

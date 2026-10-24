@@ -366,12 +366,12 @@
   aspect-ratio: 16 / 9;
   min-height: 0;
   padding: 0;
-  /* Mid-tone blue-grey: the one background where white, black and silver letters all stay visible.
+  /* Mid-tone dusty teal: muted enough that white, black and silver letters all stay visible.
      A straight top-to-bottom shade, so the rectangular stage doesn't show an oval spotlight.
      Over it, a faint white tile of kids' doodles (stars, rockets, balloons...) for some fun. */
   background:
     url('../assets/stage-doodles.svg') center / 400px repeat,
-    linear-gradient(180deg, #b6c0cc 0%, #a3aebb 55%, #929eac 100%);
+    linear-gradient(180deg, #aac3c6 0%, #98b4b7 55%, #86a5a9 100%);
 }
 @media (max-width: 640px) { :is(.builder-stage, .sign-stage).has-3d { background-size: 280px, auto; } }
 @media (max-width: 640px) { :is(.builder-stage, .sign-stage).has-3d { aspect-ratio: 4 / 3; } }
@@ -393,7 +393,7 @@
 }
 .stage-mark svg { width: 22px; height: 22px; }
 .stage-mark rect { fill: #fff; }
-.stage-mark g { fill: #a3aebb; }
+.stage-mark g { fill: #98b4b7; }
 @media (max-width: 640px) { :is(.builder-stage, .sign-stage).is-3d .stage-mark { font-size: .85rem; left: 10px; bottom: 9px; } .stage-mark svg { width: 17px; height: 17px; } }
 :is(.builder-stage, .sign-stage).is-3d-loading .builder-skel {
   display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;

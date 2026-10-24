@@ -249,7 +249,7 @@ export class BuilderPreview {
    * Waits for every glyph, snaps running animations to their end, renders once at
    * `size`×`size`, then restores the live view in the same task so nothing flickers.
    */
-  async capture(size = 512, background = '#a7b2bf'): Promise<Blob> {
+  async capture(size = 512, background = '#98b4b7'): Promise<Blob> {
     await this.contentSettled();
     this.finishAnimations();
 
