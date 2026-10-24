@@ -25,6 +25,9 @@ varying vec3 vPlaLayerAxis;
 const VERTEX_BODY = /* glsl */ `
 #include <begin_vertex>
 vPlaPos = position;
+#ifdef USE_INSTANCING
+vPlaPos = (instanceMatrix * vec4(position, 1.0)).xyz; // studs: print-frame position, so layer lines line up
+#endif
 vPlaNormal = normal;
 vPlaLayerAxis = normalize(normalMatrix * vec3(0.0, 0.0, 1.0));
 `;

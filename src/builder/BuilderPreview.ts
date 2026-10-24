@@ -3,8 +3,9 @@
  * 3D-FIX-06 PLA material and soft studio reflections).
  *
  * Loads the Draco GLBs produced by tools/export_glb.py from /models/. They are
- * in the STL frame (mm, Z-up, studs on +Z) and ship without normals, so each
- * geometry gets creased normals on load. The name group is tipped -90° about X
+ * in the STL frame (mm, Z-up, top face on +Z) and ship without normals, so each
+ * geometry gets creased normals on load. Studs are not in the mesh: the GLB
+ * lists their grid cells and every stud is an instance of one smooth shape. The name group is tipped -90° about X
  * so the letters lie flat, studs up, like the visual-target prototype.
  *
  * Rendering is on demand: nothing runs per frame except the idle sine sway,
@@ -36,6 +37,8 @@ interface ManifestLetter { width: number; height: number; depth: number; originX
 interface Manifest {
   bodyDepth: number;
   studHeight: number;
+  studDiameter: number;
+  studPitch: number;
   letters: Record<string, ManifestLetter>;
 }
 
@@ -46,6 +49,8 @@ interface CameraTween {
 }
 
 const CREASE_ANGLE = Math.PI / 6; // must match the note in tools/export_glb.py
+const STUD_SEGMENTS = 20;     // round enough at any zoom; 120 triangles a stud
+const STUD_CHAMFER = 0.2;     // mm, softens the top edge highlight like a printed stud
 const ENV_INTENSITY = 0.35;  // studio reflections: tone and soft speculars, not extra light
 const SWAY_AMPLITUDE = 0.15; // radians
 const SWAY_SPEED = 0.0003;   // radians per ms
@@ -73,7 +78,8 @@ export class BuilderPreview {
   private draco: DRACOLoader;
   private modelsBase: string;
   private manifest: Promise<Manifest>;
-  private geometries = new Map<string, Promise<THREE.BufferGeometry>>();
+  private geometries = new Map<string, Promise<{ body: THREE.BufferGeometry; studs: number[] }>>();
+  private studGeometry: Promise<THREE.BufferGeometry>;
   private buildToken = 0;
   private keyLight!: THREE.DirectionalLight;
   private lookAt = new THREE.Vector3();
@@ -128,6 +134,7 @@ export class BuilderPreview {
       if (!res.ok) throw new Error(`manifest.json: HTTP ${res.status}`);
       return res.json();
     });
+    this.studGeometry = this.manifest.then(buildStudGeometry);
 
     canvas.addEventListener('pointerdown', this.onPointerDown);
     canvas.addEventListener('pointermove', this.onPointerMove);
@@ -178,7 +185,8 @@ export class BuilderPreview {
     this.nameGroup.traverse((o) => {
       if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
     });
-    this.geometries.forEach((g) => g.then((geo) => geo.dispose()));
+    this.geometries.forEach((g) => g.then(({ body }) => body.dispose()));
+    this.studGeometry.then((g) => g.dispose());
     this.scene.environment?.dispose();
     this.draco.dispose();
     this.renderer.dispose();
@@ -215,16 +223,19 @@ export class BuilderPreview {
     this.scene.add(ground);
   }
 
-  private loadGeometry(char: string): Promise<THREE.BufferGeometry> {
+  private loadGeometry(char: string): Promise<{ body: THREE.BufferGeometry; studs: number[] }> {
     let p = this.geometries.get(char);
     if (!p) {
       p = this.loader.loadAsync(`${this.modelsBase}letter_${char}.glb`).then((gltf) => {
-        let geo: THREE.BufferGeometry | null = null;
+        let mesh: THREE.Mesh | null = null;
         gltf.scene.traverse((o) => {
-          if (!geo && o instanceof THREE.Mesh) geo = o.geometry;
+          if (!mesh && o instanceof THREE.Mesh) mesh = o;
         });
-        if (!geo) throw new Error(`letter_${char}.glb has no mesh`);
-        return toCreasedNormals(geo, CREASE_ANGLE);
+        if (!mesh) throw new Error(`letter_${char}.glb has no mesh`);
+        const m = mesh as THREE.Mesh;
+        // Node extras land in userData: stud cells as a flat [i0, j0, i1, j1, ...] list
+        const studs: number[] = m.userData.studs ?? m.parent?.userData.studs ?? [];
+        return { body: toCreasedNormals(m.geometry, CREASE_ANGLE), studs };
       });
       p.catch(() => this.geometries.delete(char)); // allow a retry
       this.geometries.set(char, p);
@@ -237,11 +248,15 @@ export class BuilderPreview {
     const token = ++this.buildToken;
     const manifest = await this.manifest;
     const chars = previewChars(this.props.name).filter((c) => manifest.letters[c]);
-    const geos = await Promise.all(chars.map((c) => this.loadGeometry(c)));
+    const [geos, studGeo] = await Promise.all([
+      Promise.all(chars.map((c) => this.loadGeometry(c))),
+      this.studGeometry,
+    ]);
     if (token !== this.buildToken) return; // superseded by newer input
 
     this.nameGroup.traverse((o) => {
       if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
+      if (o instanceof THREE.InstancedMesh) o.dispose();
     });
     this.nameGroup.clear();
 
@@ -249,13 +264,14 @@ export class BuilderPreview {
     const total = metas.reduce((w, m) => w + m.width, 0) + LETTER_GAP * Math.max(0, chars.length - 1);
     let cursor = -total / 2;
     chars.forEach((char, i) => {
-      const mesh = new THREE.Mesh(geos[i], createPlaMaterial(manifest.bodyDepth + manifest.studHeight));
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
+      const material = createPlaMaterial(manifest.bodyDepth + manifest.studHeight);
+      const body = new THREE.Mesh(geos[i].body, material);
+      body.castShadow = true;
+      body.receiveShadow = true;
       const letter = new THREE.Group();
       letter.userData = { letterIndex: i, char };
       letter.position.x = cursor - metas[i].originX; // left edge at cursor
-      letter.add(mesh);
+      letter.add(body, buildStuds(studGeo, material, geos[i].studs, manifest.studPitch));
       this.nameGroup.add(letter);
       cursor += metas[i].width + LETTER_GAP;
     });
@@ -517,4 +533,30 @@ export class BuilderPreview {
     while (obj && obj.userData.letterIndex === undefined) obj = obj.parent;
     this.props.onLetterClick?.(obj ? (obj.userData.letterIndex as number) : -1, x, y);
   }
+}
+
+/** One printed stud (with a small top chamfer), standing on the body's top face. */
+function buildStudGeometry(m: Manifest): THREE.BufferGeometry {
+  const r = m.studDiameter / 2;
+  const top = m.bodyDepth + m.studHeight;
+  // Profile bottom-up so the lathe's faces point outward; starts just inside the body to avoid a seam
+  const profile = [[r, m.bodyDepth - 0.01], [r, top - STUD_CHAMFER], [r - STUD_CHAMFER, top], [0, top]]
+    .map(([x, y]) => new THREE.Vector2(x, y));
+  const lathe = new THREE.LatheGeometry(profile, STUD_SEGMENTS);
+  lathe.rotateX(Math.PI / 2); // lathe axis Y -> print Z
+  const geo = toCreasedNormals(lathe, CREASE_ANGLE);
+  lathe.dispose();
+  return geo;
+}
+
+function buildStuds(geo: THREE.BufferGeometry, material: THREE.Material, cells: number[], pitch: number): THREE.InstancedMesh {
+  const studs = new THREE.InstancedMesh(geo, material, cells.length / 2);
+  const m = new THREE.Matrix4();
+  for (let k = 0; k < cells.length; k += 2) {
+    studs.setMatrixAt(k / 2, m.makeTranslation(cells[k] * pitch, cells[k + 1] * pitch, 0));
+  }
+  studs.computeBoundingBox();
+  studs.computeBoundingSphere();
+  studs.receiveShadow = true; // 1.8mm studs cast no shadow worth a second shadow pass
+  return studs;
 }

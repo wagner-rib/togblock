@@ -1,10 +1,12 @@
 // Draco helper for export_glb.py (trimesh can't write KHR_draco_mesh_compression).
 //
-//   node draco.mjs compress <in.glb> <out.glb>   plain GLB -> Draco GLB
-//   node draco.mjs inspect  <file.glb>           decode, print bounds/triangles as JSON
+//   node draco.mjs compress <in.glb> <out.glb> [extras.json]   plain GLB -> Draco GLB,
+//                                                 extras set on the mesh node
+//   node draco.mjs inspect  <file.glb>           decode, print bounds/triangles/studs as JSON
 import { NodeIO } from '@gltf-transform/core';
 import { KHRDracoMeshCompression } from '@gltf-transform/extensions';
 import draco3d from 'draco3dgltf';
+import { readFileSync } from 'node:fs';
 
 const io = new NodeIO()
   .registerExtensions([KHRDracoMeshCompression])
@@ -13,10 +15,12 @@ const io = new NodeIO()
     'draco3d.encoder': await draco3d.createEncoderModule(),
   });
 
-const [cmd, src, dst] = process.argv.slice(2);
+const [cmd, src, dst, extrasPath] = process.argv.slice(2);
+const meshNode = (doc) => doc.getRoot().listNodes().find((n) => n.getMesh());
 
 if (cmd === 'compress') {
   const doc = await io.read(src);
+  if (extrasPath) meshNode(doc).setExtras(JSON.parse(readFileSync(extrasPath, 'utf8')));
   doc
     .createExtension(KHRDracoMeshCompression)
     .setRequired(true)
@@ -49,7 +53,8 @@ if (cmd === 'compress') {
       triangles += (idx ? idx.getCount() : pos.getCount()) / 3;
     }
   }
-  console.log(JSON.stringify({ min, max, triangles }));
+  const studs = (meshNode(doc)?.getExtras().studs ?? []).length / 2;
+  console.log(JSON.stringify({ min, max, triangles, studs }));
 } else {
   console.error('usage: node draco.mjs compress <in> <out> | inspect <file>');
   process.exit(2);
