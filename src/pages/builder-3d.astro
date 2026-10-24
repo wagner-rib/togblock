@@ -23,7 +23,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   <main class="p3">
     <header class="p3-head">
       <h1>3D preview <span class="p3-tag">review build</span></h1>
-      <p>Lighting and material rig with one real letter from the print files. Drag to rotate.</p>
+      <p>Real letters from the print files, laid out as they'd stand on a shelf. Drag to rotate.</p>
     </header>
 
     <div class="p3-stage">
@@ -40,6 +40,12 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         <span>Name</span>
         <input id="p3-name" type="text" value="EMMA" maxlength="12" autocomplete="off" spellcheck="false" />
       </label>
+      <div class="p3-field">
+        <span>Try</span>
+        <div class="p3-row">
+          {['EMMA', 'THOMAS', 'CHARLIE', 'ALEXANDER', 'Q8'].map((n) => <button type="button" data-sample={n}>{n}</button>)}
+        </div>
+      </div>
       <div class="p3-field">
         <span>Theme</span>
         <div class="p3-row" id="p3-themes">
@@ -93,7 +99,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   </style>
 
   <script>
-    import { BuilderPreview, type ViewMode } from '../builder/BuilderPreview';
+    import { BuilderPreview, previewChars, type ViewMode } from '../builder/BuilderPreview';
 
     const canvas = document.getElementById('p3-canvas') as HTMLCanvasElement;
     const input = document.getElementById('p3-name') as HTMLInputElement;
@@ -109,7 +115,14 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     const pressGroup = (sel: string, active: Element) =>
       document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === active)));
 
-    input.addEventListener('input', () => preview.setProps({ name: input.value }));
+    const setName = (v: string) => {
+      const clean = previewChars(v).join('');
+      if (input.value !== clean) input.value = clean;
+      preview.setProps({ name: clean, letterColours: {} });
+    };
+    input.addEventListener('input', () => setName(input.value));
+    document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
+      b.addEventListener('click', () => setName(b.dataset.sample!)));
     document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
       b.addEventListener('click', () => {
         pressGroup('[data-view]', b);
