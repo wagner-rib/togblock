@@ -1,5 +1,6 @@
 /* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout, 3D-FIX-04 picking,
- * 3D-FIX-05 touch: one-finger horizontal spin, pinch / ctrl+wheel zoom).
+ * 3D-FIX-05 touch: one-finger horizontal spin, pinch / ctrl+wheel zoom,
+ * 3D-FIX-06 PLA material and soft studio reflections).
  *
  * Loads the Draco GLBs produced by tools/export_glb.py from /models/. They are
  * in the STL frame (mm, Z-up, studs on +Z) and ship without normals, so each
@@ -13,6 +14,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { createPlaMaterial } from './plaMaterial';
 import { themeColor, type LetterSize } from './themes';
 import { previewChars } from './previewState';
 
@@ -43,14 +46,14 @@ interface CameraTween {
 }
 
 const CREASE_ANGLE = Math.PI / 6; // must match the note in tools/export_glb.py
-const ROUGHNESS = 0.72;
+const ENV_INTENSITY = 0.35;  // studio reflections: tone and soft speculars, not extra light
 const SWAY_AMPLITUDE = 0.15; // radians
 const SWAY_SPEED = 0.0003;   // radians per ms
 const DRAG_SPEED = 0.008;    // radians per px
 const LETTER_GAP = 10;       // mm between letters, as on a shelf
 const CAMERA_TWEEN_MS = 300;
 const TAP_SLOP_PX = 6;       // pointer travel below this is a tap, not a drag
-const ZOOM_MIN = 0.45;      // camera distance multipliers (smaller = closer)
+const ZOOM_MIN = 0.05;      // camera distance multipliers (smaller = closer; this far in, layer lines resolve)
 const ZOOM_MAX = 1.6;
 const FRAME_MARGIN = 1.08;
 const SLOW_FRAME_MS = 40;    // a render slower than this (3x running) is a slow device
@@ -176,6 +179,7 @@ export class BuilderPreview {
       if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
     });
     this.geometries.forEach((g) => g.then((geo) => geo.dispose()));
+    this.scene.environment?.dispose();
     this.draco.dispose();
     this.renderer.dispose();
   }
@@ -245,7 +249,7 @@ export class BuilderPreview {
     const total = metas.reduce((w, m) => w + m.width, 0) + LETTER_GAP * Math.max(0, chars.length - 1);
     let cursor = -total / 2;
     chars.forEach((char, i) => {
-      const mesh = new THREE.Mesh(geos[i], new THREE.MeshStandardMaterial({ roughness: ROUGHNESS, metalness: 0 }));
+      const mesh = new THREE.Mesh(geos[i], createPlaMaterial(manifest.bodyDepth + manifest.studHeight));
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       const letter = new THREE.Group();
@@ -264,8 +268,23 @@ export class BuilderPreview {
       this.compiled = true;
       await this.renderer.compileAsync(this.scene, this.camera).catch(() => {});
       if (token !== this.buildToken) return;
+      this.scheduleEnvironment();
     }
     this.requestRender();
+  }
+
+  /** Build the studio environment once the first frame is up, so it never delays it. */
+  private scheduleEnvironment(): void {
+    const build = () => {
+      const pmrem = new THREE.PMREMGenerator(this.renderer);
+      const room = new RoomEnvironment();
+      this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+      this.scene.environmentIntensity = ENV_INTENSITY;
+      room.dispose();
+      pmrem.dispose();
+      this.requestRender();
+    };
+    'requestIdleCallback' in window ? requestIdleCallback(build, { timeout: 2000 }) : setTimeout(build, 300);
   }
 
   /** Keep the whole name inside the key light's shadow frustum. */
