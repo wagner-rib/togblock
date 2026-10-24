@@ -358,9 +358,10 @@
 /* ---- 3D preview (3D-FIX-02..08) ----
    .has-3d: WebGL2 available, so the stage switches to the 3D layout.
    .is-3d-loading: grey Russo One name until the letters are drawn.
-   .is-3d: canvas live. Without .has-3d the brick preview above is the fallback. */
+   .is-3d: canvas live. Without .has-3d the brick / flat sign preview is the fallback.
+   Shared by the name builder (.builder-stage) and the door-sign builder (.sign-stage). */
 .builder-3d, .builder-skel, .builder-views { display: none; }
-.builder-stage.has-3d {
+:is(.builder-stage, .sign-stage).has-3d {
   display: block;
   aspect-ratio: 16 / 9;
   min-height: 0;
@@ -368,24 +369,25 @@
   /* Mid-tone blue-grey: the one background where white, black and silver letters all stay visible */
   background: radial-gradient(ellipse at 50% 45%, #b9c3cf 0%, #98a4b3 75%, #8a96a5 100%);
 }
-@media (max-width: 640px) { .builder-stage.has-3d { aspect-ratio: 4 / 3; } }
-.builder-stage.has-3d::after,
+@media (max-width: 640px) { :is(.builder-stage, .sign-stage).has-3d { aspect-ratio: 4 / 3; } }
+:is(.builder-stage, .sign-stage).has-3d::after,
 .builder-stage.has-3d .brick-scaler,
-.builder-stage.has-3d .builder-empty { display: none; }
-.builder-stage.has-3d .builder-3d {
+.builder-stage.has-3d .builder-empty,
+.sign-stage.has-3d .sign-perspective-wrap { display: none; }
+:is(.builder-stage, .sign-stage).has-3d .builder-3d {
   display: block; position: absolute; inset: 0; width: 100%; height: 100%;
   touch-action: pan-y; cursor: grab;
 }
-.builder-stage.has-3d .builder-3d:active { cursor: grabbing; }
-.builder-stage.is-3d-loading .builder-skel {
+:is(.builder-stage, .sign-stage).has-3d .builder-3d:active { cursor: grabbing; }
+:is(.builder-stage, .sign-stage).is-3d-loading .builder-skel {
   display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
   font-family: "Russo One", var(--font-display); line-height: 1; letter-spacing: .02em;
   color: rgba(255,255,255,.6); white-space: nowrap; pointer-events: none;
   animation: builder-skel-pulse 1.4s ease-in-out infinite alternate;
 }
 @keyframes builder-skel-pulse { from { opacity: .45; } to { opacity: .8; } }
-@media (prefers-reduced-motion: reduce) { .builder-stage.is-3d-loading .builder-skel { animation: none; opacity: .6; } }
-.builder-stage.is-3d .builder-views {
+@media (prefers-reduced-motion: reduce) { :is(.builder-stage, .sign-stage).is-3d-loading .builder-skel { animation: none; opacity: .6; } }
+:is(.builder-stage, .sign-stage).is-3d .builder-views {
   display: flex; position: absolute; top: 12px; right: 12px; gap: 4px; padding: 4px;
   background: rgba(255,255,255,.88); border-radius: 10px; box-shadow: 0 1px 4px rgba(26,40,71,.12);
 }
@@ -395,3 +397,6 @@
 }
 .builder-views button[aria-pressed="true"] { background: var(--green-soft); color: var(--green-deep); }
 .builder-views button:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+
+.sign-stage.has-3d { position: relative; }
+.field-hint.is-error { color: var(--brick-red); font-weight: 700; }

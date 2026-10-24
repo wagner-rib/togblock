@@ -38,8 +38,8 @@ export interface BuilderPreviewProps {
   onLetterClick?: (index: number, x: number, y: number) => void;
 }
 
-interface ManifestLetter { width: number; height: number; depth: number; originX: number; originY: number }
-interface Manifest {
+export interface ManifestLetter { width: number; height: number; depth: number; originX: number; originY: number }
+export interface Manifest {
   bodyDepth: number;
   studHeight: number;
   studDiameter: number;
@@ -47,7 +47,7 @@ interface Manifest {
   letters: Record<string, ManifestLetter>;
 }
 
-interface Glyph { body: THREE.BufferGeometry; studs: number[] }
+export interface Glyph { body: THREE.BufferGeometry; studs: number[] }
 
 interface Slot {
   char: string;
@@ -90,7 +90,7 @@ const SLOW_FRAME_MS = 40;     // a render slower than this (3x running) is a slo
 const SLOW_FRAME_STREAK = 3;
 const VERY_SLOW_FRAME_MS = 120; // one frame this slow (no GPU / software WebGL): stop animating at once
 const THUMB_DIRECTION = new THREE.Vector3(0, 1, 0.38); // order thumbnail: from above, tilted enough to show the letters' depth
-const THUMB_MARGIN = 1.04;
+const THUMB_MARGIN = 1.06;
 const SHADOW_MIN_HALF = 400;  // mm; shadow frustum grows past this for long names
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -98,33 +98,33 @@ const easeOutBack = (t: number) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow
 const progress = (start: number, ms: number, now: number) => THREE.MathUtils.clamp((now - start) / ms, 0, 1);
 
 export class BuilderPreview {
-  private props: BuilderPreviewProps;
+  protected props: BuilderPreviewProps;
   private canvas: HTMLCanvasElement;
-  private renderer: THREE.WebGLRenderer;
-  private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(32, 1, 1, 2000);
-  private nameGroup = new THREE.Group();
+  protected renderer: THREE.WebGLRenderer;
+  protected scene = new THREE.Scene();
+  protected camera = new THREE.PerspectiveCamera(32, 1, 1, 2000);
+  protected nameGroup = new THREE.Group();
   private loader: GLTFLoader;
   private draco: DRACOLoader;
   private onReady?: () => void;
-  private manifest: Promise<Manifest>;
+  protected manifest: Promise<Manifest>;
   private geometries = new Map<string, Promise<Glyph>>();
   private loaded = new Map<string, Glyph>(); // same glyphs, for synchronous cache hits
-  private studGeometry: Promise<THREE.BufferGeometry>;
-  private studGeo: THREE.BufferGeometry | null = null;
+  protected studGeometry: Promise<THREE.BufferGeometry>;
+  protected studGeo: THREE.BufferGeometry | null = null;
   private skeletonMaterial = new THREE.MeshBasicMaterial({
     color: SKELETON_COLOUR, transparent: true, opacity: SKELETON_OPACITY, depthWrite: false,
   });
   private slots: Slot[] = [];
-  private layoutBox = new THREE.Box3();
-  private buildToken = 0;
-  private building: Promise<void> = Promise.resolve();
-  private shown = false; // first real letters drawn
+  protected layoutBox = new THREE.Box3();
+  protected buildToken = 0;
+  protected building: Promise<void> = Promise.resolve();
+  protected shown = false; // first real letters drawn
   private keyLight!: THREE.DirectionalLight;
   private lookAt = new THREE.Vector3();
-  private framed = false;
+  protected framed = false;
   private tween: CameraTween | null = null;
-  private reduceMotion: boolean;
+  protected reduceMotion: boolean;
 
   private rotation = 0;
   private spinTarget = 0;
@@ -189,7 +189,8 @@ export class BuilderPreview {
     this.visObs.observe(canvas);
 
     this.resize();
-    this.building = this.rebuild();
+    // After the constructor returns, so a subclass's fields exist when its rebuild() runs
+    this.building = Promise.resolve().then(() => this.rebuild());
   }
 
   setProps(next: Partial<BuilderPreviewProps>): void {
@@ -236,19 +237,8 @@ export class BuilderPreview {
    * `size`×`size`, then restores the live view in the same task so nothing flickers.
    */
   async capture(size = 512, background = '#a7b2bf'): Promise<Blob> {
-    let token: number;
-    do { // the name may change while glyphs load; wait for the latest layout
-      token = this.buildToken;
-      await this.building;
-      await Promise.all(this.slots.map((s) => this.loadGeometry(s.char)));
-      await new Promise((r) => setTimeout(r)); // let fillSlot callbacks run
-    } while (token !== this.buildToken || this.slots.some((s) => !s.material));
-
-    for (const s of this.slots) {
-      if (s.slide) { s.group.position.x = s.slide.to; s.slide = null; }
-      if (s.appear) { s.appear = null; s.material!.opacity = 1; s.group.position.z = 0; }
-      if (s.tint) { s.material!.color.copy(s.tint.to); s.tint = null; }
-    }
+    await this.contentSettled();
+    this.finishAnimations();
 
     const r = this.renderer;
     const saved = {
@@ -284,6 +274,36 @@ export class BuilderPreview {
 
     return new Promise((resolve, reject) =>
       shot.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png'));
+  }
+
+  /** Resolves once the current design is fully loaded (subclasses with other content override). */
+  protected async contentSettled(): Promise<void> {
+    let token: number;
+    do { // the name may change while glyphs load; wait for the latest layout
+      token = this.buildToken;
+      await this.building;
+      await Promise.all(this.slots.map((s) => this.loadGeometry(s.char)));
+      await new Promise((r) => setTimeout(r)); // let fillSlot callbacks run
+    } while (token !== this.buildToken || this.slots.some((s) => !s.material));
+  }
+
+  /** Snap running animations to their end state (before a capture). */
+  protected finishAnimations(): void {
+    for (const s of this.slots) {
+      if (s.slide) { s.group.position.x = s.slide.to; s.slide = null; }
+      if (s.appear) { s.appear = null; s.material!.opacity = 1; s.group.position.z = 0; }
+      if (s.tint) { s.material!.color.copy(s.tint.to); s.tint = null; }
+    }
+  }
+
+  /** True once there is real geometry to show (drives onReady and quality adaptation). */
+  protected hasContent(): boolean {
+    return this.slots.some((s) => s.material);
+  }
+
+  /** Per-frame content animation; returns true while anything is still moving. */
+  protected stepContent(now: number): boolean {
+    return this.stepSlots(now);
   }
 
   /** Colour of letter i: per-letter override, else the theme's colour for that position. */
@@ -323,7 +343,7 @@ export class BuilderPreview {
     this.scene.add(ground);
   }
 
-  private loadGeometry(char: string): Promise<Glyph> {
+  protected loadGeometry(char: string): Promise<Glyph> {
     let p = this.geometries.get(char);
     if (!p) {
       p = this.loader.loadAsync(MODEL_URLS[char]).then((gltf) => {
@@ -348,7 +368,7 @@ export class BuilderPreview {
   }
 
   /** Lay the name out left to right, LETTER_GAP apart, centred on X=0. */
-  private async rebuild(): Promise<void> {
+  protected async rebuild(): Promise<void> {
     const token = ++this.buildToken;
     const manifest = await this.manifest;
     const chars = previewChars(this.props.name).filter((c) => manifest.letters[c]);
@@ -460,7 +480,7 @@ export class BuilderPreview {
   }
 
   /** Build the studio environment once the first frame is up, so it never delays it. */
-  private scheduleEnvironment(): void {
+  protected scheduleEnvironment(): void {
     const build = () => {
       const pmrem = new THREE.PMREMGenerator(this.renderer);
       const room = new RoomEnvironment();
@@ -474,13 +494,13 @@ export class BuilderPreview {
   }
 
   /** Keep the whole name inside the key light's shadow frustum. */
-  private fitShadow(nameWidth: number): void {
+  protected fitShadow(nameWidth: number): void {
     const half = Math.max(SHADOW_MIN_HALF, nameWidth / 2 + 60);
     Object.assign(this.keyLight.shadow.camera, { left: -half, right: half, top: half * 0.75, bottom: -half * 0.75, far: half * 3 });
     this.keyLight.shadow.camera.updateProjectionMatrix();
   }
 
-  private applyColours(only?: Set<number>): void {
+  protected applyColours(only?: Set<number>): void {
     const now = performance.now();
     this.slots.forEach((slot, i) => {
       if (!slot.material || (only && !only.has(i))) return;
@@ -496,7 +516,7 @@ export class BuilderPreview {
   }
 
   /** Point the camera at the name for the current view; eases over 300ms when animate is set. */
-  private frameCamera(animate = false, direction?: THREE.Vector3, margin = FRAME_MARGIN): void {
+  protected frameCamera(animate = false, direction?: THREE.Vector3, margin = FRAME_MARGIN): void {
     const box = this.layoutBox; // target layout, not mid-slide positions
     if (box.isEmpty()) return;
 
@@ -504,8 +524,11 @@ export class BuilderPreview {
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z) * margin;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    // Fit whichever is tighter: height against the vertical FOV, width against the horizontal one
-    const fitDist = Math.max(maxDim / (2 * tanHalf), (size.x * margin) / (2 * tanHalf * this.camera.aspect));
+    // Fit whichever is tighter: the object's height (its depth/thickness, whichever shows) against
+    // the vertical FOV, its width against the horizontal one. (Fitting the width vertically too
+    // left wide names and the door sign at about half the stage width on 16:9 screens.)
+    const tall = Math.max(size.y, size.z) * margin;
+    const fitDist = Math.max(tall / (2 * tanHalf), (size.x * margin) / (2 * tanHalf * this.camera.aspect));
 
     // Spec's view angles; the camera sits fitDist (× the user's pinch zoom) away along each
     const dir = (direction?.clone() ?? {
@@ -513,11 +536,31 @@ export class BuilderPreview {
       top: new THREE.Vector3(0, 1, 0.001),
       side: new THREE.Vector3(1.1, 0.02, 0.01),
     }[this.props.viewMode]).normalize();
-    this.fit = { center, dir, dist: fitDist };
-    const toPos = center.clone().addScaledVector(dir, fitDist * this.zoom);
+
+    // Refine by projecting the layout's corners: in perspective the near edge of a flat name
+    // looks wider than the analytic fit assumes, so the Angle view used to crop at the sides.
+    // Each pass rescales the distance so the widest/tallest corner lands at 1/margin of the frame.
+    const probe = this.camera.clone();
+    probe.updateProjectionMatrix(); // capture() changes aspect without updating the live camera's matrix
+    const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => new THREE.Vector3(
+      i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+    let dist = fitDist;
+    for (let pass = 0; pass < 6; pass++) {
+      probe.position.copy(center).addScaledVector(dir, dist);
+      probe.lookAt(center);
+      probe.updateMatrixWorld();
+      const extent = Math.max(...corners.map((c) => {
+        const v = c.clone().project(probe);
+        return Math.max(Math.abs(v.x), Math.abs(v.y));
+      }));
+      dist *= extent * margin;
+    }
+    const fittedDist = dist;
+    this.fit = { center, dir, dist: fittedDist };
+    const toPos = center.clone().addScaledVector(dir, fittedDist * this.zoom);
 
     // Long names put the camera well past the spec's 2000mm far plane
-    this.camera.far = Math.max(2000, fitDist * ZOOM_MAX + maxDim * 2);
+    this.camera.far = Math.max(2000, fittedDist * ZOOM_MAX + maxDim * 2);
     this.camera.updateProjectionMatrix();
 
     if (animate && !this.reduceMotion) {
@@ -559,7 +602,7 @@ export class BuilderPreview {
 
   // ── Render loop (on demand) ──────────────────────────────────────
 
-  private requestRender(): void {
+  protected requestRender(): void {
     if (this.frameQueued) return;
     this.frameQueued = true;
     requestAnimationFrame(this.frame);
@@ -574,14 +617,14 @@ export class BuilderPreview {
 
     let moving = this.stepSpin(t, now, dt);
     moving = this.stepCamera(now) || moving;
-    moving = this.stepSlots(now) || moving;
+    moving = this.stepContent(now) || moving;
 
     this.nameGroup.rotation.z = this.rotation;
     const t0 = performance.now();
     this.renderer.render(this.scene, this.camera);
-    const hasLetters = this.slots.some((s) => s.material);
-    if (hasLetters) this.adaptQuality(performance.now() - t0);
-    if (hasLetters && !this.shown) {
+    const hasContent = this.hasContent();
+    if (hasContent) this.adaptQuality(performance.now() - t0);
+    if (hasContent && !this.shown) {
       this.shown = true;
       this.onReady?.();
     }
@@ -773,7 +816,7 @@ function buildStudGeometry(m: Manifest): THREE.BufferGeometry {
   return geo;
 }
 
-function buildStuds(geo: THREE.BufferGeometry, material: THREE.Material, cells: number[], pitch: number): THREE.InstancedMesh {
+export function buildStuds(geo: THREE.BufferGeometry, material: THREE.Material, cells: number[], pitch: number): THREE.InstancedMesh {
   const studs = new THREE.InstancedMesh(geo, material, cells.length / 2);
   const m = new THREE.Matrix4();
   for (let k = 0; k < cells.length; k += 2) {

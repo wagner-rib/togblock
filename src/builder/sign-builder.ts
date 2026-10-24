@@ -1,7 +1,14 @@
 import { FONT } from './brickfont';
-import { COLOURS, priceDoorSign, type SignShape } from './themes';
+import { COLOURS, priceDoorSign } from './themes';
 import { addToCart } from './cart';
 import type { CartItem } from './types';
+import type { SignPreview } from './SignPreview';
+import type { ViewMode } from './BuilderPreview';
+import type { Manifest } from './BuilderPreview';
+import { signFits } from './signLayout';
+import manifestJson from '../assets/models/manifest.json';
+
+const MANIFEST = manifestJson as Manifest;
 
 function q<T extends Element = Element>(sel: string, ctx: Element | Document = document): T {
   return (ctx as Element).querySelector<T>(sel) as T;
@@ -33,11 +40,10 @@ const TEXT_COLOURS = [
   { label: COLOURS.sky_blue.label,    value: COLOURS.sky_blue.hex },
 ];
 
-const SHAPE_OPTS: { value: SignShape; label: string; price: string; radius: string }[] = [
-  { value: 'rectangle', label: 'Rectangle', price: 'Included',  radius: '8px' },
-  { value: 'arch',      label: 'Arch',      price: '+€5',       radius: '50% 50% 8px 8px / 40% 40% 8px 8px' },
-  { value: 'rounded',   label: 'Rounded',   price: '+€5',       radius: '40px' },
-];
+// door_sign.py prints one shape: a rectangle with 8mm corner radius
+const PLATE_RADIUS = '8px';
+// Letters, numbers and spaces only (what door_sign.py can print cleanly)
+const SIGN_TEXT = /[^A-Z0-9 ]/g;
 
 const DECO_COLOURS = [
   COLOURS.red.hex, COLOURS.blue.hex, COLOURS.yellow.hex,
@@ -48,24 +54,26 @@ interface SignState {
   text: string;
   plateColour: string;
   textColour: string;
-  shape: SignShape;
 }
 
 export class DoorSignBuilder {
   private host: HTMLElement;
   private state: SignState;
   private MAX = 12;
+  private preview: SignPreview | null = null;  // 3D preview; null until loaded, or without WebGL2
+  private booting: Promise<void> | null = null;
+  private viewMode: ViewMode = 'top';
 
   constructor(host: HTMLElement) {
     this.host = host;
     this.state = {
-      text: host.dataset.initial || 'CHARLIE',
+      text: (host.dataset.initial || 'CHARLIE').toUpperCase().replace(SIGN_TEXT, '').slice(0, 12),
       plateColour: PLATE_COLOURS[0].value,
       textColour: TEXT_COLOURS[0].value,
-      shape: 'rectangle',
     };
     this.build();
     this.render();
+    this.setup3D();
   }
 
   private build(): void {
@@ -73,6 +81,13 @@ export class DoorSignBuilder {
       <div class="sign-builder" data-sign-builder>
 
         <div class="sign-stage" data-sign-stage>
+          <canvas class="builder-3d" data-sb-canvas aria-label="3D preview of your door sign. Drag to rotate."></canvas>
+          <div class="builder-skel" data-sb-skeleton aria-hidden="true"></div>
+          <div class="builder-views" data-sb-views role="group" aria-label="View" hidden>
+            <button type="button" data-view="top" aria-pressed="true">Top</button>
+            <button type="button" data-view="hero" aria-pressed="false">Angle</button>
+            <button type="button" data-view="side" aria-pressed="false">Side</button>
+          </div>
           <div class="sign-perspective-wrap" data-sign-perspective>
             <div class="sign-plate" data-sign-plate>
               <div class="sign-text-row" data-sign-text></div>
@@ -92,18 +107,7 @@ export class DoorSignBuilder {
                 maxlength="${this.MAX}" autocomplete="off" placeholder="e.g. Charlie"
                 value="${this.state.text}" />
             </div>
-            <p class="field-hint">Letters, numbers, spaces and apostrophes (up to ${this.MAX} chars).</p>
-          </div>
-
-          <div class="control-group">
-            <span class="label" id="sb-shape-label">Sign shape</span>
-            <div class="size-selector" role="group" aria-labelledby="sb-shape-label" data-sb-shapes>
-              ${SHAPE_OPTS.map((s) => `
-                <button type="button" class="size-opt" data-shape="${s.value}" aria-pressed="${s.value === 'rectangle' ? 'true' : 'false'}">
-                  <span class="so-label">${s.label}</span>
-                  <span class="so-price">${s.price}</span>
-                </button>`).join('')}
-            </div>
+            <p class="field-hint" data-sb-hint>Letters, numbers and spaces (up to ${this.MAX} characters).</p>
           </div>
 
           <div class="control-group">
@@ -145,22 +149,10 @@ export class DoorSignBuilder {
     // Input
     const input = q<HTMLInputElement>('[data-sb-input]', this.host);
     input.addEventListener('input', () => {
-      // Allow A-Z, 0-9, space, apostrophe
-      const raw = input.value.toUpperCase().replace(/[^A-Z0-9\s']/g, '').slice(0, this.MAX);
+      const raw = input.value.toUpperCase().replace(SIGN_TEXT, '').slice(0, this.MAX);
       this.state.text = raw;
       input.value = raw;
       this.render();
-    });
-
-    // Shape selector
-    this.host.querySelectorAll<HTMLButtonElement>('[data-shape]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this.state.shape = btn.dataset.shape as SignShape;
-        this.host.querySelectorAll('[data-shape]').forEach((b) =>
-          b.setAttribute('aria-pressed', String((b as HTMLButtonElement).dataset.shape === this.state.shape))
-        );
-        this.render();
-      });
     });
 
     // Plate colour
@@ -186,6 +178,13 @@ export class DoorSignBuilder {
     });
 
     q('[data-sb-add]', this.host).addEventListener('click', () => this.addToCart());
+
+    this.host.querySelectorAll<HTMLButtonElement>('[data-sb-views] [data-view]').forEach((b) =>
+      b.addEventListener('click', () => {
+        this.viewMode = b.dataset.view as ViewMode;
+        this.host.querySelectorAll('[data-sb-views] [data-view]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        this.preview?.setSign({ viewMode: this.viewMode });
+      }));
   }
 
   render(): void {
@@ -193,18 +192,16 @@ export class DoorSignBuilder {
     const textRow = q('[data-sign-text]', this.host);
     const decos = q('[data-sign-decos]', this.host);
 
-    // Shape → border-radius
-    const shapeOpt = SHAPE_OPTS.find((s) => s.value === this.state.shape)!;
     plate.style.cssText = `
       background-color: ${this.state.plateColour};
       background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.38) 28%, transparent 32%);
       background-size: 14px 14px;
-      border-radius: ${shapeOpt.radius};
+      border-radius: ${PLATE_RADIUS};
     `;
 
     // Render name in brick font
     const cell = 14;
-    const text = this.state.text.replace(/[^A-Z0-9\s]/g, '');
+    const text = this.state.text;
 
     textRow.innerHTML = '';
     textRow.style.cssText = `
@@ -279,6 +276,9 @@ export class DoorSignBuilder {
 
     this.fitText(textRow, plate);
     this.updatePrice();
+    this.updateFit();
+    this.preview?.setSign({ text: this.state.text, plateColour: this.state.plateColour, textColour: this.state.textColour });
+    this.updateSkeleton();
 
     // Counter
     const counter = q('[data-sb-counter]', this.host);
@@ -287,9 +287,8 @@ export class DoorSignBuilder {
 
   private updatePrice(): void {
     const letterCount = Math.max(1, [...this.state.text].filter(c => c !== ' ').length);
-    const hasShapeAddon = this.state.shape !== 'rectangle';
     const isTwoTone = this.state.plateColour !== this.state.textColour;
-    const price = priceDoorSign(letterCount, hasShapeAddon, isTwoTone);
+    const price = priceDoorSign(letterCount, false, isTwoTone);
 
     const priceEl = q('[data-sb-price]', this.host);
     const breakdownEl = q('[data-sb-breakdown]', this.host);
@@ -297,7 +296,6 @@ export class DoorSignBuilder {
 
     if (breakdownEl) {
       const parts = [`€25 base + €4 × ${letterCount}`];
-      if (hasShapeAddon) parts.push('+ €5 shape');
       if (isTwoTone) parts.push('+ €3 two-tone');
       breakdownEl.textContent = parts.join(' ');
     }
@@ -314,27 +312,25 @@ export class DoorSignBuilder {
 
   private addToCart(): void {
     const text = this.state.text.trim();
-    if (!text) return;
+    if (!text || !signFits(text, MANIFEST)) return;
     const letterCount = Math.max(1, [...text.replace(/\s/g, '')].length);
-    const hasShapeAddon = this.state.shape !== 'rectangle';
     const isTwoTone = this.state.plateColour !== this.state.textColour;
-    const price = priceDoorSign(letterCount, hasShapeAddon, isTwoTone);
+    const price = priceDoorSign(letterCount, false, isTwoTone);
 
     const btn = q<HTMLButtonElement>('[data-sb-add]', this.host);
     btn.classList.add('is-loading');
     btn.innerHTML = `<span class="spin" aria-hidden="true"></span><span>Adding…</span>`;
 
-    const shapeLabel = SHAPE_OPTS.find((s) => s.value === this.state.shape)?.label ?? 'Rectangle';
 
     const payload: CartItem = {
       id: 'sign_' + Date.now().toString(36),
       type: 'door-sign',
       name: text,
-      shape: this.state.shape,
+      shape: 'rectangle',
       theme: 'sign',
       oneColour: this.state.plateColour,
       brickSizePx: 14,
-      sizeLabel: `Door Sign · ${shapeLabel}`,
+      sizeLabel: 'Door Sign · Rectangle',
       letters: [...text].filter(c => c !== ' ').map((c) => ({ char: c, colour: this.state.textColour })),
       brickCount: letterCount * 35,
       price,
@@ -345,12 +341,90 @@ export class DoorSignBuilder {
       textColour: this.state.textColour,
     };
 
-    setTimeout(() => {
+    const minDelay = new Promise((r) => setTimeout(r, 750)); // keep the "Adding…" beat even when capture is instant
+    Promise.all([this.uploadThumbnail(), minDelay]).then(([thumbnailId]) => {
+      if (thumbnailId) payload.thumbnailId = thumbnailId;
       addToCart(payload);
       btn.classList.remove('is-loading');
       btn.innerHTML = `<span>Add to basket</span>`;
       (window as Window & { TogToast?: (p: CartItem) => void }).TogToast?.(payload);
-    }, 750);
+    });
+  }
+
+  /** Long names hit door_sign.py's 22mm minimum and run off the plate: say so, block the order. */
+  private updateFit(): void {
+    const hint = q('[data-sb-hint]', this.host);
+    const add = q<HTMLButtonElement>('[data-sb-add]', this.host);
+    const text = this.state.text.trim();
+    const fits = !text || signFits(text, MANIFEST);
+    hint.classList.toggle('is-error', !fits);
+    hint.textContent = fits
+      ? `Letters, numbers and spaces (up to ${this.MAX} characters).`
+      : 'That name is too long to fit on the sign. Try a shorter name or fewer wide letters like M and W.';
+    add.disabled = !text || !fits;
+    add.setAttribute('aria-disabled', String(add.disabled));
+  }
+
+  /* ---- 3D preview (same pipeline as the name builder) ---- */
+
+  private setup3D(): void {
+    if (!document.createElement('canvas').getContext('webgl2')) return; // keep the flat sign preview
+    const stage = q('[data-sign-stage]', this.host);
+    stage.classList.add('has-3d', 'is-3d-loading');
+    this.updateSkeleton();
+    const start = () => {
+      if (!this.host.offsetParent) return stage.classList.remove('has-3d', 'is-3d-loading'); // letters tab showing
+      this.booting ??= this.boot3D();
+    };
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 200));
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
+  }
+
+  private async boot3D(): Promise<void> {
+    const stage = q('[data-sign-stage]', this.host);
+    try {
+      const { SignPreview } = await import('./SignPreview');
+      this.preview = new SignPreview(q<HTMLCanvasElement>('[data-sb-canvas]', this.host), {
+        text: this.state.text, plateColour: this.state.plateColour, textColour: this.state.textColour,
+        viewMode: this.viewMode,
+      }, {
+        onReady: () => {
+          stage.classList.replace('is-3d-loading', 'is-3d');
+          q<HTMLElement>('[data-sb-views]', this.host).hidden = false;
+        },
+      });
+    } catch (err) {
+      console.warn('3D preview unavailable, keeping the flat sign preview.', err);
+      this.preview = null;
+      stage.classList.remove('has-3d', 'is-3d-loading', 'is-3d');
+    }
+  }
+
+  /** Grey Russo One name shown until the 3D sign is drawn. */
+  private updateSkeleton(): void {
+    const stage = q('[data-sign-stage]', this.host);
+    if (!stage.classList.contains('is-3d-loading')) return;
+    const skel = q<HTMLElement>('[data-sb-skeleton]', this.host);
+    skel.textContent = this.state.text;
+    const len = Math.max(4, this.state.text.length); // the sign keeps short names smaller than the stage
+    skel.style.fontSize = `${Math.min((stage.clientWidth * 0.62) / (len * 0.7), stage.clientHeight * 0.2)}px`;
+  }
+
+  /** PNG of the sign for the order (3D-FIX-08); undefined if 3D isn't available. */
+  private async uploadThumbnail(): Promise<string | undefined> {
+    try {
+      if (!q('[data-sign-stage]', this.host).classList.contains('has-3d')) return undefined;
+      this.booting ??= this.boot3D();
+      await this.booting;
+      if (!this.preview) return undefined;
+      const png = await this.preview.capture();
+      const res = await fetch('/api/thumbnails', { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png });
+      return res.ok ? (await res.json()).id : undefined;
+    } catch (err) {
+      console.warn('Design preview not saved; adding to basket without it.', err);
+      return undefined;
+    }
   }
 }
 

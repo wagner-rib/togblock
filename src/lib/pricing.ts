@@ -6,6 +6,9 @@ import {
   priceLetters, priceDoorSign, addonCost, SIZE_LABELS,
   type LetterSize, type SignShape, type Addons,
 } from '../builder/themes';
+import { signFits } from '../builder/signLayout';
+import manifest from '../assets/models/manifest.json'; // JSON only: keeps three.js out of the server bundle
+import type { Manifest } from '../builder/BuilderPreview';
 
 export type ItemOptions =
   | { kind: 'letters'; size: LetterSize; addons: Addons }
@@ -25,7 +28,7 @@ export interface ItemConfig {
 }
 
 const SIZES: LetterSize[] = ['small', 'standard', 'statement'];
-const SHAPES: SignShape[] = ['rectangle', 'arch', 'rounded'];
+const SHAPES: SignShape[] = ['rectangle']; // the only plate door_sign.py prints
 const HEX = /^#[0-9a-f]{6}$/i;
 const MAX_QTY = 20;
 
@@ -47,11 +50,14 @@ export function priceItem(item: ItemConfig): Priced {
   }
 
   if (item.product_type === 'door-sign') {
-    if (!/^[A-Z0-9\s']{1,12}$/.test(item.custom_name) || !item.custom_name.trim()) {
+    if (!/^[A-Z0-9 ]{1,12}$/.test(item.custom_name) || !item.custom_name.trim()) {
       return { ok: false, error: 'A door sign in your basket has unsupported text' };
     }
+    if (!signFits(item.custom_name, manifest as Manifest)) {
+      return { ok: false, error: 'A door sign in your basket is too long to fit on the plate' };
+    }
     const shape = item.shape as SignShape;
-    if (!SHAPES.includes(shape)) return { ok: false, error: 'Missing sign shape' };
+    if (!SHAPES.includes(shape)) return { ok: false, error: "That sign shape isn't available any more" };
     const plate = item.plate_colour ?? '';
     const text = item.text_colour ?? '';
     if (!HEX.test(plate) || !HEX.test(text)) return { ok: false, error: 'Missing sign colours' };
