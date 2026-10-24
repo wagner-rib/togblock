@@ -6,7 +6,11 @@ import '@fontsource/baloo-2/700.css';
 import '../styles/tokens.css';
 import { THEMES, COLOURS } from '../builder/themes';
 
-const themes = Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label, swatch: t.swatch }));
+// One colour leads and is the default; the rest keep their themes.ts order
+const themes = Object.entries(THEMES)
+  .map(([id, t]) => ({ id, label: t.label, swatch: t.swatch }))
+  .sort((a, b) => Number(b.id === 'one') - Number(a.id === 'one'));
+const DEFAULT_ONE = COLOURS.green.hex;
 const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
 ---
 
@@ -29,8 +33,8 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     <div class="p3-stage">
       <canvas id="p3-canvas" aria-label="3D preview of your letters"></canvas>
       <div class="p3-views" role="group" aria-label="View">
-        <button type="button" data-view="hero" aria-pressed="true">Hero</button>
-        <button type="button" data-view="top" aria-pressed="false">Top</button>
+        <button type="button" data-view="hero" aria-pressed="false">Hero</button>
+        <button type="button" data-view="top" aria-pressed="true">Top</button>
         <button type="button" data-view="side" aria-pressed="false">Side</button>
       </div>
     </div>
@@ -50,7 +54,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         <span>Theme</span>
         <div class="p3-row" id="p3-themes">
           {themes.map((t) => (
-            <button type="button" data-theme={t.id} aria-pressed={t.id === 'rainbow' ? 'true' : 'false'}>
+            <button type="button" data-theme={t.id} aria-pressed={t.id === 'one' ? 'true' : 'false'}>
               <i class="p3-sw">{t.swatch.slice(0, 4).map((c) => <b style={`background:${c}`}></b>)}</i>
               {t.label}
             </button>
@@ -62,6 +66,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         <div class="p3-row" id="p3-colours">
           {colours.map((c) => (
             <button type="button" class="p3-dot" data-hex={c.hex} title={c.label} aria-label={c.label}
+                    aria-pressed={c.hex === DEFAULT_ONE ? 'true' : 'false'}
                     style={`background:${c.hex}`}></button>
           ))}
         </div>
@@ -96,6 +101,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     .p3-sw { display: inline-flex; gap: 2px; }
     .p3-sw b { width: 6px; height: 14px; border-radius: 2px; }
     .p3-dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
+    .p3-dot[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--white) inset; }
   </style>
 
   <script>
@@ -106,10 +112,10 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     const preview = new BuilderPreview(canvas, {
       name: input.value,
       size: 'standard',
-      theme: 'rainbow',
-      oneColour: '#169B62',
+      theme: 'one',
+      oneColour: document.querySelector<HTMLElement>('.p3-dot[aria-pressed="true"]')!.dataset.hex!,
       letterColours: {},
-      viewMode: 'hero',
+      viewMode: 'top',
     });
 
     const pressGroup = (sel: string, active: Element) =>
@@ -137,6 +143,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       b.addEventListener('click', () => {
         const one = document.querySelector('[data-theme="one"]')!;
         pressGroup('[data-theme]', one);
+        pressGroup('[data-hex]', b);
         preview.setProps({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} });
       }));
   </script>
