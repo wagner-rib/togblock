@@ -7,6 +7,17 @@ import Base from '../layouts/Base.astro';
   description="TógBlocks started on a kitchen table in Kildare. A niece, a name, and a 3D printer that never quite switched off. Here's how it happened."
   currentPage="/about"
 >
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "AboutPage",
+      "name": "Our Story — TógBlocks",
+      "url": "https://togblocks.com/about",
+      "description": "TógBlocks started on a kitchen table in Kildare. A niece, a name, and a 3D printer that never quite switched off.",
+      "about": { "@id": "https://togblocks.com/#organization" },
+      "isPartOf": { "@id": "https://togblocks.com/#website" }
+    })} />
+  </Fragment>
 
   <!-- ═══ HERO ═══ -->
   <div class="ab-hero">

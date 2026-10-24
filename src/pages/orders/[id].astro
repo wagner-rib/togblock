@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getTokenFromRequest, getSession } from '../../lib/auth';
+import { getTokenFromRequest, getSession, verifyOrderAccessKey } from '../../lib/auth';
 import { query } from '../../lib/db';
 
 const { id } = Astro.params;
@@ -15,14 +15,26 @@ const success = Astro.url.searchParams.get('success') === '1';
 // Fetch order
 const orderRes = await query<{
   id: number; status: string; subtotal: number; shipping_cost: number; total: number;
-  guest_email: string | null; created_at: Date;
+  guest_email: string | null; created_at: Date; user_id: number | null;
 }>(
-  'SELECT id, status, subtotal, shipping_cost, total, guest_email, created_at FROM orders WHERE id = $1',
+  'SELECT id, status, subtotal, shipping_cost, total, guest_email, created_at, user_id FROM orders WHERE id = $1',
   [orderId]
 );
 
 if (!orderRes.rows.length) return Astro.redirect('/');
 const order = orderRes.rows[0];
+
+// Order pages show names and addresses: only the owner, an admin, or a holder of the
+// signed link (Stripe return URL / order emails) may view one. IDs are sequential.
+const accessKey = Astro.url.searchParams.get('k') ?? '';
+const canView =
+  (user && (user.isAdmin || (order.user_id !== null && Number(order.user_id) === Number(user.id)))) ||
+  (accessKey !== '' && verifyOrderAccessKey(orderId, accessKey));
+if (!canView) {
+  return user
+    ? new Response('Order not found.', { status: 404 })
+    : Astro.redirect(`/login?returnTo=${encodeURIComponent(`/orders/${orderId}`)}`);
+}
 
 // Items
 const itemsRes = await query<{
@@ -51,6 +63,19 @@ function formatPrice(cents: number) {
 const orderRef = `#TB${String(order.id).padStart(5, '0')}`;
 // Trust ?success=1 from Stripe's redirect — webhook updates DB asynchronously
 const isPaid   = order.status === 'paid' || success;
+
+// FIX-05: Purchase event payload (fired once per order, only after Stripe's success redirect)
+const purchase = success ? {
+  transactionId: order.id,
+  value: order.total / 100,
+  currency: 'EUR',
+  items: items.map(i => ({
+    id:       i.product_type === 'door-sign' ? 'DOOR-SIGN' : 'BRICK-LETTERS',
+    name:     i.product_type === 'door-sign' ? 'Door / Room Sign' : 'Brick Name Letters',
+    price:    i.unit_price / 100,
+    quantity: i.quantity,
+  })),
+} : null;
 ---
 
 <Base
@@ -295,7 +320,13 @@ const isPaid   = order.status === 'paid' || success;
 }
 </style>
 
-<script define:vars={{ success }}>
+<script define:vars={{ success, purchase }}>
+if (purchase) {
+  var key = 'tb_purchase_tracked_' + purchase.transactionId;
+  var already = false;
+  try { already = localStorage.getItem(key) === '1'; localStorage.setItem(key, '1'); } catch (e) {}
+  if (!already && window.tbTrack) window.tbTrack('Purchase', purchase);
+}
 if (success) {
   // Clear localStorage cart
   localStorage.removeItem('togblocks_cart');

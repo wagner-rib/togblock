@@ -1,4 +1,12 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /login
+Disallow: /orders/
+Disallow: /review/
 
-Sitemap: https://togblocks.ie/sitemap-index.xml
+Sitemap: https://togblocks.com/sitemap-index.xml

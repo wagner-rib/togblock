@@ -1,23 +1,48 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ReviewGrid from '../../components/ReviewGrid.astro';
+import { getApprovedReviews, getRatingSummary } from '../../lib/reviews';
+
+const PRODUCT_TYPE = 'letters';
+const [reviews, rating] = await Promise.all([
+  getApprovedReviews({ productType: PRODUCT_TYPE, limit: 6 }).catch(() => []),
+  getRatingSummary(PRODUCT_TYPE).catch(() => ({ count: 0, average: 0 })),
+]);
 
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
   "name": "Personalised Brick Name Letters",
   "description": "Chunky personalised 3D brick name letters, compatible with standard building brick systems including LEGO®. 3D printed in Ireland, ships in 3 days.",
-  "image": "https://togblocks.ie/products/luca-letters.jpg",
+  "image": "https://togblocks.com/products/luca-letters.jpg",
   "brand": { "@type": "Brand", "name": "TógBlocks" },
   "sku": "BRICK-LETTERS",
   "offers": {
     "@type": "Offer",
-    "url": "https://togblocks.ie/products/brick-letters",
+    "url": "https://togblocks.com/products/brick-letters",
     "priceCurrency": "EUR",
     "price": "5.99",
     "priceValidUntil": "2027-12-31",
     "availability": "https://schema.org/InStock",
-    "seller": { "@type": "Organization", "name": "TógBlocks" }
-  }
+    "seller": { "@id": "https://togblocks.com/#organization" }
+  },
+  // Only real, approved reviews — never hard-code ratings (FIX-03/FIX-07).
+  ...(rating.count > 0 && {
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": String(rating.average),
+      "reviewCount": String(rating.count),
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "review": reviews.map((r) => ({
+      "@type": "Review",
+      "author": { "@type": "Person", "name": r.display_name },
+      "datePublished": new Date(r.created_at).toISOString().slice(0, 10),
+      "reviewBody": r.body,
+      "reviewRating": { "@type": "Rating", "ratingValue": String(r.rating), "bestRating": "5" }
+    }))
+  })
 };
 ---
 
@@ -28,7 +53,7 @@ const productSchema = {
   ogImage="/products/luca-letters.jpg"
 >
   <Fragment slot="head">
-    <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(productSchema).replace(/</g, '\\u003c')} />
   </Fragment>
 
   <article>
@@ -256,6 +281,19 @@ const productSchema = {
       </div>
     </section>
 
+    <!-- ============ REVIEWS ============ -->
+    {reviews.length > 0 && (
+      <section class="section" aria-labelledby="reviews-heading">
+        <div class="wrap">
+          <div class="sec-head">
+            <h2 id="reviews-heading">What customers say</h2>
+            <p class="muted">{rating.average} out of 5 from {rating.count} review{rating.count === 1 ? '' : 's'}</p>
+          </div>
+          <ReviewGrid reviews={reviews} />
+        </div>
+      </section>
+    )}
+
     <!-- ============ FAQ ============ -->
     <section class="section" aria-labelledby="faq-heading">
       <div class="wrap">
@@ -315,6 +353,11 @@ const productSchema = {
   </article>
 
 </Base>
+
+<script>
+  import { track } from '../../scripts/track';
+  track('ViewContent', { id: 'BRICK-LETTERS', name: 'Brick Name Letters', value: 5.99 });
+</script>
 
 <style>
 .pdp-hero {

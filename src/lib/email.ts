@@ -1,19 +1,20 @@
 import nodemailer from 'nodemailer';
+import { orderAccessKey } from './auth';
 
 function getTransport() {
   return nodemailer.createTransport({
-    host: import.meta.env.SMTP_HOST,
-    port: Number(import.meta.env.SMTP_PORT ?? 587),
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT ?? 587),
     secure: false, // STARTTLS
     auth: {
-      user: import.meta.env.SMTP_USER,
-      pass: import.meta.env.SMTP_PASS,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
     tls: { rejectUnauthorized: false },
   });
 }
 
-const FROM = import.meta.env.SMTP_FROM ?? import.meta.env.SMTP_USER;
+const FROM = process.env.SMTP_FROM ?? process.env.SMTP_USER;
 
 interface OrderItem {
   product_type: string;
@@ -94,7 +95,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
       <h2 style="font-size:16px;font-weight:700;color:#111827;margin:28px 0 12px">Delivery address</h2>
       <p style="color:#374151;line-height:1.8;margin:0">${addressHtml}</p>
       <div style="text-align:center;margin:32px 0">
-        <a href="https://togblocks.com/orders/${data.orderId}"
+        <a href="https://togblocks.com/orders/${data.orderId}?k=${orderAccessKey(data.orderId)}"
            style="display:inline-block;background:#1D4ED8;color:#fff;text-decoration:none;padding:14px 32px;border-radius:999px;font-weight:700;font-size:15px">
           View your order →
         </a>
@@ -172,7 +173,7 @@ export async function sendDispatchNotification(data: {
         If you have any questions, just reply to this email. 💚
       </p>
       <div style="text-align:center;margin:32px 0">
-        <a href="https://togblocks.com/orders/${data.orderId}"
+        <a href="https://togblocks.com/orders/${data.orderId}?k=${orderAccessKey(data.orderId)}"
            style="display:inline-block;background:#1D4ED8;color:#fff;text-decoration:none;padding:14px 32px;border-radius:999px;font-weight:700;font-size:15px">
           View your order →
         </a>
@@ -213,7 +214,7 @@ export async function sendAdminMessage(data: {
       <p style="color:#111827;font-size:16px;margin:0 0 20px">Hi ${data.customerName},</p>
       <div style="color:#374151;line-height:1.7;margin:0 0 28px">${bodyHtml}</div>
       <div style="text-align:center;margin:24px 0">
-        <a href="https://togblocks.com/orders/${data.orderId}"
+        <a href="https://togblocks.com/orders/${data.orderId}?k=${orderAccessKey(data.orderId)}"
            style="display:inline-block;background:#1D4ED8;color:#fff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:700;font-size:14px">
           View your order →
         </a>
@@ -232,6 +233,60 @@ export async function sendAdminMessage(data: {
     replyTo: 'togblocks@outlook.com',
     to: data.customerEmail,
     subject: data.subject,
+    html,
+  });
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+export async function sendReviewRequest(data: {
+  orderId: number; customerName: string; customerEmail: string; url: string;
+}) {
+  const ref = `#TB${String(data.orderId).padStart(5, '0')}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif">
+  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+    <div style="background:#1D4ED8;padding:32px 40px;text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">📸</div>
+      <h1 style="color:#fff;margin:0;font-size:24px;font-weight:800">How did it turn out?</h1>
+    </div>
+    <div style="padding:32px 40px">
+      <p style="color:#111827;font-size:16px;margin:0 0 16px">Hi ${escapeHtml(data.customerName)},</p>
+      <p style="color:#374151;line-height:1.6;margin:0 0 16px">
+        Your order <strong>${ref}</strong> should have arrived by now. We'd love to know what you think —
+        and if you can snap a photo of it in its new home, even better.
+      </p>
+      <p style="color:#374151;line-height:1.6;margin:0 0 16px">
+        We're a tiny family workshop, so every honest review (good or not so good) genuinely helps.
+        It takes about a minute.
+      </p>
+      <div style="text-align:center;margin:32px 0">
+        <a href="${data.url}"
+           style="display:inline-block;background:#1D4ED8;color:#fff;text-decoration:none;padding:14px 32px;border-radius:999px;font-weight:700;font-size:15px">
+          Leave a review →
+        </a>
+      </div>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6">
+        Something not right with your order? Just reply to this email and we'll fix it.
+      </p>
+    </div>
+    <div style="background:#f9fafb;padding:20px 40px;text-align:center;font-size:12px;color:#9ca3af">
+      TógBlocks · Made in Ireland 🇮🇪
+    </div>
+  </div>
+</body>
+</html>`;
+
+  await getTransport().sendMail({
+    from: FROM,
+    replyTo: 'togblocks@outlook.com',
+    to: data.customerEmail,
+    subject: `How did your TógBlocks build turn out? (${ref})`,
     html,
   });
 }

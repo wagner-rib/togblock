@@ -8,7 +8,7 @@ const SESSION_DAYS  = 30;
 // ── Session token: <id>.<hmac-signature> ──────────────────────────────────
 
 function sign(id: string): string {
-  const secret = import.meta.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET!;
   const mac = createHmac('sha256', secret).update(id).digest('hex');
   return `${id}.${mac}`;
 }
@@ -18,7 +18,7 @@ function verify(token: string): string | null {
   if (dot < 1) return null;
   const id  = token.slice(0, dot);
   const mac = token.slice(dot + 1);
-  const expected = createHmac('sha256', import.meta.env.SESSION_SECRET).update(id).digest('hex');
+  const expected = createHmac('sha256', process.env.SESSION_SECRET!).update(id).digest('hex');
   try {
     if (!timingSafeEqual(Buffer.from(mac, 'hex'), Buffer.from(expected, 'hex'))) return null;
   } catch {
@@ -137,6 +137,19 @@ export async function loginEmailUser(opts: {
   const ok = await bcrypt.compare(opts.password, result.rows[0].password_hash);
   if (!ok) return { error: 'Invalid email or password.' };
   return { id: result.rows[0].id };
+}
+
+// ── Per-order access key ─────────────────────────────────────────────────
+// Lets guests (and email links) open /orders/<id> without being able to enumerate other orders.
+
+export function orderAccessKey(orderId: number | string): string {
+  return createHmac('sha256', process.env.SESSION_SECRET!).update(`order:${orderId}`).digest('hex').slice(0, 32);
+}
+
+export function verifyOrderAccessKey(orderId: number | string, key: string): boolean {
+  const expected = Buffer.from(orderAccessKey(orderId));
+  const given    = Buffer.from(key);
+  return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
 export { SESSION_COOKIE };

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getStripe, shippingCost, classifyCountry } from '../../lib/stripe';
 import { query } from '../../lib/db';
-import { getTokenFromRequest, getSession } from '../../lib/auth';
+import { getTokenFromRequest, getSession, orderAccessKey } from '../../lib/auth';
 
 interface CartItem {
   product_type: 'letters' | 'door-sign';
@@ -101,6 +101,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({
       clientSecret: pi.client_secret,
       orderId,
+      accessKey: orderAccessKey(orderId),
       total,
       shipping,
     });

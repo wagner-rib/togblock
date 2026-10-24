@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig!, import.meta.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(body, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     return new Response(`Webhook error: ${err.message}`, { status: 400 });
   }

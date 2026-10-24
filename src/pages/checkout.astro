@@ -5,7 +5,7 @@ import { FONT } from '../builder/brickfont';
 
 const token = getTokenFromRequest(Astro.request);
 const user  = token ? await getSession(token) : null;
-const stripePublicKey = import.meta.env.STRIPE_PUBLIC_KEY ?? '';
+const stripePublicKey = process.env.STRIPE_PUBLIC_KEY ?? '';
 
 const countries = [
   { code: 'IE', label: 'Ireland' },
@@ -608,6 +608,7 @@ let stripe = null;
 let elements = null;
 let paymentElement = null;
 let currentOrderId = null;
+let currentOrderKey = null;
 
 function loadCart() {
   try { cart = JSON.parse(localStorage.getItem('togblocks_cart') || '[]'); } catch { cart = []; }
@@ -814,6 +815,7 @@ async function initStripe(country) {
     if (!res.ok || !data.clientSecret) throw new Error(data.error || 'Checkout failed');
 
     currentOrderId = data.orderId;
+    currentOrderKey = data.accessKey;
 
     if (!stripe) stripe = Stripe(stripePublicKey);
 
@@ -881,7 +883,7 @@ function initCheckout() {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${origin}/orders/${currentOrderId}?success=1`,
+        return_url: `${origin}/orders/${currentOrderId}?success=1&k=${currentOrderKey}`,
         payment_method_data: {
           billing_details: {
             email: document.getElementById('co-email').value.trim(),
@@ -908,4 +910,17 @@ if (document.readyState === 'loading') {
 } else {
   initCheckout();
 }
+</script>
+
+<script>
+  // FIX-05: InitiateCheckout from the basket contents
+  import { loadCart, trackItem } from '../builder/cart';
+  import { track } from '../scripts/track';
+  const cart = loadCart();
+  if (cart.length) {
+    track('InitiateCheckout', {
+      value: cart.reduce((sum, i) => sum + i.price * (i.qty || 1), 0),
+      items: cart.map(trackItem),
+    });
+  }
 </script>

@@ -1,0 +1,26 @@
+---
+import type { PublicReview } from '../lib/reviews';
+
+interface Props { reviews: PublicReview[] }
+const { reviews } = Astro.props;
+---
+
+<div class="early-grid">
+  {reviews.map((r) => (
+    <article class="review-card" aria-label={`Review by ${r.display_name}`}>
+      {r.has_photo && (
+        <img class="review-card__photo" src={`/api/reviews/photo/${r.id}`} alt={`${r.display_name}'s TógBlocks order`} loading="lazy" />
+      )}
+      <div class="review-card__stars" aria-label={`${r.rating} out of 5 stars`}>
+        {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+      </div>
+      <blockquote>"{r.body}"</blockquote>
+      <div class="review-card__by">
+        <div>
+          <p class="review-card__name">{r.display_name}</p>
+          {r.location && <p class="review-card__loc">{r.location}</p>}
+        </div>
+      </div>
+    </article>
+  ))}
+</div>

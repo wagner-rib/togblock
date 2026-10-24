@@ -2,12 +2,14 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
+// Server secrets are read from process.env at runtime. import.meta.env would be inlined at
+// build time, and the Docker build has no .env, so it compiled to `undefined` in production.
 let pool: pg.Pool | null = null;
 
 export function getPool(): pg.Pool {
   if (!pool) {
     pool = new Pool({
-      connectionString: import.meta.env.DATABASE_URL,
+      connectionString: process.env.DATABASE_URL,
       max: 10,
       idleTimeoutMillis: 30_000,
     });

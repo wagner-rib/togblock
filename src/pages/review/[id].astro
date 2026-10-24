@@ -1,0 +1,170 @@
+---
+import Base from '../../layouts/Base.astro';
+import { query } from '../../lib/db';
+import { verifyReviewToken, detectImageMime, MAX_PHOTO_BYTES } from '../../lib/reviews';
+
+const orderId = Number(Astro.params.id);
+const token   = Astro.url.searchParams.get('t') ?? '';
+
+if (!orderId || !verifyReviewToken(orderId, token)) {
+  return new Response('This review link is not valid.', { status: 404 });
+}
+
+const orderRes = await query<{ status: string; first_name: string | null; city: string | null; product_types: string[] }>(`
+  SELECT o.status,
+         split_part(COALESCE(a.name, u.name, ''), ' ', 1) AS first_name,
+         a.city,
+         ARRAY(SELECT DISTINCT product_type FROM order_items WHERE order_id = o.id) AS product_types
+  FROM orders o
+  LEFT JOIN users u     ON u.id = o.user_id
+  LEFT JOIN addresses a ON a.id = o.address_id
+  WHERE o.id = $1
+`, [orderId]);
+
+if (!orderRes.rows.length) return new Response('This review link is not valid.', { status: 404 });
+const order = orderRes.rows[0];
+const productType = order.product_types.length === 1 ? order.product_types[0] : null;
+
+const existing = await query('SELECT 1 FROM reviews WHERE order_id = $1', [orderId]);
+let state: 'form' | 'thanks' | 'already' | 'not-yet' =
+  existing.rows.length ? 'already'
+  : ['dispatched', 'delivered'].includes(order.status) ? 'form'
+  : 'not-yet';
+
+let error = '';
+let values = { rating: '5', body: '', display_name: order.first_name ?? '', location: order.city ?? '' };
+
+if (state === 'form' && Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  values = {
+    rating:       String(form.get('rating') ?? ''),
+    body:         String(form.get('body') ?? '').trim(),
+    display_name: String(form.get('display_name') ?? '').trim(),
+    location:     String(form.get('location') ?? '').trim(),
+  };
+  const rating = Number(values.rating);
+  const photo  = form.get('photo');
+
+  let photoBuf: Buffer | null = null;
+  let photoMime: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    if (photo.size > MAX_PHOTO_BYTES) {
+      error = 'That photo is over 5 MB. Please pick a smaller one.';
+    } else {
+      photoBuf  = Buffer.from(await photo.arrayBuffer());
+      photoMime = detectImageMime(photoBuf);
+      if (!photoMime) error = 'Please upload a JPG, PNG or WebP photo.';
+    }
+  }
+
+  if (!error && !(rating >= 1 && rating <= 5)) error = 'Please choose a star rating.';
+  if (!error && values.body.length < 10)        error = 'Please write a few words about your order.';
+  if (!error && values.body.length > 2000)      error = 'Please keep your review under 2,000 characters.';
+  if (!error && !values.display_name)           error = 'Please tell us the name to show with your review.';
+
+  if (!error) {
+    await query(`
+      INSERT INTO reviews (order_id, product_type, rating, body, display_name, location, photo, photo_mime)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      ON CONFLICT DO NOTHING
+    `, [orderId, productType, rating, values.body, values.display_name.slice(0, 60),
+        values.location.slice(0, 60) || null, photoBuf, photoMime]);
+    state = 'thanks';
+  }
+}
+
+const orderRef = `#TB${String(orderId).padStart(5, '0')}`;
+---
+
+<Base title="Leave a review — TógBlocks" description="Tell us how your TógBlocks order turned out." currentPage="/review">
+  <Fragment slot="head"><meta name="robots" content="noindex, nofollow" /></Fragment>
+
+  <div class="wrap-narrow">
+    <div class="page-hero">
+      <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> Order {orderRef}</span>
+      {state === 'form'    && <h1>How did it turn out?</h1>}
+      {state === 'thanks'  && <h1>Thank you!</h1>}
+      {state === 'already' && <h1>We've got your review</h1>}
+      {state === 'not-yet' && <h1>Not quite yet</h1>}
+    </div>
+
+    {state === 'thanks' && (
+      <div class="card rv-msg">
+        <p class="lead">Your review is in. We read every one, and once we've had a look it'll appear on the site.</p>
+        <a class="btn btn--primary" href="/">Back to TógBlocks</a>
+      </div>
+    )}
+    {state === 'already' && (
+      <div class="card rv-msg">
+        <p class="lead">You've already reviewed this order. Thanks again for taking the time.</p>
+        <a class="btn btn--primary" href="/">Back to TógBlocks</a>
+      </div>
+    )}
+    {state === 'not-yet' && (
+      <div class="card rv-msg">
+        <p class="lead">This order hasn't been posted yet. Come back once it's arrived and we'd love to hear what you think.</p>
+      </div>
+    )}
+
+    {state === 'form' && (
+      <form class="card rv-form" method="post" enctype="multipart/form-data" action={`/review/${orderId}?t=${token}`}>
+        {error && <p class="field-hint is-error" role="alert">{error}</p>}
+
+        <fieldset class="field rv-stars">
+          <legend class="label">Your rating</legend>
+          <div class="rv-stars__row">
+            {[5, 4, 3, 2, 1].map((n) => (
+              <>
+                <input type="radio" id={`r${n}`} name="rating" value={n} checked={values.rating === String(n)} required />
+                <label for={`r${n}`} title={`${n} star${n > 1 ? 's' : ''}`}>★<span class="sr-only">{n} star{n > 1 ? 's' : ''}</span></label>
+              </>
+            ))}
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label class="label" for="rv-body">Your review</label>
+          <textarea class="textarea" id="rv-body" name="body" rows="5" minlength="10" maxlength="2000" required
+            placeholder="What did you order, who was it for, how did it look when it arrived?">{values.body}</textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="rv-photo">A photo of it in its new home <span class="muted">(optional, but we love these)</span></label>
+          <input class="input" id="rv-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
+          <span class="field-hint">JPG, PNG or WebP, up to 5 MB.</span>
+        </div>
+
+        <div class="rv-row">
+          <div class="field">
+            <label class="label" for="rv-name">Name to show</label>
+            <input class="input" id="rv-name" name="display_name" maxlength="60" required value={values.display_name} />
+          </div>
+          <div class="field">
+            <label class="label" for="rv-loc">Town or county <span class="muted">(optional)</span></label>
+            <input class="input" id="rv-loc" name="location" maxlength="60" value={values.location} />
+          </div>
+        </div>
+
+        <p class="field-hint">We check reviews before they go live, but we publish the critical ones too.</p>
+        <button class="btn btn--cta btn--lg" type="submit">Send review</button>
+      </form>
+    )}
+  </div>
+</Base>
+
+<style>
+.rv-msg, .rv-form { margin-bottom: clamp(48px, 8vw, 96px); }
+.rv-msg { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.rv-form { display: flex; flex-direction: column; gap: 22px; }
+.rv-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .rv-row { grid-template-columns: 1fr; } }
+
+.rv-stars { border: 0; padding: 0; margin: 0; }
+.rv-stars__row { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+.rv-stars__row input { position: absolute; opacity: 0; pointer-events: none; }
+.rv-stars__row label { font-size: 34px; line-height: 1; color: var(--line-strong); cursor: pointer; transition: color .12s; }
+.rv-stars__row input:checked ~ label,
+.rv-stars__row label:hover,
+.rv-stars__row label:hover ~ label { color: var(--orange); }
+.rv-stars__row input:focus-visible + label { outline: 2px solid var(--green); outline-offset: 2px; border-radius: 4px; }
+</style>

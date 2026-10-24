@@ -1,5 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
+import ReviewGrid from '../components/ReviewGrid.astro';
+import { getApprovedReviews } from '../lib/reviews';
+
+// FIX-03: only bring reviews back once there are at least 6 real ones with photos.
+const MIN_HOMEPAGE_REVIEWS = 6;
+// A DB hiccup must never take down the landing page — fall back to the early-days section.
+const photoReviews = await getApprovedReviews({ photosOnly: true, limit: 9 }).catch(() => []);
+const showReviews  = photoReviews.length >= MIN_HOMEPAGE_REVIEWS;
 
 const sliderCards = [
   { img: '/products/luca-letters.jpg', alt: 'Rainbow LUCA 3D brick letters', cat: 'Brick Letters', name: 'Name Letters', price: 'from €7', href: '/products/brick-letters', badge: 'Best Seller' },
@@ -217,8 +225,19 @@ const allCards = [...sliderCards, ...sliderCards];
     </div>
   </section>
 
-  <!-- ═══════════════════════════════ EARLY DAYS ═══ -->
-  <!-- Reviews section removed until there are real, photo-backed reviews (FIX-03 / FIX-06). -->
+  <!-- ═══════════════════════════════ REVIEWS / EARLY DAYS ═══ -->
+  {showReviews ? (
+  <section class="testimonials-section" aria-labelledby="reviews-heading">
+    <div class="section-label" data-reveal>
+      <span class="eyebrow">
+        <span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span>
+        Customer photos
+      </span>
+      <h2 id="reviews-heading">Straight from our customers</h2>
+    </div>
+    <ReviewGrid reviews={photoReviews} />
+  </section>
+  ) : (
   <section class="testimonials-section" aria-labelledby="early-heading">
     <div class="section-label" data-reveal>
       <span class="eyebrow">
@@ -242,6 +261,7 @@ const allCards = [...sliderCards, ...sliderCards];
       ))}
     </div>
   </section>
+  )}
 
   <!-- ════════════════════════════════════ BIG CTA ═══ -->
   <section class="cta-band-full" aria-labelledby="cta-heading">

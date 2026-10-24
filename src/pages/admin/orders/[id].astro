@@ -14,12 +14,14 @@ const flash = Astro.url.searchParams.get('flash');
 const orderRes = await query<{
   id: number; status: string; total: number; subtotal: number; shipping_cost: number;
   created_at: Date; updated_at: Date; tracking_number: string | null;
-  tracking_carrier: string | null; admin_notes: string | null;
+  tracking_carrier: string | null; admin_notes: string | null; review_requested_at: Date | null;
+  has_review: boolean;
   guest_email: string | null; stripe_pi_id: string | null;
   customer_name: string; customer_email: string | null; user_id: number | null;
 }>(`
   SELECT o.id, o.status, o.total, o.subtotal, o.shipping_cost, o.created_at, o.updated_at,
     o.tracking_number, o.tracking_carrier, o.admin_notes, o.guest_email, o.stripe_pi_id,
+    o.review_requested_at, EXISTS (SELECT 1 FROM reviews r WHERE r.order_id = o.id) AS has_review,
     COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
     COALESCE(u.email, o.guest_email)         AS customer_email,
     u.id AS user_id
@@ -85,6 +87,8 @@ const FLASH_MSGS: Record<string, { msg: string; ok: boolean }> = {
   dispatched:     { msg: '✓ Order dispatched — customer emailed.',      ok: true  },
   message_sent:   { msg: '✓ Message sent to customer.',                 ok: true  },
   notes_saved:    { msg: '✓ Notes saved.',                              ok: true  },
+  review_request_sent:       { msg: '✓ Review request emailed to customer.', ok: true  },
+  review_request_ineligible: { msg: '✗ Not sent — order must be dispatched/delivered, have an email, and not already be reviewed.', ok: false },
   error:          { msg: '✗ Something went wrong. Please try again.',   ok: false },
 };
 const flashData = flash ? FLASH_MSGS[flash] : null;
@@ -314,6 +318,29 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
               onclick={`navigator.clipboard.writeText('${order.tracking_number}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1600)})`}>
               Copy
             </button>
+          </div>
+        </div>
+      )}
+
+      <!-- Review request -->
+      {['dispatched','delivered'].includes(order.status) && (
+        <div class="adm-card section-card">
+          <div class="section-hd"><div class="section-title">⭐ Review</div></div>
+          <div class="dispatch-body">
+            {order.has_review
+              ? <p>Customer has left a review. <a href="/admin/reviews">Moderate reviews →</a></p>
+              : (
+                <form method="POST" action={`/api/admin/orders/${order.id}/review-request`}>
+                  <p style="margin-bottom:12px;color:var(--ink-60);font-size:.88rem">
+                    {order.review_requested_at
+                      ? `Review request sent ${new Date(order.review_requested_at).toLocaleDateString('en-IE')}.`
+                      : 'New orders are asked automatically 7 days after dispatch. Use this for older orders or to resend.'}
+                  </p>
+                  <button type="submit" class="adm-btn adm-btn--ghost">
+                    {order.review_requested_at ? 'Resend review request' : 'Send review request'}
+                  </button>
+                </form>
+              )}
           </div>
         </div>
       )}

@@ -14,5 +14,11 @@ export default defineConfig({
   security: {
     checkOrigin: false,
   },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // Only public marketing pages — keep account, checkout and admin out of the index (FIX-08).
+      filter: (page) =>
+        !/\/(admin|account|cart|checkout|login|orders|review|api)(\/|$)/.test(new URL(page).pathname),
+    }),
+  ],
 });

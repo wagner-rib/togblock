@@ -1,0 +1,100 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminUser } from '../../lib/adminAuth';
+import { query } from '../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+if (!admin) return Astro.redirect('/login?returnTo=/admin/reviews');
+
+const tab = (['pending', 'approved', 'rejected'] as const).find(t => t === Astro.url.searchParams.get('tab')) ?? 'pending';
+const flash = Astro.url.searchParams.get('flash');
+
+const [listRes, countRes] = await Promise.all([
+  query<{
+    id: number; order_id: number | null; product_type: string | null; rating: number; body: string;
+    display_name: string; location: string | null; has_photo: boolean; created_at: Date;
+  }>(`
+    SELECT id, order_id, product_type, rating, body, display_name, location,
+           (photo IS NOT NULL) AS has_photo, created_at
+    FROM reviews WHERE status = $1 ORDER BY created_at DESC LIMIT 200
+  `, [tab]),
+  query<{ status: string; n: string }>('SELECT status, COUNT(*) AS n FROM reviews GROUP BY status'),
+]);
+const counts = Object.fromEntries(countRes.rows.map(r => [r.status, Number(r.n)]));
+const PRODUCT_LABELS: Record<string, string> = { letters: 'Brick Letters', 'door-sign': 'Door Sign' };
+---
+
+<AdminLayout title="Reviews" currentPage="reviews" admin={admin}>
+  {flash && <div class="adm-flash adm-flash--ok">✓ Review {flash}.</div>}
+
+  <p class="rv-note">
+    Reviews only appear on the site once approved. The homepage switches from the "Early days" section to
+    reviews once 6 approved reviews with photos exist; product pages show approved reviews for that product.
+    Publish critical reviews too — only reject spam, abuse or anything not about a real order.
+  </p>
+
+  <div class="rv-tabs">
+    {(['pending', 'approved', 'rejected'] as const).map(t => (
+      <a href={`/admin/reviews?tab=${t}`} class={t === tab ? 'active' : ''}>
+        {t[0].toUpperCase() + t.slice(1)} <span>{counts[t] ?? 0}</span>
+      </a>
+    ))}
+  </div>
+
+  {listRes.rows.length === 0 && <div class="adm-card rv-empty">No {tab} reviews.</div>}
+
+  <div class="rv-list">
+    {listRes.rows.map(r => (
+      <div class="adm-card rv-item">
+        {r.has_photo && (
+          <a href={`/api/reviews/photo/${r.id}`} target="_blank" rel="noopener">
+            <img src={`/api/reviews/photo/${r.id}`} alt="" class="rv-photo" loading="lazy" />
+          </a>
+        )}
+        <div class="rv-main">
+          <div class="rv-meta">
+            <span class="rv-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+            <strong>{r.display_name}</strong>{r.location && <span> · {r.location}</span>}
+            {r.product_type && <span> · {PRODUCT_LABELS[r.product_type] ?? r.product_type}</span>}
+            {r.order_id && <a href={`/admin/orders/${r.order_id}`}> · Order #TB{String(r.order_id).padStart(5, '0')}</a>}
+            <span class="rv-date"> · {new Date(r.created_at).toLocaleDateString('en-IE')}</span>
+          </div>
+          <p class="rv-body">{r.body}</p>
+          <div class="rv-actions">
+            {tab !== 'approved' && (
+              <form method="POST" action={`/api/admin/reviews/${r.id}`}>
+                <input type="hidden" name="status" value="approved" />
+                <button class="adm-btn adm-btn--green adm-btn--sm" type="submit">Approve</button>
+              </form>
+            )}
+            {tab !== 'rejected' && (
+              <form method="POST" action={`/api/admin/reviews/${r.id}`}>
+                <input type="hidden" name="status" value="rejected" />
+                <button class="adm-btn adm-btn--ghost adm-btn--sm" type="submit">Reject</button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</AdminLayout>
+
+<style>
+.rv-note { color: var(--ink-60); font-size: .88rem; max-width: 70ch; margin-bottom: 18px; }
+.rv-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.rv-tabs a { padding: 7px 14px; border-radius: 999px; border: 1.5px solid #e5e7eb; text-decoration: none; color: inherit; font-weight: 600; font-size: .88rem; }
+.rv-tabs a.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.rv-tabs span { opacity: .7; margin-left: 4px; }
+.rv-empty { padding: 28px; text-align: center; color: var(--ink-60); }
+.rv-list { display: flex; flex-direction: column; gap: 12px; }
+.rv-item { display: flex; gap: 18px; padding: 18px; align-items: flex-start; }
+.rv-photo { width: 120px; height: 120px; object-fit: cover; border-radius: 10px; display: block; }
+.rv-main { flex: 1; min-width: 0; }
+.rv-meta { font-size: .86rem; color: var(--ink-60); }
+.rv-meta strong { color: var(--ink); }
+.rv-stars { color: #f59e0b; letter-spacing: 1px; margin-right: 8px; }
+.rv-body { margin: 8px 0 12px; white-space: pre-line; }
+.rv-actions { display: flex; gap: 8px; }
+@media (max-width: 600px) { .rv-item { flex-direction: column; } }
+</style>

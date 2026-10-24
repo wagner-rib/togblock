@@ -27,6 +27,13 @@ interface Props {
 const { title, description, currentPage = '/', ogImage = '/og.png' } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
+// FIX-05: tracking IDs come from the runtime env (.env → container). Unset = no tracking, no banner.
+const rawPixel = process.env.META_PIXEL_ID ?? '';
+const rawGa4   = process.env.GA4_MEASUREMENT_ID ?? '';
+const META_PIXEL_ID = /^\d{5,20}$/.test(rawPixel) ? rawPixel : '';
+const GA4_ID        = /^G-[A-Z0-9]{4,15}$/.test(rawGa4) ? rawGa4 : '';
+const trackingEnabled = Boolean(META_PIXEL_ID || GA4_ID);
+
 const token = getTokenFromRequest(Astro.request);
 const user  = token ? await getSession(token) : null;
 
@@ -81,32 +88,118 @@ const navItems = [
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://togblocks.ie/#organization",
+        "@id": "https://togblocks.com/#organization",
         "name": "TógBlocks",
-        "url": "https://togblocks.ie",
+        "url": "https://togblocks.com",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://togblocks.ie/logo.svg"
+          "url": "https://togblocks.com/logo.svg"
         },
         "description": "Personalised 3D brick name letters and door signs, 3D printed in Ireland. Compatible with LEGO®.",
         "address": {
           "@type": "PostalAddress",
           "addressCountry": "IE"
         },
-        "sameAs": []
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "email": "togblocks@outlook.com",
+          "availableLanguage": ["en", "ga"]
+        }
       },
       {
         "@type": "WebSite",
-        "@id": "https://togblocks.ie/#website",
-        "url": "https://togblocks.ie",
+        "@id": "https://togblocks.com/#website",
+        "url": "https://togblocks.com",
         "name": "TógBlocks",
-        "publisher": { "@id": "https://togblocks.ie/#organization" }
+        "publisher": { "@id": "https://togblocks.com/#organization" }
       }
     ]
   })} />
 
   <!-- Page-specific head content (JSON-LD, etc.) -->
   <slot name="head" />
+
+  <!-- Analytics + consent (FIX-05). Nothing loads until the visitor accepts. -->
+  <script is:inline define:vars={{ META_PIXEL_ID, GA4_ID }}>
+    (function () {
+      var KEY = 'tb_consent', queue = [], loaded = false;
+      var enabled = !!(META_PIXEL_ID || GA4_ID);
+      var GA_NAMES = { ViewContent: 'view_item', AddToCart: 'add_to_cart', InitiateCheckout: 'begin_checkout', Purchase: 'purchase' };
+
+      function getConsent() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+      function setConsent(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+
+      function load() {
+        if (loaded) return; loaded = true;
+        if (META_PIXEL_ID) {
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+          document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', META_PIXEL_ID);
+          fbq('track', 'PageView');
+        }
+        if (GA4_ID) {
+          var g = document.createElement('script');
+          g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
+          document.head.appendChild(g);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () { dataLayer.push(arguments); };
+          gtag('js', new Date());
+          gtag('config', GA4_ID);
+        }
+        queue.splice(0).forEach(function (e) { send(e[0], e[1]); });
+      }
+
+      function send(name, d) {
+        var currency = d.currency || 'EUR';
+        var items = d.items || (d.id ? [{ id: d.id, name: d.name, price: d.value, quantity: 1 }] : []);
+        if (window.fbq) {
+          var fb = {
+            value: d.value, currency: currency, content_type: 'product',
+            content_ids: items.map(function (i) { return i.id; }),
+            contents: items.map(function (i) { return { id: i.id, quantity: i.quantity }; }),
+            num_items: items.reduce(function (n, i) { return n + i.quantity; }, 0)
+          };
+          if (d.name) fb.content_name = d.name;
+          fbq('track', name, fb, d.transactionId ? { eventID: 'order-' + d.transactionId } : undefined);
+        }
+        if (window.gtag) {
+          var ga = {
+            currency: currency, value: d.value,
+            items: items.map(function (i) { return { item_id: i.id, item_name: i.name, price: i.price, quantity: i.quantity }; })
+          };
+          if (d.transactionId) ga.transaction_id = String(d.transactionId);
+          gtag('event', GA_NAMES[name], ga);
+        }
+      }
+
+      window.tbTrack = function (name, data) {
+        if (!enabled) return;
+        var c = getConsent();
+        if (c === 'granted') { loaded ? send(name, data) : queue.push([name, data]); }
+        else if (c !== 'denied') queue.push([name, data]);
+      };
+
+      window.tbConsent = function (choice) {
+        setConsent(choice);
+        var b = document.getElementById('tb-consent');
+        if (b) b.hidden = true;
+        if (choice === 'granted') load(); else queue.length = 0;
+      };
+
+      window.tbShowConsent = function () {
+        var b = document.getElementById('tb-consent');
+        if (b) b.hidden = false;
+      };
+
+      if (!enabled) return;
+      if (getConsent() === 'granted') load();
+      else if (!getConsent()) document.addEventListener('DOMContentLoaded', window.tbShowConsent);
+    })();
+  </script>
 
   <!-- Stripe.js — loaded globally so Payment Element mounts fast -->
   <script src="https://js.stripe.com/v3/" is:inline></script>
@@ -266,6 +359,7 @@ const navItems = [
             <li><a href="/about">Our story</a></li>
             <li><a href="/faq">FAQ</a></li>
             <li><a href="/faq#shipping">Shipping</a></li>
+            {trackingEnabled && <li><button type="button" class="footer-link-btn" onclick="tbShowConsent()">Cookie settings</button></li>}
           </ul>
         </div>
         <div>
@@ -288,6 +382,19 @@ const navItems = [
       </div>
     </div>
   </footer>
+
+  {trackingEnabled && (
+    <div class="consent" id="tb-consent" role="dialog" aria-live="polite" aria-label="Cookie preferences" hidden>
+      <p>
+        We'd like to use analytics and advertising cookies (Google Analytics, Meta) to see which ads
+        bring people here and improve the shop. Nothing is set unless you say yes.
+      </p>
+      <div class="consent__actions">
+        <button type="button" class="btn btn--ghost btn--sm" onclick="tbConsent('denied')">Reject</button>
+        <button type="button" class="btn btn--primary btn--sm" onclick="tbConsent('granted')">Accept</button>
+      </div>
+    </div>
+  )}
 
   <script>
     import '../scripts/site.ts';
@@ -350,5 +457,33 @@ const navItems = [
 @media (max-width: 600px) {
   .nav-signin-btn span:last-child { display: none; }
 }
+
+/* ── COOKIE CONSENT (FIX-05) ──────────────────────────────── */
+.consent {
+  position: fixed;
+  left: 16px; right: 16px; bottom: 16px;
+  z-index: 1000;
+  max-width: 560px;
+  margin-inline: auto;
+  background: var(--white);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: var(--fs-sm);
+}
+.consent[hidden] { display: none; }
+.consent__actions { display: flex; gap: 10px; justify-content: flex-end; }
+.consent__actions .btn { flex: 1; justify-content: center; }
+
+.footer-link-btn {
+  background: none; border: 0; padding: 0;
+  font: inherit; color: var(--offwhite); opacity: .82; cursor: pointer; text-align: left;
+}
+.footer-link-btn:hover { opacity: 1; text-decoration: underline; }
 </style>
 </html>

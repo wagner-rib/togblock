@@ -6,7 +6,7 @@ const GOOGLE_USER_URL  = 'https://www.googleapis.com/oauth2/v3/userinfo';
 
 export function getAuthorizationUrl(state: string, redirectUri: string): string {
   const params = new URLSearchParams({
-    client_id:     import.meta.env.GOOGLE_CLIENT_ID,
+    client_id:     process.env.GOOGLE_CLIENT_ID!,
     redirect_uri:  redirectUri,
     response_type: 'code',
     scope:         'openid email profile',
@@ -23,8 +23,8 @@ export async function exchangeCode(code: string, redirectUri: string) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id:     import.meta.env.GOOGLE_CLIENT_ID,
-      client_secret: import.meta.env.GOOGLE_CLIENT_SECRET,
+      client_id:     process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       redirect_uri:  redirectUri,
       grant_type:    'authorization_code',
     }),

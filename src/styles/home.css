@@ -782,6 +782,14 @@
 
 .early-grid .review-card { width: min(320px, 100%); }
 
+.review-card__photo {
+  width: calc(100% + 56px);
+  margin: -28px -28px 0;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
 /* ── BIG CTA BAND ───────────────────────────────────────────── */
 .cta-band-full {
   padding-block: clamp(72px, 10vw, 128px);
