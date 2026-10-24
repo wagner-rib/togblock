@@ -23,11 +23,13 @@
     "oslo": "^1.2.1",
     "pg": "^8.21.0",
     "resend": "^6.12.4",
-    "stripe": "^22.2.0"
+    "stripe": "^22.2.0",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@types/pg": "^8.20.0",
+    "@types/three": "^0.170.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.0",

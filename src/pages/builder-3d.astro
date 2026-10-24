@@ -1,0 +1,131 @@
+---
+// Review page for the 3D preview while it is built (3D-FIX-02..08).
+// Not linked, not indexed, not in the sitemap. Removed when /builder swaps over.
+import '@fontsource/nunito/600.css';
+import '@fontsource/baloo-2/700.css';
+import '../styles/tokens.css';
+import { THEMES, COLOURS } from '../builder/themes';
+
+const themes = Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label, swatch: t.swatch }));
+const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>3D Builder Preview — TógBlocks</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <main class="p3">
+    <header class="p3-head">
+      <h1>3D preview <span class="p3-tag">review build</span></h1>
+      <p>Lighting and material rig with one real letter from the print files. Drag to rotate.</p>
+    </header>
+
+    <div class="p3-stage">
+      <canvas id="p3-canvas" aria-label="3D preview of your letters"></canvas>
+      <div class="p3-views" role="group" aria-label="View">
+        <button type="button" data-view="hero" aria-pressed="true">Hero</button>
+        <button type="button" data-view="top" aria-pressed="false">Top</button>
+        <button type="button" data-view="side" aria-pressed="false">Side</button>
+      </div>
+    </div>
+
+    <div class="p3-controls">
+      <label class="p3-field">
+        <span>Name</span>
+        <input id="p3-name" type="text" value="EMMA" maxlength="12" autocomplete="off" spellcheck="false" />
+      </label>
+      <div class="p3-field">
+        <span>Theme</span>
+        <div class="p3-row" id="p3-themes">
+          {themes.map((t) => (
+            <button type="button" data-theme={t.id} aria-pressed={t.id === 'rainbow' ? 'true' : 'false'}>
+              <i class="p3-sw">{t.swatch.slice(0, 4).map((c) => <b style={`background:${c}`}></b>)}</i>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="p3-field">
+        <span>One-colour pick</span>
+        <div class="p3-row" id="p3-colours">
+          {colours.map((c) => (
+            <button type="button" class="p3-dot" data-hex={c.hex} title={c.label} aria-label={c.label}
+                    style={`background:${c.hex}`}></button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    body { margin: 0; background: var(--offwhite); color: var(--ink); font-family: var(--font-body); }
+    .p3 { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+    .p3-head h1 { font-family: var(--font-display); margin: 0; font-size: 1.8rem; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .p3-head p { margin: 4px 0 0; color: var(--ink-60); }
+    .p3-tag { font: 600 .75rem var(--font-body); letter-spacing: .06em; text-transform: uppercase; background: var(--orange-soft); padding: 3px 8px; border-radius: 999px; }
+    .p3-stage {
+      position: relative; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden;
+      background: radial-gradient(ellipse at 50% 110%, rgba(26,40,71,.10) 0%, transparent 55%),
+                  linear-gradient(180deg, #faf7ec 0%, #e9e4d4 100%);
+      box-shadow: 0 4px 14px rgba(26,40,71,.08), 0 10px 24px rgba(26,40,71,.06);
+    }
+    #p3-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; }
+    #p3-canvas:active { cursor: grabbing; }
+    .p3-views { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,.85); border-radius: 10px; }
+    .p3-controls { display: flex; flex-direction: column; gap: 16px; }
+    .p3-field { display: flex; flex-direction: column; gap: 8px; }
+    .p3-field > span { font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-60); }
+    .p3-field input { font: 700 1.4rem var(--font-display); text-transform: uppercase; padding: 8px 14px; border: 2px solid var(--line-strong); border-radius: 12px; max-width: 320px; }
+    .p3-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { font: 600 .9rem var(--font-body); border: 2px solid var(--line-strong); background: var(--white); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+    button[aria-pressed="true"] { border-color: var(--green); background: var(--green-soft); }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+    .p3-views button { border: 0; border-radius: 7px; }
+    .p3-sw { display: inline-flex; gap: 2px; }
+    .p3-sw b { width: 6px; height: 14px; border-radius: 2px; }
+    .p3-dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
+  </style>
+
+  <script>
+    import { BuilderPreview, type ViewMode } from '../builder/BuilderPreview';
+
+    const canvas = document.getElementById('p3-canvas') as HTMLCanvasElement;
+    const input = document.getElementById('p3-name') as HTMLInputElement;
+    const preview = new BuilderPreview(canvas, {
+      name: input.value,
+      size: 'standard',
+      theme: 'rainbow',
+      oneColour: '#169B62',
+      letterColours: {},
+      viewMode: 'hero',
+    });
+
+    const pressGroup = (sel: string, active: Element) =>
+      document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === active)));
+
+    input.addEventListener('input', () => preview.setProps({ name: input.value }));
+    document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
+      b.addEventListener('click', () => {
+        pressGroup('[data-view]', b);
+        preview.setProps({ viewMode: b.dataset.view as ViewMode });
+      }));
+    document.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((b) =>
+      b.addEventListener('click', () => {
+        pressGroup('[data-theme]', b);
+        preview.setProps({ theme: b.dataset.theme!, letterColours: {} });
+      }));
+    document.querySelectorAll<HTMLButtonElement>('[data-hex]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const one = document.querySelector('[data-theme="one"]')!;
+        pressGroup('[data-theme]', one);
+        preview.setProps({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} });
+      }));
+  </script>
+</body>
+</html>

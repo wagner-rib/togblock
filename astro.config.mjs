@@ -18,7 +18,7 @@ export default defineConfig({
     sitemap({
       // Only public marketing pages — keep account, checkout and admin out of the index (FIX-08).
       filter: (page) =>
-        !/\/(admin|account|cart|checkout|login|orders|review|api)(\/|$)/.test(new URL(page).pathname),
+        !/\/(admin|account|cart|checkout|login|orders|review|api|builder-3d)(\/|$)/.test(new URL(page).pathname),
     }),
   ],
 });

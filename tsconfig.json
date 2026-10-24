@@ -4,9 +4,21 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@builder/*": ["src/builder/*"],
-      "@scripts/*": ["src/scripts/*"],
-      "@styles/*": ["src/styles/*"]
+      "@builder/*": [
+        "src/builder/*"
+      ],
+      "@scripts/*": [
+        "src/scripts/*"
+      ],
+      "@styles/*": [
+        "src/styles/*"
+      ]
     }
-  }
+  },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "tools",
+    "public/draco"
+  ]
 }
