@@ -129,9 +129,11 @@ import '@fontsource/russo-one/400.css'; // 3D preview's loading skeleton uses th
   overflow: hidden;
 }
 
-/* strip the builder's own card chrome — we provide it via .bn-card */
-.bn-card .builder,
-.bn-card .sign-builder {
+/* strip the builder's own card chrome — we provide it via .bn-card.
+   :global because the builders render their markup from JS, so Astro's scoped
+   selector never matched and a second rounded frame showed inside the card. */
+.bn-card :global(.builder),
+.bn-card :global(.sign-builder) {
   border: none;
   border-radius: 0;
   box-shadow: none;
