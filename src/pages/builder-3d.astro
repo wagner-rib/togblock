@@ -37,7 +37,20 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         <button type="button" data-view="top" aria-pressed="true">Top</button>
         <button type="button" data-view="side" aria-pressed="false">Side</button>
       </div>
+      <div class="p3-pop" id="p3-pop" role="dialog" aria-labelledby="p3-pop-title" hidden>
+        <div class="p3-pop-head">
+          <span id="p3-pop-title">Letter colour</span>
+          <button type="button" class="p3-pop-close" id="p3-pop-close" aria-label="Close">×</button>
+        </div>
+        <div class="p3-pop-grid">
+          {colours.map((c) => (
+            <button type="button" class="p3-dot" data-pick={c.hex} title={c.label} aria-label={c.label}
+                    aria-pressed="false" style={`background:${c.hex}`}></button>
+          ))}
+        </div>
+      </div>
     </div>
+    <p class="p3-hint">Tap a letter to change just its colour.</p>
 
     <div class="p3-controls">
       <label class="p3-field">
@@ -48,6 +61,13 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         <span>Try</span>
         <div class="p3-row">
           {['EMMA', 'THOMAS', 'CHARLIE', 'ALEXANDER', 'Q8'].map((n) => <button type="button" data-sample={n}>{n}</button>)}
+        </div>
+      </div>
+      <div class="p3-field">
+        <span>Share</span>
+        <div class="p3-row">
+          <button type="button" id="p3-copy">Copy link to this design</button>
+          <span class="p3-copied" id="p3-copied" aria-live="polite"></span>
         </div>
       </div>
       <div class="p3-field">
@@ -102,29 +122,99 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     .p3-sw b { width: 6px; height: 14px; border-radius: 2px; }
     .p3-dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
     .p3-dot[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--white) inset; }
+    .p3-hint { margin: -10px 0 0; font-size: var(--fs-xs); color: var(--ink-60); }
+    .p3-copied { font-size: var(--fs-xs); color: var(--ink-60); align-self: center; }
+    .p3-pop {
+      position: absolute; z-index: 5; width: 212px; padding: 10px; display: flex; flex-direction: column; gap: 8px;
+      background: var(--white); border-radius: 14px; box-shadow: 0 10px 32px rgba(26,40,71,.18), 0 2px 6px rgba(26,40,71,.08);
+    }
+    .p3-pop[hidden] { display: none; }
+    .p3-pop-head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-60); }
+    .p3-pop-close { border: 0; padding: 0 6px; font-size: 1.2rem; line-height: 1; background: none; }
+    .p3-pop-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; justify-items: center; }
   </style>
 
   <script>
     import { BuilderPreview, previewChars, type ViewMode } from '../builder/BuilderPreview';
+    import { encodeState, decodeState, type PreviewState } from '../builder/previewState';
+    import { COLOURS } from '../builder/themes';
 
-    const canvas = document.getElementById('p3-canvas') as HTMLCanvasElement;
-    const input = document.getElementById('p3-name') as HTMLInputElement;
+    const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    const canvas = $<HTMLCanvasElement>('p3-canvas');
+    const input = $<HTMLInputElement>('p3-name');
+    const pop = $('p3-pop');
+    const popTitle = $('p3-pop-title');
+
+    const DEFAULTS: PreviewState = { name: 'EMMA', theme: 'one', oneColour: COLOURS.green.hex, letterColours: {} };
+    let state = decodeState(location.hash, DEFAULTS);
+    let popIndex = -1;
+
+    const pressGroup = (sel: string, active: Element | null) =>
+      document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === active)));
+    const sameHex = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
     const preview = new BuilderPreview(canvas, {
-      name: input.value,
+      ...state,
       size: 'standard',
-      theme: 'one',
-      oneColour: document.querySelector<HTMLElement>('.p3-dot[aria-pressed="true"]')!.dataset.hex!,
-      letterColours: {},
       viewMode: 'top',
+      onLetterClick: (i, x, y) => (i < 0 ? closePop() : openPop(i, x, y)),
     });
 
-    const pressGroup = (sel: string, active: Element) =>
-      document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === active)));
+    /** Apply a state change to the preview, the controls and the URL hash. */
+    function update(next: Partial<PreviewState>): void {
+      state = { ...state, ...next };
+      preview.setProps(next);
+      syncControls();
+      history.replaceState(null, '', encodeState(state));
+    }
 
+    function syncControls(): void {
+      if (input.value !== state.name) input.value = state.name;
+      pressGroup('[data-theme]', document.querySelector(`[data-theme="${state.theme}"]`));
+      pressGroup('[data-hex]', state.theme === 'one'
+        ? [...document.querySelectorAll<HTMLElement>('[data-hex]')].find((b) => sameHex(b.dataset.hex!, state.oneColour)) ?? null
+        : null);
+      if (popIndex >= 0) markPopColour();
+    }
+
+    // ── Per-letter colour popover ──
+    function openPop(i: number, x: number, y: number): void {
+      popIndex = i;
+      popTitle.textContent = `Letter ${i + 1} · ${state.name[i]}`;
+      markPopColour();
+      pop.hidden = false;
+      const stage = canvas.getBoundingClientRect();
+      const w = pop.offsetWidth, h = pop.offsetHeight;
+      const left = Math.min(Math.max(8, x - w / 2), stage.width - w - 8);
+      const top = y + 16 + h < stage.height ? y + 16 : Math.max(8, y - h - 16);
+      pop.style.left = `${left}px`;
+      pop.style.top = `${top}px`;
+      pop.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
+    }
+    function closePop(): void {
+      popIndex = -1;
+      pop.hidden = true;
+    }
+    function markPopColour(): void {
+      const hex = preview.letterHex(popIndex);
+      pop.querySelectorAll<HTMLElement>('[data-pick]').forEach((b) =>
+        b.setAttribute('aria-pressed', String(sameHex(b.dataset.pick!, hex))));
+    }
+    pop.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach((b) =>
+      b.addEventListener('click', () => {
+        if (popIndex < 0) return;
+        update({ letterColours: { ...state.letterColours, [popIndex]: b.dataset.pick! } });
+      }));
+    $('p3-pop-close').addEventListener('click', closePop);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+    document.addEventListener('pointerdown', (e) => {
+      if (!pop.hidden && !pop.contains(e.target as Node) && e.target !== canvas) closePop();
+    });
+
+    // ── Controls ──
     const setName = (v: string) => {
-      const clean = previewChars(v).join('');
-      if (input.value !== clean) input.value = clean;
-      preview.setProps({ name: clean, letterColours: {} });
+      closePop();
+      update({ name: previewChars(v).join(''), letterColours: {} });
     };
     input.addEventListener('input', () => setName(input.value));
     document.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
@@ -132,20 +222,33 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
       b.addEventListener('click', () => {
         pressGroup('[data-view]', b);
+        closePop();
         preview.setProps({ viewMode: b.dataset.view as ViewMode });
       }));
     document.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((b) =>
-      b.addEventListener('click', () => {
-        pressGroup('[data-theme]', b);
-        preview.setProps({ theme: b.dataset.theme!, letterColours: {} });
-      }));
+      b.addEventListener('click', () => update({ theme: b.dataset.theme!, letterColours: {} })));
     document.querySelectorAll<HTMLButtonElement>('[data-hex]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const one = document.querySelector('[data-theme="one"]')!;
-        pressGroup('[data-theme]', one);
-        pressGroup('[data-hex]', b);
-        preview.setProps({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} });
-      }));
+      b.addEventListener('click', () => update({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} })));
+
+    const copied = $('p3-copied');
+    $('p3-copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copied.textContent = 'Link copied';
+      } catch {
+        copied.textContent = location.href;
+      }
+    });
+
+    // A pasted link (or back/forward) rebuilds the exact design
+    window.addEventListener('hashchange', () => {
+      closePop();
+      const next = decodeState(location.hash, DEFAULTS);
+      state = next;
+      preview.setProps(next);
+      syncControls();
+    });
+    syncControls();
   </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout).
+/* Three.js preview of the printed letters (3D-FIX-02 scene, 3D-FIX-03 layout, 3D-FIX-04 picking).
  *
  * Loads the Draco GLBs produced by tools/export_glb.py from /models/. They are
  * in the STL frame (mm, Z-up, studs on +Z) and ship without normals, so each
@@ -23,6 +23,7 @@ export interface BuilderPreviewProps {
   oneColour: string;                     // hex, used by the 'one' theme
   letterColours: Record<number, string>; // per-index hex overrides
   viewMode: ViewMode;
+  /** Tap on the preview: letter index (-1 = missed every letter), canvas-relative CSS px. */
   onLetterClick?: (index: number, x: number, y: number) => void;
 }
 
@@ -47,6 +48,7 @@ const DRAG_SPEED = 0.008;    // radians per px
 const LETTER_GAP = 10;       // mm between letters, as on a shelf
 const MAX_LETTERS = 12;      // same limit and charset as NameBuilder
 const CAMERA_TWEEN_MS = 300;
+const TAP_SLOP_PX = 6;       // pointer travel below this is a tap, not a drag
 const FRAME_MARGIN = 1.08;  // name fills ~92% of the tighter screen axis
 const SHADOW_MIN_HALF = 400; // mm; shadow frustum grows past this for long names
 
@@ -78,7 +80,8 @@ export class BuilderPreview {
   private swaying: boolean;
   private visible = true;
   private frameQueued = false;
-  private drag: { id: number; startX: number; startRot: number } | null = null;
+  private drag: { id: number; startX: number; startY: number; startRot: number; moved: boolean } | null = null;
+  private raycaster = new THREE.Raycaster();
   private resizeObs: ResizeObserver;
   private visObs: IntersectionObserver;
 
@@ -138,6 +141,11 @@ export class BuilderPreview {
     } else if (next.viewMode && next.viewMode !== prev.viewMode) {
       this.frameCamera(true);
       this.requestRender();
+    } else if (next.letterColours && Object.keys(next).length === 1) {
+      // Single-letter recolour: only touch letters whose colour actually changed
+      const changed = new Set([...Object.keys(prev.letterColours), ...Object.keys(next.letterColours)]
+        .map(Number).filter((i) => prev.letterColours[i] !== next.letterColours![i]));
+      this.applyColours(changed);
     } else {
       this.applyColours();
     }
@@ -248,11 +256,17 @@ export class BuilderPreview {
     this.keyLight.shadow.camera.updateProjectionMatrix();
   }
 
-  private applyColours(): void {
+  /** Colour of letter i: per-letter override, else the theme's colour for that position. */
+  letterHex(i: number): string {
     const { theme, oneColour, letterColours } = this.props;
+    return letterColours[i] ?? themeColor(theme, i, oneColour);
+  }
+
+  private applyColours(only?: Set<number>): void {
     for (const letter of this.nameGroup.children) {
       const i = letter.userData.letterIndex as number;
-      const hex = letterColours[i] ?? themeColor(theme, i, oneColour);
+      if (only && !only.has(i)) continue;
+      const hex = this.letterHex(i);
       letter.traverse((o) => {
         if (o instanceof THREE.Mesh) (o.material as THREE.MeshStandardMaterial).color.set(hex);
       });
@@ -349,17 +363,38 @@ export class BuilderPreview {
 
   private onPointerDown = (e: PointerEvent): void => {
     this.swaying = false;
-    this.drag = { id: e.pointerId, startX: e.clientX, startRot: this.rotation };
+    this.drag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, startRot: this.rotation, moved: false };
     this.canvas.setPointerCapture(e.pointerId);
   };
 
   private onPointerMove = (e: PointerEvent): void => {
     if (!this.drag || e.pointerId !== this.drag.id) return;
-    this.rotation = this.drag.startRot + (e.clientX - this.drag.startX) * DRAG_SPEED;
+    const dx = e.clientX - this.drag.startX;
+    if (!this.drag.moved && Math.hypot(dx, e.clientY - this.drag.startY) < TAP_SLOP_PX) return;
+    this.drag.moved = true;
+    this.rotation = this.drag.startRot + dx * DRAG_SPEED;
     this.requestRender();
   };
 
   private onPointerUp = (e: PointerEvent): void => {
-    if (this.drag?.id === e.pointerId) this.drag = null;
+    if (this.drag?.id !== e.pointerId) return;
+    const tapped = !this.drag.moved && e.type === 'pointerup';
+    this.drag = null;
+    if (tapped) this.pick(e);
   };
+
+  /** Raycast a tap into the name and report which letter (index) was hit. */
+  private pick(e: PointerEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ndc = new THREE.Vector2((x / rect.width) * 2 - 1, -(y / rect.height) * 2 + 1);
+    this.nameGroup.rotation.z = this.rotation;
+    this.nameGroup.updateMatrixWorld();
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.intersectObjects(this.nameGroup.children, true)[0];
+    let obj: THREE.Object3D | null = hit?.object ?? null;
+    while (obj && obj.userData.letterIndex === undefined) obj = obj.parent;
+    this.props.onLetterClick?.(obj ? (obj.userData.letterIndex as number) : -1, x, y);
+  }
 }
