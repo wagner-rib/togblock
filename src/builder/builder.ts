@@ -277,6 +277,7 @@ export class NameBuilder {
         this.state.addons[key] = !this.state.addons[key];
         card.setAttribute('aria-pressed', String(this.state.addons[key]));
         this.updatePrice();
+        if (key === 'dots') this.preview?.setProps({ dots: this.state.addons.dots }); // pops the pieces on/off in 3D
       });
     });
 
@@ -624,6 +625,7 @@ export class NameBuilder {
       theme: this.state.theme,
       oneColour: this.state.oneColor,
       letterColours: { ...this.state.overrides },
+      dots: this.state.addons.dots,
     };
   }
 
