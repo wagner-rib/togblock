@@ -118,7 +118,22 @@ const navItems = [
   <!-- Page-specific head content (JSON-LD, etc.) -->
   <slot name="head" />
 
-  <!-- Analytics + consent (FIX-05). Nothing loads until the visitor accepts. -->
+  <!-- Google tag with Consent Mode v2: everything starts denied (no cookies, no ad data) and only
+       switches to granted when the visitor accepts below, or already accepted on an earlier visit. -->
+  {GA4_ID && <script is:inline define:vars={{ GA4_ID }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    var granted = false;
+    try { granted = localStorage.getItem('tb_consent') === 'granted'; } catch (e) {}
+    var state = granted ? 'granted' : 'denied';
+    gtag('consent', 'default', { ad_storage: state, analytics_storage: state, ad_user_data: state, ad_personalization: state });
+    gtag('js', new Date());
+    gtag('config', GA4_ID);
+  </script>}
+  {GA4_ID && <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}></script>}
+
+  <!-- Meta Pixel + consent (FIX-05). The pixel loads only after the visitor accepts. -->
   <script is:inline define:vars={{ META_PIXEL_ID, GA4_ID }}>
     (function () {
       var KEY = 'tb_consent', queue = [], loaded = false;
@@ -145,14 +160,8 @@ const navItems = [
           fbq('init', META_PIXEL_ID);
           fbq('track', 'PageView');
         }
-        if (GA4_ID) {
-          var g = document.createElement('script');
-          g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
-          document.head.appendChild(g);
-          window.dataLayer = window.dataLayer || [];
-          window.gtag = function () { dataLayer.push(arguments); };
-          gtag('js', new Date());
-          gtag('config', GA4_ID);
+        if (GA4_ID && window.gtag) {
+          gtag('consent', 'update', { ad_storage: 'granted', analytics_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted' });
         }
         queue.splice(0).forEach(function (e) { send(e[0], e[1]); });
       }
@@ -204,8 +213,6 @@ const navItems = [
       else if (!getConsent()) document.addEventListener('DOMContentLoaded', window.tbShowConsent);
     })();
   </script>
-
-  <!-- Stripe.js — loaded globally so Payment Element mounts fast -->
 
   <!-- Vibe init: apply saved theme before first paint to avoid flash -->
   <script is:inline>
@@ -388,7 +395,7 @@ const navItems = [
     <div class="consent" id="tb-consent" role="dialog" aria-live="polite" aria-label="Cookie preferences" hidden>
       <p>
         We'd like to use analytics and advertising cookies (Google Analytics, Meta) to see which ads
-        bring people here and improve the shop. Nothing is set unless you say yes.
+        bring people here and improve the shop. No tracking cookies are set unless you say yes.
         <a href="/privacy#cookies">Privacy Policy</a>
       </p>
       <div class="consent__actions">
