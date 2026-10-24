@@ -80,6 +80,13 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
         </div>
       </div>
       <div class="p3-field">
+        <span>Order</span>
+        <div class="p3-row">
+          <button type="button" id="p3-add" class="p3-add">Add to basket</button>
+          <span class="p3-copied" id="p3-added" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="p3-field">
         <span>Share</span>
         <div class="p3-row">
           <button type="button" id="p3-copy">Copy link to this design</button>
@@ -148,6 +155,9 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     .p3-dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
     .p3-dot[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--white) inset; }
     .p3-hint { margin: -10px 0 0; font-size: var(--fs-xs); color: var(--ink-60); }
+    .p3-add { background: var(--green); border-color: var(--green); color: var(--white); }
+    .p3-add:disabled { opacity: .6; cursor: progress; }
+    .p3-copied a { color: var(--green); font-weight: 600; }
     .p3-copied { font-size: var(--fs-xs); color: var(--ink-60); align-self: center; }
     .p3-pop {
       position: absolute; z-index: 5; width: 212px; padding: 10px; display: flex; flex-direction: column; gap: 8px;
@@ -162,7 +172,9 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
   <script>
     import type { BuilderPreview, ViewMode } from '../builder/BuilderPreview';
     import { encodeState, decodeState, previewChars, type PreviewState } from '../builder/previewState';
-    import { COLOURS } from '../builder/themes';
+    import { COLOURS, THEMES, priceLetters, SIZE_LABELS, SIZE_MM, SIZE_CELL_PX } from '../builder/themes';
+    import { countFilledCells } from '../builder/brickfont';
+    import { addToCart } from '../builder/cart';
 
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
     const canvas = $<HTMLCanvasElement>('p3-canvas');
@@ -186,6 +198,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     // three.js (~150 KB gzipped) loads only once the page is up and idle, so typing,
     // scrolling and first paint never wait on WebGL. Controls work meanwhile; the
     // preview picks up whatever state exists when it starts.
+    let booting: Promise<void> | null = null;
     async function boot(): Promise<void> {
       const { BuilderPreview } = await import('../builder/BuilderPreview');
       preview = new BuilderPreview(canvas, {
@@ -197,8 +210,9 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     }
     const whenIdle = (fn: () => void) =>
       'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200);
-    if (document.readyState === 'complete') whenIdle(boot);
-    else addEventListener('load', () => whenIdle(boot), { once: true });
+    const start = () => { booting ??= boot(); };
+    if (document.readyState === 'complete') whenIdle(start);
+    else addEventListener('load', () => whenIdle(start), { once: true });
 
     // ── HTML skeleton (first paint) ──
     const skel = $('p3-skel');
@@ -225,6 +239,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       preview?.setProps(next);
       syncControls();
       fitSkeleton();
+      syncAdd();
       history.replaceState(null, '', encodeState(state));
     }
 
@@ -293,6 +308,60 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
     document.querySelectorAll<HTMLButtonElement>('[data-hex]').forEach((b) =>
       b.addEventListener('click', () => { buzz(); update({ theme: 'one', oneColour: b.dataset.hex!, letterColours: {} }); }));
 
+    // ── Add to basket (3D-FIX-08: with a PNG of the design for the order) ──
+    const addBtn = $<HTMLButtonElement>('p3-add');
+    const added = $('p3-added');
+    const SIZE = 'standard' as const;
+    const priceLabel = () => `Add to basket · €${priceLetters(state.name.length, SIZE).toFixed(2)}`;
+    const syncAdd = () => {
+      addBtn.textContent = state.name ? priceLabel() : 'Add to basket';
+      addBtn.disabled = !state.name;
+    };
+    input.addEventListener('input', syncAdd);
+
+    async function uploadThumbnail(): Promise<string | undefined> {
+      try {
+        booting ??= boot();
+        await booting;
+        const png = await preview!.capture();
+        const res = await fetch('/api/thumbnails', { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png });
+        if (res.ok) return (await res.json()).id;
+      } catch (err) {
+        console.warn('Design preview not saved; adding to basket without it.', err);
+      }
+      return undefined; // the order still goes through, just without the picture
+    }
+
+    addBtn.addEventListener('click', async () => {
+      if (!state.name) return;
+      addBtn.disabled = true;
+      added.textContent = 'Saving your design…';
+      const thumbnailId = await uploadThumbnail();
+      const letters = [...state.name].map((char, i) => ({
+        char, colour: preview?.letterHex(i) ?? state.letterColours[i] ?? state.oneColour,
+      }));
+      addToCart({
+        id: 'build_' + Date.now().toString(36),
+        type: 'custom-name',
+        name: state.name,
+        size: SIZE,
+        sizeLabel: `${SIZE_LABELS[SIZE]} (${SIZE_MM[SIZE]}cm)`,
+        theme: state.theme,
+        oneColour: THEMES[state.theme]?.single ? state.oneColour : null,
+        brickSizePx: SIZE_CELL_PX[SIZE],
+        letters,
+        brickCount: letters.reduce((n, l) => n + countFilledCells(l.char), 0),
+        price: priceLetters(letters.length, SIZE),
+        currency: 'EUR',
+        qty: 1,
+        createdAt: new Date().toISOString(),
+        addons: { dots: false, giftBox: false },
+        ...(thumbnailId ? { thumbnailId } : {}),
+      });
+      added.innerHTML = 'Added. <a href="/cart">View basket →</a>';
+      addBtn.disabled = false;
+    });
+
     const copied = $('p3-copied');
     $('p3-copy').addEventListener('click', async () => {
       try {
@@ -313,6 +382,7 @@ const colours = Object.entries(COLOURS).map(([id, c]) => ({ id, ...c }));
       fitSkeleton();
     });
     syncControls();
+    syncAdd();
   </script>
 </body>
 </html>

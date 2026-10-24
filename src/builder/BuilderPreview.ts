@@ -1,6 +1,6 @@
 /* Three.js preview of the printed letters.
  * 3D-FIX-02 scene · 03 layout · 04 picking · 05 touch (spin, pinch / ctrl+wheel zoom)
- * 06 PLA material and studio reflections · 07 skeletons and motion.
+ * 06 PLA material and studio reflections · 07 skeletons and motion · 08 order thumbnails.
  *
  * Loads the Draco GLBs produced by tools/export_glb.py (see models.ts). They are
  * in the STL frame (mm, Z-up, top face on +Z) and ship without normals, so each
@@ -89,6 +89,8 @@ const FRAME_MARGIN = 1.08;    // name fills ~92% of the tighter screen axis
 const SLOW_FRAME_MS = 40;     // a render slower than this (3x running) is a slow device
 const SLOW_FRAME_STREAK = 3;
 const VERY_SLOW_FRAME_MS = 120; // one frame this slow (no GPU / software WebGL): stop animating at once
+const THUMB_DIRECTION = new THREE.Vector3(0, 1, 0.38); // order thumbnail: from above, tilted enough to show the letters' depth
+const THUMB_MARGIN = 1.04;
 const SHADOW_MIN_HALF = 400;  // mm; shadow frustum grows past this for long names
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -116,6 +118,7 @@ export class BuilderPreview {
   private slots: Slot[] = [];
   private layoutBox = new THREE.Box3();
   private buildToken = 0;
+  private building: Promise<void> = Promise.resolve();
   private shown = false; // first real letters drawn
   private keyLight!: THREE.DirectionalLight;
   private lookAt = new THREE.Vector3();
@@ -186,14 +189,14 @@ export class BuilderPreview {
     this.visObs.observe(canvas);
 
     this.resize();
-    void this.rebuild();
+    this.building = this.rebuild();
   }
 
   setProps(next: Partial<BuilderPreviewProps>): void {
     const prev = this.props;
     this.props = { ...prev, ...next };
     if (next.name !== undefined && next.name !== prev.name) {
-      void this.rebuild();
+      this.building = this.rebuild();
     } else if (next.viewMode && next.viewMode !== prev.viewMode) {
       this.frameCamera(true);
       this.requestRender();
@@ -223,6 +226,64 @@ export class BuilderPreview {
     this.scene.environment?.dispose();
     this.draco.dispose();
     this.renderer.dispose();
+  }
+
+  /**
+   * Square PNG of the current design for the order record (3D-FIX-08). Framed from above
+   * with a slight tilt rather than the spec's hero angle: in a square, the hero view turns
+   * a name into a thin strip, and this reads at email and gift-card sizes.
+   * Waits for every glyph, snaps running animations to their end, renders once at
+   * `size`×`size`, then restores the live view in the same task so nothing flickers.
+   */
+  async capture(size = 512, background = '#f6f2e7'): Promise<Blob> {
+    let token: number;
+    do { // the name may change while glyphs load; wait for the latest layout
+      token = this.buildToken;
+      await this.building;
+      await Promise.all(this.slots.map((s) => this.loadGeometry(s.char)));
+      await new Promise((r) => setTimeout(r)); // let fillSlot callbacks run
+    } while (token !== this.buildToken || this.slots.some((s) => !s.material));
+
+    for (const s of this.slots) {
+      if (s.slide) { s.group.position.x = s.slide.to; s.slide = null; }
+      if (s.appear) { s.appear = null; s.material!.opacity = 1; s.group.position.z = 0; }
+      if (s.tint) { s.material!.color.copy(s.tint.to); s.tint = null; }
+    }
+
+    const r = this.renderer;
+    const saved = {
+      ratio: r.getPixelRatio(), size: r.getSize(new THREE.Vector2()), aspect: this.camera.aspect,
+      zoom: this.zoom,
+      pos: this.camera.position.clone(), look: this.lookAt.clone(),
+    };
+    r.setPixelRatio(1);
+    r.setSize(size, size, false);
+    this.camera.aspect = 1;
+    this.zoom = 1;
+    this.frameCamera(false, THUMB_DIRECTION, THUMB_MARGIN);
+    this.nameGroup.rotation.z = 0;
+    r.render(this.scene, this.camera);
+    const shot = document.createElement('canvas');
+    shot.width = shot.height = size;
+    const ctx = shot.getContext('2d')!;
+    ctx.fillStyle = background; // flatten onto the stage colour: PNG alpha looks odd in some mail clients
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(r.domElement, 0, 0, size, size); // same task as render: drawing buffer still valid
+
+    r.setPixelRatio(saved.ratio);
+    r.setSize(saved.size.x, saved.size.y, false);
+    this.camera.aspect = saved.aspect;
+    this.zoom = saved.zoom;
+    this.frameCamera(); // restores this.fit for the live view…
+    this.tween = null;
+    this.camera.position.copy(saved.pos); // …then the exact camera the user had
+    this.lookAt.copy(saved.look);
+    this.camera.lookAt(this.lookAt);
+    this.nameGroup.rotation.z = this.rotation;
+    r.render(this.scene, this.camera);
+
+    return new Promise((resolve, reject) =>
+      shot.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png'));
   }
 
   /** Colour of letter i: per-letter override, else the theme's colour for that position. */
@@ -435,23 +496,23 @@ export class BuilderPreview {
   }
 
   /** Point the camera at the name for the current view; eases over 300ms when animate is set. */
-  private frameCamera(animate = false): void {
+  private frameCamera(animate = false, direction?: THREE.Vector3, margin = FRAME_MARGIN): void {
     const box = this.layoutBox; // target layout, not mid-slide positions
     if (box.isEmpty()) return;
 
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z) * FRAME_MARGIN;
+    const maxDim = Math.max(size.x, size.y, size.z) * margin;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     // Fit whichever is tighter: height against the vertical FOV, width against the horizontal one
-    const fitDist = Math.max(maxDim / (2 * tanHalf), (size.x * FRAME_MARGIN) / (2 * tanHalf * this.camera.aspect));
+    const fitDist = Math.max(maxDim / (2 * tanHalf), (size.x * margin) / (2 * tanHalf * this.camera.aspect));
 
     // Spec's view angles; the camera sits fitDist (× the user's pinch zoom) away along each
-    const dir = {
+    const dir = (direction?.clone() ?? {
       hero: new THREE.Vector3(0, 0.55, 1.1),
       top: new THREE.Vector3(0, 1, 0.001),
       side: new THREE.Vector3(1.1, 0.02, 0.01),
-    }[this.props.viewMode].normalize();
+    }[this.props.viewMode]).normalize();
     this.fit = { center, dir, dist: fitDist };
     const toPos = center.clone().addScaledVector(dir, fitDist * this.zoom);
 

@@ -21,6 +21,7 @@ interface OrderItem {
   custom_name: string;
   quantity: number;
   unit_price: number;
+  thumbnail?: Buffer | null; // 3D-FIX-08: 512px PNG of the design, embedded inline
 }
 
 interface OrderEmailData {
@@ -38,12 +39,16 @@ interface OrderEmailData {
 
 function money(cents: number) { return `€${(cents / 100).toFixed(2)}`; }
 
+const thumbCid = (i: number) => `design-${i}@togblocks`;
+
 function itemRows(items: OrderItem[]) {
-  return items.map(item => `
+  return items.map((item, i) => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">
+        ${item.thumbnail ? `<img src="cid:${thumbCid(i)}" width="240" height="240" alt="Preview of ${escapeHtml(item.custom_name)}"
+          style="display:block;width:240px;height:240px;border-radius:12px;margin:0 0 10px;background:#f6f2e7">` : ''}
         <strong>${item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'}</strong><br>
-        <span style="color:#6b7280;font-size:14px">Name: ${item.custom_name}</span>
+        <span style="color:#6b7280;font-size:14px">Name: ${escapeHtml(item.custom_name)}</span>
       </td>
       <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right">
         ${item.quantity} × ${money(item.unit_price)}
@@ -121,6 +126,10 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     to: data.customerEmail,
     subject: `Your TógBlocks order ${ref} is confirmed! 🧱`,
     html,
+    // Inline (cid:) attachments: shows in Gmail/Outlook/Apple Mail with no public image URL
+    attachments: data.items.flatMap((item, i) => item.thumbnail
+      ? [{ filename: `design-${i + 1}.png`, content: item.thumbnail, cid: thumbCid(i), contentType: 'image/png' }]
+      : []),
   });
 
   // Notify the business

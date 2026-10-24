@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getStripe, shippingCost, classifyCountry } from '../../lib/stripe';
 import { query } from '../../lib/db';
 import { getTokenFromRequest, getSession, orderAccessKey } from '../../lib/auth';
+import { thumbnailParam } from '../../lib/thumbnails';
 
 interface CartItem {
   product_type: 'letters' | 'door-sign';
@@ -9,6 +10,7 @@ interface CartItem {
   colours: string[];
   quantity: number;
   unit_price: number;
+  thumbnail_id?: string | null; // 3D-FIX-08: design_thumbnails id from Add to basket
 }
 
 interface CheckoutBody {
@@ -72,11 +74,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Save order items
     for (const item of items) {
+      // Unknown/garbage thumbnail ids become NULL rather than failing the order
       await query(
-        `INSERT INTO order_items (order_id, product_type, custom_name, colours, quantity, unit_price)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+        `INSERT INTO order_items (order_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id)
+         VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid))`,
         [orderId, item.product_type, item.custom_name, JSON.stringify(item.colours),
-         item.quantity, item.unit_price]
+         item.quantity, item.unit_price, thumbnailParam(item.thumbnail_id)]
       );
     }
 

@@ -1,0 +1,91 @@
+---
+// 3D-FIX-08: printable gift card for the box, one A6 card per lettered item,
+// built from the order record (name + the customer's own 3D preview).
+import '@fontsource/russo-one/400.css';
+import '@fontsource/nunito/600.css';
+import '@fontsource/nunito/800.css';
+import { getAdminUser } from '../../../../lib/adminAuth';
+import { query } from '../../../../lib/db';
+
+const admin = await getAdminUser(Astro.request);
+const orderId = Number(Astro.params.id);
+if (!admin) return Astro.redirect(`/login?returnTo=/admin/orders/${orderId}/gift-card`);
+if (!orderId) return Astro.redirect('/admin/orders');
+
+const itemsRes = await query<{ custom_name: string; quantity: number; thumbnail_id: string | null }>(
+  `SELECT custom_name, quantity, thumbnail_id FROM order_items
+    WHERE order_id = $1 AND product_type <> 'door-sign' ORDER BY id`,
+  [orderId],
+);
+// One card per physical set: an item with quantity 2 gets two cards
+const cards = itemsRes.rows.flatMap((item) => Array.from({ length: Math.max(1, item.quantity) }, () => item));
+const ref = `#TB${String(orderId).padStart(5, '0')}`;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Gift card {ref} — TógBlocks</title>
+</head>
+<body>
+  <div class="gc-toolbar">
+    <a href={`/admin/orders/${orderId}`}>← Order {ref}</a>
+    <span>{cards.length} card{cards.length === 1 ? '' : 's'} · A6 (105 × 148 mm)</span>
+    <button type="button" onclick="window.print()">Print</button>
+  </div>
+
+  {cards.length === 0 && <p class="gc-empty">This order has no brick-letter items, so there's no gift card to print.</p>}
+
+  {cards.map((card) => (
+    <section class="gc-card">
+      <img class="gc-logo" src="/logo.svg" alt="TógBlocks" width="120" height="32" />
+      <div class="gc-for">Made for</div>
+      <div class="gc-name">{card.custom_name}</div>
+      {card.thumbnail_id
+        ? <img class="gc-thumb" src={`/api/thumbnails/${card.thumbnail_id}`} width="512" height="512" alt="" />
+        : <div class="gc-thumb gc-thumb--none"></div>}
+      <p class="gc-line">Designed by you, printed for you,<br />one brick at a time in Ireland.</p>
+      <div class="gc-foot">
+        <span>togblocks.com</span>
+        <span>{ref}</span>
+      </div>
+    </section>
+  ))}
+
+  <style>
+    @page { size: 105mm 148mm; margin: 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e8e6df; color: #1d2230; font-family: "Nunito", system-ui, sans-serif; }
+    .gc-toolbar {
+      position: sticky; top: 0; display: flex; gap: 16px; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: #fff; border-bottom: 1px solid #ddd; font-size: 14px;
+    }
+    .gc-toolbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+    .gc-toolbar button { font: 800 14px "Nunito", sans-serif; padding: 8px 18px; border: 0; border-radius: 999px; background: #1d4ed8; color: #fff; cursor: pointer; }
+    .gc-empty { text-align: center; padding: 48px 16px; }
+    .gc-card {
+      width: 105mm; height: 148mm; margin: 16px auto; padding: 9mm 8mm 7mm;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      background: #fffdf7; box-shadow: 0 2px 10px rgba(0,0,0,.12); overflow: hidden;
+      break-after: page;
+    }
+    .gc-logo { height: 8mm; width: auto; margin-bottom: 6mm; }
+    .gc-for { font-weight: 800; font-size: 9pt; letter-spacing: .14em; text-transform: uppercase; color: #6b7280; }
+    .gc-name {
+      font-family: "Russo One", sans-serif; font-size: 26pt; line-height: 1.1; margin: 1mm 0 4mm;
+      max-width: 100%; overflow-wrap: anywhere;
+    }
+    .gc-thumb { width: 72mm; height: 72mm; border-radius: 4mm; background: #f6f2e7; object-fit: cover; }
+    .gc-line { margin: 5mm 0 0; font-size: 9.5pt; line-height: 1.45; color: #374151; }
+    .gc-foot { margin-top: auto; width: 100%; display: flex; justify-content: space-between; font-size: 7.5pt; color: #9ca3af; }
+    @media print {
+      body { background: none; }
+      .gc-toolbar { display: none; }
+      .gc-card { margin: 0; box-shadow: none; }
+    }
+  </style>
+</body>
+</html>

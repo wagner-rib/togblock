@@ -32,8 +32,8 @@ if (!orderRes.rows.length) return Astro.redirect('/admin/orders');
 const order = orderRes.rows[0];
 
 const [itemsRes, addrRes, logRes, msgRes] = await Promise.all([
-  query<{ product_type: string; custom_name: string; colours: string[]; quantity: number; unit_price: number }>(
-    'SELECT product_type, custom_name, colours, quantity, unit_price FROM order_items WHERE order_id = $1 ORDER BY id',
+  query<{ product_type: string; custom_name: string; colours: string[]; quantity: number; unit_price: number; thumbnail_id: string | null }>(
+    'SELECT product_type, custom_name, colours, quantity, unit_price, thumbnail_id FROM order_items WHERE order_id = $1 ORDER BY id',
     [orderId]
   ),
   query<{ name: string; line1: string; line2: string | null; city: string; county: string | null; postcode: string | null; country: string }>(
@@ -219,6 +219,11 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
         <div class="section-hd">
           <div class="section-title">Items ordered</div>
           <div class="section-badge">{items.length}</div>
+          {items.some((i) => i.product_type !== 'door-sign') && (
+            <a class="adm-btn adm-btn--ghost gift-card-link" href={`/admin/orders/${orderId}/gift-card`} target="_blank" rel="noopener">
+              🎁 Print gift card
+            </a>
+          )}
         </div>
         <div class="items-list">
           {items.map((item, idx) => (
@@ -228,6 +233,12 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
                   <span style={`flex:1;background:${c}`} title={c}></span>
                 ))}
               </div>
+              {item.thumbnail_id && (
+                <a class="item-thumb" href={`/api/thumbnails/${item.thumbnail_id}`} target="_blank" rel="noopener"
+                   title="Open the customer's 3D preview">
+                  <img src={`/api/thumbnails/${item.thumbnail_id}`} width="88" height="88" alt={`3D preview of ${item.custom_name}`} loading="lazy" />
+                </a>
+              )}
               <div class="item-body">
                 <div class="item-name">{item.custom_name}</div>
                 <div class="item-meta">
@@ -615,6 +626,9 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
 .items-list {}
 .item-row { display: flex; align-items: stretch; }
 .item-row--border { border-bottom: 1px solid var(--ab); }
+.item-thumb { flex-shrink: 0; align-self: center; margin-left: 14px; }
+.item-thumb img { display: block; width: 88px; height: 88px; border-radius: 10px; background: #f6f2e7; }
+.gift-card-link { margin-left: auto; font-size: 0.8rem; padding: 6px 12px; }
 .item-swatch-bar { display: flex; flex-direction: column; width: 10px; flex-shrink: 0; overflow: hidden; }
 .item-body { flex: 1; padding: 18px 16px 18px 18px; }
 .item-name { font-family: var(--font-d); font-weight: 800; font-size: 1.15rem; color: var(--ink); margin-bottom: 4px; }

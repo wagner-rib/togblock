@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getTokenFromRequest, getSession } from '../../lib/auth';
 import { query } from '../../lib/db';
+import { thumbnailParam } from '../../lib/thumbnails';
 
 // Normalised shape expected by the DB
 interface NormalisedItem {
@@ -9,6 +10,7 @@ interface NormalisedItem {
   colours: string[];
   quantity: number;
   unit_price: number; // cents
+  thumbnail_id: string | null;
 }
 
 // Raw shape the builder stores in localStorage
@@ -18,12 +20,14 @@ interface RawBuilderItem {
   letters?: { colour: string }[];
   qty?: number;
   price?: number;      // euros (integer)
+  thumbnailId?: string;
   // already-normalised fields (if caller already mapped)
   product_type?: string;
   custom_name?: string;
   colours?: string[];
   quantity?: number;
   unit_price?: number;
+  thumbnail_id?: string | null;
 }
 
 function normalise(raw: RawBuilderItem): NormalisedItem {
@@ -36,7 +40,8 @@ function normalise(raw: RawBuilderItem): NormalisedItem {
   const quantity     = raw.quantity ?? raw.qty ?? 1;
   const unit_price   = raw.unit_price
     ?? Math.round((raw.price ?? 0) * 100);  // euros → cents
-  return { product_type, custom_name, colours, quantity, unit_price };
+  const thumbnail_id = thumbnailParam(raw.thumbnail_id ?? raw.thumbnailId);
+  return { product_type, custom_name, colours, quantity, unit_price, thumbnail_id };
 }
 
 // GET → return saved cart for logged-in user
@@ -46,7 +51,7 @@ export const GET: APIRoute = async ({ request }) => {
   if (!user) return json([]);
 
   const result = await query<NormalisedItem>(
-    `SELECT product_type, custom_name, colours, quantity, unit_price
+    `SELECT product_type, custom_name, colours, quantity, unit_price, thumbnail_id
      FROM cart_items WHERE user_id = $1 ORDER BY added_at`,
     [user.id]
   );
@@ -67,10 +72,10 @@ export const POST: APIRoute = async ({ request }) => {
   await query('DELETE FROM cart_items WHERE user_id = $1', [user.id]);
   for (const item of items) {
     await query(
-      `INSERT INTO cart_items (user_id, product_type, custom_name, colours, quantity, unit_price)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO cart_items (user_id, product_type, custom_name, colours, quantity, unit_price, thumbnail_id)
+       VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM design_thumbnails WHERE id = $7::uuid))`,
       [user.id, item.product_type, item.custom_name,
-       JSON.stringify(item.colours), item.quantity, item.unit_price]
+       JSON.stringify(item.colours), item.quantity, item.unit_price, item.thumbnail_id]
     );
   }
   return json({ ok: true, saved: items.length });

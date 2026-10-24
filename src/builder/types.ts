@@ -25,4 +25,5 @@ export interface CartItem {
   plateColour?: string;
   textColour?: string;
   addons?: { dots: boolean; giftBox: boolean };
+  thumbnailId?: string; // 3D-FIX-08: 512px preview PNG uploaded at Add to basket
 }

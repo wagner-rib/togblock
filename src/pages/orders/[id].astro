@@ -38,9 +38,9 @@ if (!canView) {
 
 // Items
 const itemsRes = await query<{
-  product_type: string; custom_name: string; quantity: number; unit_price: number;
+  product_type: string; custom_name: string; quantity: number; unit_price: number; thumbnail_id: string | null;
 }>(
-  'SELECT product_type, custom_name, quantity, unit_price FROM order_items WHERE order_id = $1',
+  'SELECT product_type, custom_name, quantity, unit_price, thumbnail_id FROM order_items WHERE order_id = $1 ORDER BY id',
   [orderId]
 );
 
@@ -109,7 +109,10 @@ const purchase = success ? {
         <h2 class="ord-section__title">Items ordered</h2>
         {items.map(item => (
           <div class="ord-item">
-            <div class="ord-item__icon">{item.product_type === 'door-sign' ? '🚪' : '🧱'}</div>
+            {item.thumbnail_id
+              ? <img class="ord-item__thumb" src={`/api/thumbnails/${item.thumbnail_id}`} width="96" height="96"
+                     alt={`Your ${item.custom_name} design`} loading="lazy" />
+              : <div class="ord-item__icon">{item.product_type === 'door-sign' ? '🚪' : '🧱'}</div>}
             <div class="ord-item__info">
               <strong>{item.custom_name}</strong>
               <span>{item.product_type === 'door-sign' ? 'Door Sign' : 'Brick Letters'} · qty {item.quantity}</span>
@@ -259,6 +262,12 @@ const purchase = success ? {
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+}
+.ord-item__thumb {
+  width: 96px; height: 96px; flex-shrink: 0;
+  border-radius: var(--radius);
+  background: #f6f2e7;
+  object-fit: cover;
 }
 .ord-item__icon {
   width: 44px; height: 44px;

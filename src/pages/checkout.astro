@@ -600,6 +600,7 @@ function normalize(item) {
     colours:      (item.letters ?? []).map(l => l.colour),
     quantity:     item.qty   ?? 1,
     unit_price:   eurosToCents(item.price ?? 0),
+    thumbnail_id: item.thumbnailId ?? null,
   };
 }
 

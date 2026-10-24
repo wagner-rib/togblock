@@ -39,9 +39,11 @@ export const POST: APIRoute = async ({ request }) => {
     const order = orderRes.rows[0];
 
     const itemsRes = await query<{
-      product_type: string; custom_name: string; quantity: number; unit_price: number;
+      product_type: string; custom_name: string; quantity: number; unit_price: number; thumbnail: Buffer | null;
     }>(
-      'SELECT product_type, custom_name, quantity, unit_price FROM order_items WHERE order_id = $1',
+      `SELECT oi.product_type, oi.custom_name, oi.quantity, oi.unit_price, t.png AS thumbnail
+         FROM order_items oi LEFT JOIN design_thumbnails t ON t.id = oi.thumbnail_id
+        WHERE oi.order_id = $1 ORDER BY oi.id`,
       [orderId]
     );
 

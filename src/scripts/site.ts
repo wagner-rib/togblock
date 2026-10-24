@@ -375,6 +375,7 @@ async function syncCartWithServer(): Promise<void> {
         colours:      (i.letters ?? []).map((l: any) => l.colour),
         quantity:     i.qty ?? 1,
         unit_price:   Math.round((i.price ?? 0) * 100),
+        thumbnail_id: i.thumbnailId ?? null,
       }))),
     });
   } catch {
@@ -394,6 +395,7 @@ async function loadCartFromServer(): Promise<void> {
       colours: string[];
       quantity: number;
       unit_price: number;
+      thumbnail_id?: string | null;
     }[] = await res.json();
     if (!serverItems.length) return;
 
@@ -411,6 +413,7 @@ async function loadCartFromServer(): Promise<void> {
       brickCount: 0,
       currency: 'EUR',
       createdAt: new Date().toISOString(),
+      ...(s.thumbnail_id ? { thumbnailId: s.thumbnail_id } : {}),
     }));
     saveCart(restored);
   } catch {
