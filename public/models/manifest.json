@@ -1,0 +1,334 @@
+{
+  "generated": "2026-10-24T10:08:15+00:00",
+  "fontScale": 1.0,
+  "studDiameter": 4.9,
+  "studHeight": 1.8,
+  "studPitch": 8.0,
+  "bodyDepth": 18.0,
+  "letters": {
+    "A": {
+      "width": 191.89,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -95.94,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16464
+    },
+    "B": {
+      "width": 162.97,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -81.49,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18392
+    },
+    "C": {
+      "width": 147.2,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -73.6,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 17000
+    },
+    "D": {
+      "width": 162.97,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -81.49,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16920
+    },
+    "E": {
+      "width": 145.89,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -72.94,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16452
+    },
+    "F": {
+      "width": 145.89,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -72.94,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16112
+    },
+    "G": {
+      "width": 162.97,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -81.49,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18248
+    },
+    "H": {
+      "width": 160.34,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -80.17,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16416
+    },
+    "I": {
+      "width": 94.63,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -47.31,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 15704
+    },
+    "J": {
+      "width": 102.51,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -51.26,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16440
+    },
+    "K": {
+      "width": 161.92,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -80.96,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16596
+    },
+    "L": {
+      "width": 143.26,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -71.63,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 15652
+    },
+    "M": {
+      "width": 205.03,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -102.51,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16564
+    },
+    "N": {
+      "width": 160.34,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -80.17,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16524
+    },
+    "O": {
+      "width": 170.86,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -85.43,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18336
+    },
+    "P": {
+      "width": 162.97,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -81.49,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16832
+    },
+    "Q": {
+      "width": 195.86,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -85.43,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 17128
+    },
+    "R": {
+      "width": 165.6,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -82.8,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18264
+    },
+    "S": {
+      "width": 160.34,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -80.17,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18448
+    },
+    "T": {
+      "width": 157.71,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -78.86,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 15868
+    },
+    "U": {
+      "width": 165.6,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -82.8,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16692
+    },
+    "V": {
+      "width": 191.89,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -95.94,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16584
+    },
+    "W": {
+      "width": 262.86,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -131.43,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16484
+    },
+    "X": {
+      "width": 178.74,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -89.37,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16564
+    },
+    "Y": {
+      "width": 186.63,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -93.31,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16488
+    },
+    "Z": {
+      "width": 149.83,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -74.91,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16488
+    },
+    "0": {
+      "width": 155.09,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -77.54,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18328
+    },
+    "1": {
+      "width": 90.69,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -45.34,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 15464
+    },
+    "2": {
+      "width": 141.94,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -70.97,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16820
+    },
+    "3": {
+      "width": 147.2,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -73.6,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18304
+    },
+    "4": {
+      "width": 162.97,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -81.49,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 16284
+    },
+    "5": {
+      "width": 147.2,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -73.6,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18160
+    },
+    "6": {
+      "width": 149.83,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -74.91,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18540
+    },
+    "7": {
+      "width": 141.94,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -70.97,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 15924
+    },
+    "8": {
+      "width": 160.34,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -80.17,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18664
+    },
+    "9": {
+      "width": 149.83,
+      "height": 184.0,
+      "depth": 19.8,
+      "originX": -74.91,
+      "originY": -92.0,
+      "triangles": 8000,
+      "fileBytes": 18568
+    }
+  }
+}

@@ -6,3 +6,7 @@ dist/
 .DS_Store
 *.log
 .astro/
+
+# offline asset tooling
+tools/.venv/
+tools/node_modules/
