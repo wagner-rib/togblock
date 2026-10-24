@@ -21,7 +21,7 @@ import type { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { createPlaMaterial } from './plaMaterial';
-import { buildDotGeometry, dotTopZ, placeDots } from './decorativeDots';
+import { buildPieceGeometry, createPieceMaterial, placePieces } from './decorativeDots';
 import { themeColor, type LetterSize } from './themes';
 import { previewChars } from './previewState';
 import { manifest as MANIFEST, MODEL_URLS, createDracoLoader } from './models';
@@ -34,7 +34,7 @@ export interface BuilderPreviewProps {
   theme: string;                         // key of THEMES
   oneColour: string;                     // hex, used by the 'one' theme
   letterColours: Record<number, string>; // per-index hex overrides
-  dots?: boolean;                        // "Decorative Dots" add-on: show the 10 snap-on pieces
+  dots?: boolean;                        // "Decorative Dots" add-on: show the pack's 10 LEGO pieces
   viewMode: ViewMode;
   /** Tap on the preview: letter index (-1 = missed every letter), canvas-relative CSS px. */
   onLetterClick?: (index: number, x: number, y: number) => void;
@@ -60,7 +60,7 @@ interface Slot {
   appear: { start: number } | null;
   tint: { from: THREE.Color; to: THREE.Color; start: number } | null;
   studs: number[] | null;                   // stud cells, once the glyph is loaded
-  dots: THREE.InstancedMesh | null;         // decorative dots pressed onto this letter
+  dots: THREE.Group | null;                 // decorative pieces pressed onto this letter
 }
 
 interface CameraTween {
@@ -84,8 +84,8 @@ const APPEAR_MS = 150;        // a letter fading up into place…
 const APPEAR_STAGGER_MS = 50; // …each new letter this much after the previous one
 const APPEAR_RISE_MM = 6;
 const TINT_MS = 200;          // colour changes blend rather than snap
-const DOT_POP_MS = 260;       // decorative dots pop on…
-const DOT_STAGGER_MS = 45;    // …one after another
+const DOT_POP_MS = 280;       // decorative pieces pop on…
+const DOT_STAGGER_MS = 55;    // …one after another
 const SKELETON_COLOUR = 0xd0d4e0;
 const SKELETON_OPACITY = 0.4;
 const TAP_SLOP_PX = 6;        // pointer travel below this is a tap, not a drag
@@ -123,8 +123,7 @@ export class BuilderPreview {
   });
   private slots: Slot[] = [];
   private manifestData: Manifest | null = null;
-  private dotGeo: THREE.BufferGeometry | null = null;
-  private dotMaterial: THREE.MeshStandardMaterial | null = null;
+  private pieceGeos = new Map<string, THREE.BufferGeometry>(); // by footprint, e.g. 2x4
   private dotsKey = '';
   private dotsPop: { start: number } | null = null;
   protected layoutBox = new THREE.Box3();
@@ -235,8 +234,7 @@ export class BuilderPreview {
     this.canvas.removeEventListener('wheel', this.onWheel);
     this.slots.forEach((s) => this.disposeSlot(s));
     this.skeletonMaterial.dispose();
-    this.dotGeo?.dispose();
-    this.dotMaterial?.dispose();
+    this.pieceGeos.forEach((g) => g.dispose());
     this.geometries.forEach((g) => g.then(({ body }) => body.dispose()));
     this.studGeometry.then((g) => g.dispose());
     this.scene.environment?.dispose();
@@ -495,14 +493,15 @@ export class BuilderPreview {
 
   private disposeSlot(slot: Slot): void {
     slot.material?.dispose();
+    slot.dots?.traverse((o) => { if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose(); });
     slot.skeleton?.geometry.dispose();
     slot.group.traverse((o) => { if (o instanceof THREE.InstancedMesh) o.dispose(); });
     slot.group.removeFromParent();
   }
 
   /**
-   * Place (or clear) the decorative dots. Only rebuilds when the name, its colours, the
-   * loaded letters or the add-on change; `pop` animates the dots in.
+   * Place (or clear) the decorative pieces. Only rebuilds when the name, its colours, the
+   * loaded letters or the add-on change; `pop` animates them in.
    */
   private refreshDots(pop: boolean): void {
     const m = this.manifestData;
@@ -512,31 +511,29 @@ export class BuilderPreview {
     this.dotsKey = key;
     for (const slot of this.slots) {
       if (!slot.dots) continue;
-      slot.dots.dispose();
+      slot.dots.traverse((o) => { if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose(); });
       slot.group.remove(slot.dots);
       slot.dots = null;
     }
     this.dotsPop = null;
     if (!on || !m) return this.requestRender();
 
-    this.dotGeo ??= buildDotGeometry(m.bodyDepth, CREASE_ANGLE);
-    this.dotMaterial ??= createPlaMaterial(dotTopZ(m.bodyDepth)); // white base × per-dot colour
-    const placed = placeDots(this.props.name, this.slots.map((s, i) => ({ studs: s.studs ?? [], colour: this.letterHex(i) })));
-    const mat = new THREE.Matrix4();
+    const placed = placePieces(this.props.name, this.slots.map((s, i) => ({ studs: s.studs ?? [], colour: this.letterHex(i) })));
     this.slots.forEach((slot, li) => {
       const mine = placed.filter((d) => d.letter === li);
       if (!mine.length) return;
-      const dots = new THREE.InstancedMesh(this.dotGeo!, this.dotMaterial!, mine.length);
-      dots.userData.base = mine.map((d) => new THREE.Matrix4().makeTranslation(d.i * m.studPitch, d.j * m.studPitch, 0));
-      mine.forEach((d, k) => {
-        dots.setMatrixAt(k, mat.copy(dots.userData.base[k]));
-        dots.setColorAt(k, new THREE.Color(d.colour));
-      });
-      dots.receiveShadow = true;
-      dots.computeBoundingBox();
-      dots.computeBoundingSphere();
-      slot.dots = dots;
-      slot.group.add(dots);
+      const group = new THREE.Group();
+      for (const d of mine) {
+        const k = `${d.w}x${d.h}`;
+        if (!this.pieceGeos.has(k)) this.pieceGeos.set(k, buildPieceGeometry(d.w, d.h, m.studPitch));
+        const piece = new THREE.Mesh(this.pieceGeos.get(k)!, createPieceMaterial(d.colour));
+        piece.position.set(d.cx * m.studPitch, d.cy * m.studPitch, m.bodyDepth); // on the letter's top face
+        piece.castShadow = true;
+        piece.receiveShadow = true;
+        group.add(piece);
+      }
+      slot.dots = group;
+      slot.group.add(group);
     });
     if (pop && !this.reduceMotion) {
       this.dotsPop = { start: performance.now() };
@@ -545,24 +542,16 @@ export class BuilderPreview {
     this.requestRender();
   }
 
-  /** Pop-in: each dot grows from its stud with a small overshoot, one after another. */
+  /** Pop-in: each piece grows out of the letter with a small overshoot, one after another. */
   private stepDots(now: number): boolean {
-    if (!this.dotsPop || !this.manifestData) return false;
-    const z = this.manifestData.bodyDepth;
-    const lift = new THREE.Matrix4().makeTranslation(0, 0, z), drop = new THREE.Matrix4().makeTranslation(0, 0, -z);
-    const mat = new THREE.Matrix4(), scale = new THREE.Matrix4();
+    if (!this.dotsPop) return false;
     let n = 0, done = true;
     for (const slot of this.slots) {
-      const dots = slot.dots;
-      if (!dots) continue;
-      (dots.userData.base as THREE.Matrix4[]).forEach((base, k) => {
-        const t = progress(this.dotsPop!.start + n++ * DOT_STAGGER_MS, DOT_POP_MS, now);
+      for (const piece of slot.dots?.children ?? []) {
+        const t = progress(this.dotsPop.start + n++ * DOT_STAGGER_MS, DOT_POP_MS, now);
         if (t < 1) done = false;
-        const sc = Math.max(0.001, easeOutBack(t));
-        // Scale about the letter's top face so the dot grows out of its stud
-        dots.setMatrixAt(k, mat.copy(base).multiply(lift).multiply(scale.makeScale(sc, sc, sc)).multiply(drop));
-      });
-      dots.instanceMatrix.needsUpdate = true;
+        piece.scale.setScalar(Math.max(0.001, easeOutBack(t))); // geometry's origin is its base, so it grows from the letter
+      }
     }
     if (done) this.dotsPop = null;
     return true;

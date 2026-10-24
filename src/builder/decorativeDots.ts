@@ -1,37 +1,64 @@
-/* "Decorative Dots" add-on in the 3D preview: a pack of 10 round 1×1 snap-on
- * pieces (like LEGO DOTS tiles) pressed onto studs across the name, in a bright
- * mixed palette. Placement is seeded by the name, so a given name always gets
- * the same arrangement instead of reshuffling on every change.
+/* "Decorative Dots" add-on in the 3D preview: a pack of 10 small LEGO-compatible
+ * plates (2×4, 2×3, 2×2 and a few 1×N) snapped onto the letters' studs, as in
+ * the product photos (e.g. /products/finn-letters.jpg). Pieces lie along or
+ * across the letter, sit fully on its studs, keep a gap from each other, and are
+ * glossy moulded plastic rather than matte PLA. Placement is seeded by the name,
+ * so a given name always gets the same arrangement.
  */
 import * as THREE from 'three';
-import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { COLOURS } from './themes';
 
-export const DOT_COUNT = 10;          // pieces in the pack
-const DOT_DIAMETER = 7.8;             // fits a 1×1 cell on the 8mm grid
-const DOT_HEIGHT = 3.2;               // 1×1 round tile; its hollow underside covers the stud
-const DOT_CHAMFER = 0.35;
-const DOT_SEGMENTS = 28;
+export const PIECE_COUNT = 10;        // pieces in the pack
+const PLATE_HEIGHT = 3.2;             // LEGO plate
+const PLATE_CLEARANCE = 0.1;          // per side, as moulded bricks are 7.8mm per 8mm cell
+const STUD_RADIUS = 2.4;
+const STUD_HEIGHT = 1.7;
+const STUD_SEGMENTS = 20;
 
-// Bright, mixed and gender-neutral; a dot never matches the letter it sits on
-const DOT_PALETTE = [COLOURS.red.hex, COLOURS.yellow.hex, COLOURS.blue.hex, COLOURS.green.hex, COLOURS.pink.hex, COLOURS.sky_blue.hex];
+// Sizes as [cells along X, cells along Y]; picked at random with these weights, then rotated
+const SIZES: [number, number, number][] = [[4, 2, 4], [3, 2, 2], [2, 2, 3], [4, 1, 1], [2, 1, 1]];
 
-export const dotTopZ = (bodyDepth: number) => bodyDepth + DOT_HEIGHT;
+// Bright mix from the product photos, plus pink so it suits every kid
+const PALETTE = [
+  COLOURS.red.hex, COLOURS.yellow.hex, COLOURS.blue.hex, COLOURS.sky_blue.hex,
+  '#8CC63F', COLOURS.green.hex, COLOURS.white.hex, COLOURS.pink.hex,
+];
 
-/** One round tile sitting on the letter's top face (z = bodyDepth). */
-export function buildDotGeometry(bodyDepth: number, creaseAngle: number): THREE.BufferGeometry {
-  const r = DOT_DIAMETER / 2, top = bodyDepth + DOT_HEIGHT;
-  const profile = [[r, bodyDepth + 0.01], [r, top - DOT_CHAMFER], [r - DOT_CHAMFER, top], [0, top]]
-    .map(([x, y]) => new THREE.Vector2(x, y));
-  const lathe = new THREE.LatheGeometry(profile, DOT_SEGMENTS);
-  lathe.rotateX(Math.PI / 2); // lathe axis Y -> print Z
-  const geo = toCreasedNormals(lathe, creaseAngle);
-  lathe.dispose();
+export interface PieceLetter { studs: number[]; colour: string } // studs: flat [i0, j0, i1, j1, ...] cells
+export interface PlacedPiece {
+  letter: number;
+  cx: number; cy: number;          // centre in grid cells (may be .5)
+  w: number; h: number;            // footprint in cells along X / Y
+  colour: string;
+}
+
+/**
+ * A plate of w×h cells, centred on x/y, bottom at z=0 (it sits on the letter's
+ * top face; its hollow underside would cover the letter studs it presses onto).
+ */
+export function buildPieceGeometry(w: number, h: number, pitch: number): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const plate = new THREE.BoxGeometry(w * pitch - 2 * PLATE_CLEARANCE, h * pitch - 2 * PLATE_CLEARANCE, PLATE_HEIGHT);
+  plate.translate(0, 0, PLATE_HEIGHT / 2);
+  parts.push(plate);
+  for (let i = 0; i < w; i++) {
+    for (let j = 0; j < h; j++) {
+      const stud = new THREE.CylinderGeometry(STUD_RADIUS, STUD_RADIUS, STUD_HEIGHT, STUD_SEGMENTS);
+      stud.rotateX(Math.PI / 2); // cylinder axis Y -> Z
+      stud.translate((i - (w - 1) / 2) * pitch, (j - (h - 1) / 2) * pitch, PLATE_HEIGHT + STUD_HEIGHT / 2);
+      parts.push(stud);
+    }
+  }
+  const geo = mergeGeometries(parts)!;
+  parts.forEach((g) => g.dispose());
   return geo;
 }
 
-export interface DotLetter { studs: number[]; colour: string } // studs: flat [i0, j0, i1, j1, ...] cells
-export interface PlacedDot { letter: number; i: number; j: number; colour: string }
+/** Glossy moulded-plastic look, so pieces read as LEGO next to the matte printed letters. */
+export function createPieceMaterial(hex: string): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.28, metalness: 0 });
+}
 
 function seededRandom(seed: string): () => number {
   let h = 2166136261;
@@ -53,43 +80,64 @@ function shuffle<T>(items: T[], rand: () => number): T[] {
   return a;
 }
 
-/** Spread DOT_COUNT dots over the letters: every letter gets some, none touch each other. */
-export function placeDots(name: string, letters: DotLetter[]): PlacedDot[] {
+function pickSize(rand: () => number): [number, number] {
+  const total = SIZES.reduce((n, s) => n + s[2], 0);
+  let r = rand() * total;
+  for (const [w, h, weight] of SIZES) {
+    if ((r -= weight) < 0) return [w, h];
+  }
+  return [2, 2];
+}
+
+/** Spread PIECE_COUNT plates over the letters: every letter gets some, all fully supported, none touching. */
+export function placePieces(name: string, letters: PieceLetter[]): PlacedPiece[] {
   const rand = seededRandom(name);
-  const usable = letters.map((l, idx) => ({ ...l, idx })).filter((l) => l.studs.length >= 2);
+  const usable = letters.map((l, idx) => ({ ...l, idx })).filter((l) => l.studs.length >= 8);
   if (!usable.length) return [];
 
   // Quotas: one per letter first (a random 10 if the name is longer), the rest by size
   const quota = new Map<number, number>();
-  const order = shuffle(usable, rand);
-  order.slice(0, DOT_COUNT).forEach((l) => quota.set(l.idx, 1));
-  let left = DOT_COUNT - quota.size;
+  shuffle(usable, rand).slice(0, PIECE_COUNT).forEach((l) => quota.set(l.idx, 1));
+  let left = PIECE_COUNT - quota.size;
   const bySize = [...usable].sort((a, b) => b.studs.length - a.studs.length);
-  for (let k = 0; left > 0 && k < 50; k++) {
+  for (let k = 0; left > 0 && k < 50; k++, left--) {
     const l = bySize[k % bySize.length];
     quota.set(l.idx, (quota.get(l.idx) ?? 0) + 1);
-    left--;
   }
 
-  const dots: PlacedDot[] = [];
-  const palette = shuffle(DOT_PALETTE, rand);
+  const pieces: PlacedPiece[] = [];
+  const palette = shuffle(PALETTE, rand);
   let p = 0;
   for (const l of usable) {
-    const want = quota.get(l.idx) ?? 0;
-    const cells = shuffle(Array.from({ length: l.studs.length / 2 }, (_, c) => [l.studs[2 * c], l.studs[2 * c + 1]]), rand);
-    const picked: number[][] = [];
-    for (const [i, j] of cells) {
-      if (picked.length >= want) break;
-      if (picked.some(([a, b]) => Math.max(Math.abs(a - i), Math.abs(b - j)) < 2)) continue; // keep a gap
-      picked.push([i, j]);
-    }
-    for (const [i, j] of picked) {
-      // Next palette colour that differs from the letter and from the previous dot
-      let colour = palette[p++ % palette.length];
-      for (let tries = 0; tries < palette.length && (colour.toLowerCase() === l.colour.toLowerCase()
-        || colour === dots[dots.length - 1]?.colour); tries++) colour = palette[p++ % palette.length];
-      dots.push({ letter: l.idx, i, j, colour });
+    const cells = new Set<string>();
+    for (let c = 0; c < l.studs.length; c += 2) cells.add(`${l.studs[c]},${l.studs[c + 1]}`);
+    const anchors = shuffle([...cells].map((k) => k.split(',').map(Number)), rand);
+    const blocked = new Set<string>(); // taken cells plus a one-cell margin
+    for (let n = 0; n < (quota.get(l.idx) ?? 0); n++) {
+      let [w, h] = pickSize(rand);
+      if (rand() < 0.5) [w, h] = [h, w]; // lie across or along the letter
+      // Try the chosen size, then smaller ones, at every anchor until one fits fully on the letter
+      const tries: [number, number][] = [[w, h], [h, w], [2, 2], [2, 1], [1, 2]];
+      let placed = false;
+      for (const [tw, th] of tries) {
+        for (const [ai, aj] of anchors) {
+          let ok = true;
+          for (let i = 0; i < tw && ok; i++) for (let j = 0; j < th && ok; j++) {
+            const key = `${ai + i},${aj + j}`;
+            ok = cells.has(key) && !blocked.has(key);
+          }
+          if (!ok) continue;
+          for (let i = -1; i <= tw; i++) for (let j = -1; j <= th; j++) blocked.add(`${ai + i},${aj + j}`);
+          let colour = palette[p++ % palette.length];
+          for (let t = 0; t < palette.length && (colour.toLowerCase() === l.colour.toLowerCase()
+            || colour === pieces[pieces.length - 1]?.colour); t++) colour = palette[p++ % palette.length];
+          pieces.push({ letter: l.idx, cx: ai + (tw - 1) / 2, cy: aj + (th - 1) / 2, w: tw, h: th, colour });
+          placed = true;
+          break;
+        }
+        if (placed) break;
+      }
     }
   }
-  return dots;
+  return pieces;
 }
