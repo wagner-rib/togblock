@@ -133,14 +133,9 @@ export class NameBuilder {
           <div class="control-group">
             <span class="label" id="nb-size-label">Letter size</span>
             <div class="size-selector" role="group" aria-labelledby="nb-size-label" data-sizes>
-              <button type="button" class="size-opt" data-size="small" aria-pressed="false">
-                <span class="so-label">Small</span>
-                <span class="so-dim">12cm</span>
-                <span class="so-price">€5.99/letter</span>
-              </button>
               <button type="button" class="size-opt" data-size="standard" aria-pressed="true">
-                <span class="so-label">Medium</span>
-                <span class="so-dim">15cm</span>
+                <span class="so-label">Standard</span>
+                <span class="so-dim">14cm</span>
                 <span class="so-price">€7.99/letter</span>
               </button>
               <button type="button" class="size-opt" data-size="statement" aria-pressed="false">
@@ -168,7 +163,7 @@ export class NameBuilder {
                 </span>
                 <span class="ec-body">
                   <span class="ec-name">Decorative Dots</span>
-                  <span class="ec-desc">Pack of 10 colourful snap-on studs</span>
+                  <span class="ec-desc">10 colourful snap-on brick pieces · Ages 3+</span>
                 </span>
                 <span class="ec-price">+€3</span>
                 <span class="ec-toggle"><span class="ect-add">Add</span><span class="ect-added">✓ Added</span></span>
@@ -188,6 +183,7 @@ export class NameBuilder {
                 <span class="ec-toggle"><span class="ect-add">Add</span><span class="ect-added">✓ Added</span></span>
               </button>
             </div>
+            <p class="age-warning"><svg class="age-icon" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="#fff" stroke="#c8102e" stroke-width="3.5"/><text x="20" y="25" text-anchor="middle" font-size="13" font-weight="800" font-family="Arial,sans-serif" fill="#1f2937">0-3</text><path d="M8 32 32 8" stroke="#c8102e" stroke-width="3.5"/></svg><span><strong>Warning:</strong> Decorative Dots are not suitable for children under 3 years. Small parts. Choking hazard.</span></p>
           </div>
 
           <div class="builder-checkout">

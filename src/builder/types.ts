@@ -3,7 +3,7 @@ export interface LetterPayload {
   colour: string;
 }
 
-export type LetterSize = 'small' | 'standard' | 'statement';
+export type LetterSize = 'standard' | 'statement';
 export type SignShape  = 'rectangle' | 'arch' | 'rounded';
 
 export interface CartItem {

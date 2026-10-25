@@ -160,6 +160,14 @@ const countries = [
         </div>
       </section>
 
+      <!-- Gift message -->
+      <section class="co-section">
+        <h2 class="co-section__title"><label for="co-gift">Gift message</label> <span class="optional">(optional, free)</span></h2>
+        <textarea class="input" id="co-gift" name="gift_message" rows="3" maxlength="200"
+                  placeholder="Happy 3rd birthday Ada! Love, Granny and Grandad xx"></textarea>
+        <p class="field-hint">We print it on the card that goes in the box. No prices are included. <span id="co-gift-count">0</span>/200</p>
+      </section>
+
       <!-- Notes -->
       <section class="co-section">
         <h2 class="co-section__title">Special instructions <span class="optional">(optional)</span></h2>
@@ -590,7 +598,7 @@ function classifyCountry(iso) {
 
 function calcShipping(country, subtotalCents) {
   const region = classifyCountry(country);
-  if (region === 'IE' && subtotalCents >= 6000) return 0;
+  if (region === 'IE' && subtotalCents >= 4000) return 0; // keep in step with shippingCost() in lib/stripe.ts
   return shippingRates[region] ?? 0;
 }
 
@@ -719,7 +727,7 @@ function renderSummary(country) {
         </div>
         <div class="co-item-type">${isDoorSign(item) ? 'Door Sign' : 'Brick Letters'} &nbsp;·&nbsp; €${item.price ?? 0} each</div>
         ${item.addons?.dots || item.addons?.giftBox ? `<div class="co-item-addons">
-          ${item.addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>' : ''}
+          ${item.addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · 10 snap-on brick pieces · Ages 3+, small parts · <strong>+€3</strong></span>' : ''}
           ${item.addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>' : ''}
         </div>` : ''}
         <div class="co-item-controls">
@@ -768,7 +776,7 @@ function renderSummary(country) {
   if (country && shipping !== null) {
     const region = classifyCountry(country);
     badgeTxt.textContent = shipping === 0
-      ? 'Free shipping — over €60 to Ireland!'
+      ? 'Free shipping on Irish orders over €40!'
       : `Shipping: ${formatCents(shipping)} · ${shippingLabel[region] || ''}`;
     badge.hidden = false;
   } else {
@@ -824,6 +832,7 @@ async function initStripe(country) {
           postcode: document.getElementById('co-postcode').value.trim() || undefined,
         },
         notes: document.getElementById('co-notes').value.trim() || undefined,
+        giftMessage: document.getElementById('co-gift').value.trim() || undefined,
       }),
     });
 
@@ -939,4 +948,9 @@ if (document.readyState === 'loading') {
       items: cart.map(trackItem),
     });
   }
+
+  // Gift message character counter
+  const giftBox = document.getElementById('co-gift') as HTMLTextAreaElement | null;
+  const giftCount = document.getElementById('co-gift-count');
+  giftBox?.addEventListener('input', () => { if (giftCount) giftCount.textContent = String(giftBox.value.length); });
 </script>

@@ -2,22 +2,34 @@
  * GLB a content-hashed /_astro/ URL served with a one-year immutable cache, so
  * repeat visits never re-download or re-validate a glyph; the manifest rides
  * along inside the (lazy) preview chunk instead of costing a request. */
-import manifest from '../assets/models/manifest.json';
+import largeManifest from '../assets/models/manifest.json';
+import standardManifest from '../assets/models/standard/manifest.json';
+import type { LetterSize } from './themes';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { FileLoader } from 'three';
 import dracoWrapper from 'three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js?url';
 import dracoWasm from 'three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url';
 import dracoJs from 'three/examples/jsm/libs/draco/gltf/draco_decoder.js?url';
 
-const files = import.meta.glob('../assets/models/letter_*.glb', {
+// One set per letter size: letter_font.py 'large' (184mm, Premium) at the top
+// level, which the door sign also uses, and 'standard' (144mm) in standard/.
+const largeFiles = import.meta.glob('../assets/models/letter_*.glb', {
+  query: '?url', import: 'default', eager: true,
+}) as Record<string, string>;
+const standardFiles = import.meta.glob('../assets/models/standard/letter_*.glb', {
   query: '?url', import: 'default', eager: true,
 }) as Record<string, string>;
 
-export const MODEL_URLS: Record<string, string> = Object.fromEntries(
+const byChar = (files: Record<string, string>): Record<string, string> => Object.fromEntries(
   Object.entries(files).map(([path, url]) => [path.match(/letter_(\w)\.glb$/)![1], url]),
 );
 
-export { manifest };
+export interface ModelSet { manifest: typeof largeManifest; urls: Record<string, string> }
+
+export const MODEL_SETS: Record<LetterSize, ModelSet> = {
+  standard: { manifest: standardManifest, urls: byChar(standardFiles) },
+  statement: { manifest: largeManifest, urls: byChar(largeFiles) },
+};
 
 // ── Draco decoder ──
 // DRACOLoader fetches its decoder by fixed file name from a directory, which

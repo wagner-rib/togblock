@@ -21,10 +21,10 @@ import type { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { createPlaMaterial } from './plaMaterial';
-import { buildPieceGeometry, createPieceMaterial, placePieces } from './decorativeDots';
+import { buildPieceGeometry, createPieceMaterial, placePieces, studGrid, rowY } from './decorativeDots';
 import { themeColor, type LetterSize } from './themes';
 import { previewChars } from './previewState';
-import { manifest as MANIFEST, MODEL_URLS, createDracoLoader } from './models';
+import { MODEL_SETS, createDracoLoader } from './models';
 
 export type ViewMode = 'hero' | 'top' | 'side';
 
@@ -49,17 +49,18 @@ export interface Manifest {
   letters: Record<string, ManifestLetter>;
 }
 
-export interface Glyph { body: THREE.BufferGeometry; studs: number[] }
+export interface Glyph { body: THREE.BufferGeometry; studs: number[] } // studs: full-stud centres, flat [x0, y0, ...] in mm
 
 interface Slot {
   char: string;
+  size: LetterSize;                         // which model set its glyph comes from
   group: THREE.Group;                       // userData.letterIndex is the name index
   material: THREE.MeshStandardMaterial | null;
   skeleton: THREE.Mesh | null;
   slide: { from: number; to: number; start: number } | null;
   appear: { start: number } | null;
   tint: { from: THREE.Color; to: THREE.Color; start: number } | null;
-  studs: number[] | null;                   // stud cells, once the glyph is loaded
+  studs: number[] | null;                   // stud centres in mm, once the glyph is loaded
   dots: THREE.Group | null;                 // decorative pieces pressed onto this letter
 }
 
@@ -114,7 +115,7 @@ export class BuilderPreview {
   private draco: DRACOLoader;
   private onReady?: () => void;
   protected manifest: Promise<Manifest>;
-  private geometries = new Map<string, Promise<Glyph>>();
+  private geometries = new Map<string, Promise<Glyph>>(); // by size:char
   private loaded = new Map<string, Glyph>(); // same glyphs, for synchronous cache hits
   protected studGeometry: Promise<THREE.BufferGeometry>;
   protected studGeo: THREE.BufferGeometry | null = null;
@@ -180,8 +181,8 @@ export class BuilderPreview {
 
     this.draco = createDracoLoader();
     this.loader = new GLTFLoader().setDRACOLoader(this.draco);
-    this.manifest = Promise.resolve(MANIFEST as Manifest);
-    this.studGeometry = this.manifest.then(buildStudGeometry);
+    this.manifest = Promise.resolve(MODEL_SETS[props.size].manifest as Manifest);
+    this.studGeometry = this.manifest.then(buildStudGeometry); // stud shape is the same at every size
 
     canvas.addEventListener('pointerdown', this.onPointerDown);
     canvas.addEventListener('pointermove', this.onPointerMove);
@@ -208,7 +209,8 @@ export class BuilderPreview {
     this.props = { ...prev, ...next };
     if (next.dots !== undefined && !!next.dots !== !!prev.dots && Object.keys(next).length === 1) {
       this.refreshDots(true);
-    } else if (next.name !== undefined && next.name !== prev.name) {
+    } else if ((next.name !== undefined && next.name !== prev.name) || (next.size && next.size !== prev.size)) {
+      this.manifest = Promise.resolve(MODEL_SETS[this.props.size].manifest as Manifest);
       this.building = this.rebuild();
     } else if (next.viewMode && next.viewMode !== prev.viewMode) {
       this.frameCamera(true);
@@ -359,25 +361,27 @@ export class BuilderPreview {
   }
 
   protected loadGeometry(char: string): Promise<Glyph> {
-    let p = this.geometries.get(char);
+    const size = this.props.size;
+    const key = `${size}:${char}`;
+    let p = this.geometries.get(key);
     if (!p) {
-      p = this.loader.loadAsync(MODEL_URLS[char]).then((gltf) => {
+      p = this.loader.loadAsync(MODEL_SETS[size].urls[char]).then((gltf) => {
         let mesh: THREE.Mesh | null = null;
         gltf.scene.traverse((o) => {
           if (!mesh && o instanceof THREE.Mesh) mesh = o;
         });
         if (!mesh) throw new Error(`letter_${char}.glb has no mesh`);
         const m = mesh as THREE.Mesh;
-        // Node extras land in userData: stud cells as a flat [i0, j0, i1, j1, ...] list
+        // Node extras land in userData: full-stud centres as a flat [x0, y0, x1, y1, ...] list in mm
         const glyph = {
           body: toCreasedNormals(m.geometry, CREASE_ANGLE),
           studs: (m.userData.studs ?? m.parent?.userData.studs ?? []) as number[],
         };
-        this.loaded.set(char, glyph);
+        this.loaded.set(key, glyph);
         return glyph;
       });
-      p.catch(() => this.geometries.delete(char)); // allow a retry
-      this.geometries.set(char, p);
+      p.catch(() => this.geometries.delete(key)); // allow a retry
+      this.geometries.set(key, p);
     }
     return p;
   }
@@ -401,9 +405,10 @@ export class BuilderPreview {
     const metas = chars.map((c) => manifest.letters[c]);
     const total = metas.reduce((w, m) => w + m.width, 0) + LETTER_GAP * Math.max(0, chars.length - 1);
 
-    // Keep slots whose letter is unchanged at that position; replace the rest
+    // Keep slots whose letter and size are unchanged at that position; replace the rest
     const old = this.slots;
-    this.slots = chars.map((char, i) => (old[i]?.char === char ? old[i] : this.createSlot(char, i)));
+    const size = this.props.size;
+    this.slots = chars.map((char, i) => (old[i]?.char === char && old[i].size === size ? old[i] : this.createSlot(char, i)));
     old.forEach((s, i) => { if (this.slots[i] !== s) this.disposeSlot(s); });
 
     let cursor = -total / 2;
@@ -419,7 +424,7 @@ export class BuilderPreview {
       }
       slot.group.position.x = x;
       this.nameGroup.add(slot.group);
-      const glyph = this.loaded.get(slot.char);
+      const glyph = this.loaded.get(`${slot.size}:${slot.char}`);
       const delay = stagger++ * APPEAR_STAGGER_MS;
       if (glyph) {
         this.fillSlot(slot, glyph, manifest, now + delay);
@@ -460,7 +465,7 @@ export class BuilderPreview {
   private createSlot(char: string, index: number): Slot {
     const group = new THREE.Group();
     group.userData = { letterIndex: index, char };
-    return { char, group, material: null, skeleton: null, slide: null, appear: null, tint: null, studs: null, dots: null };
+    return { char, size: this.props.size, group, material: null, skeleton: null, slide: null, appear: null, tint: null, studs: null, dots: null };
   }
 
   /** Translucent block the size of the glyph, shown until its GLB arrives. */
@@ -483,7 +488,7 @@ export class BuilderPreview {
     const body = new THREE.Mesh(glyph.body, material);
     body.castShadow = true;
     body.receiveShadow = true;
-    slot.group.add(body, buildStuds(this.studGeo!, material, glyph.studs, manifest.studPitch));
+    slot.group.add(body, buildStuds(this.studGeo!, material, glyph.studs));
     slot.material = material;
     slot.studs = glyph.studs;
     if (this.reduceMotion) return;
@@ -506,7 +511,7 @@ export class BuilderPreview {
   private refreshDots(pop: boolean): void {
     const m = this.manifestData;
     const on = !!this.props.dots && !!m;
-    const key = on ? [this.props.name, ...this.slots.map((s, i) => (s.studs ? this.letterHex(i) : '-'))].join('|') : '';
+    const key = on ? [this.props.name, this.props.size, ...this.slots.map((s, i) => (s.studs ? this.letterHex(i) : '-'))].join('|') : '';
     if (key === this.dotsKey) return;
     this.dotsKey = key;
     for (const slot of this.slots) {
@@ -518,7 +523,9 @@ export class BuilderPreview {
     this.dotsPop = null;
     if (!on || !m) return this.requestRender();
 
-    const placed = placePieces(this.props.name, this.slots.map((s, i) => ({ studs: s.studs ?? [], colour: this.letterHex(i) })));
+    // Pieces snap to grid cells; stud rows sit wherever letter_font.py centred them in each stroke
+    const grids = this.slots.map((s) => studGrid(s.studs ?? [], m.studPitch));
+    const placed = placePieces(this.props.name, grids.map((g, i) => ({ studs: g.cells, colour: this.letterHex(i) })));
     this.slots.forEach((slot, li) => {
       const mine = placed.filter((d) => d.letter === li);
       if (!mine.length) return;
@@ -527,7 +534,7 @@ export class BuilderPreview {
         const k = `${d.w}x${d.h}`;
         if (!this.pieceGeos.has(k)) this.pieceGeos.set(k, buildPieceGeometry(d.w, d.h, m.studPitch));
         const piece = new THREE.Mesh(this.pieceGeos.get(k)!, createPieceMaterial(d.colour));
-        piece.position.set(d.cx * m.studPitch, d.cy * m.studPitch, m.bodyDepth); // on the letter's top face
+        piece.position.set(d.cx * m.studPitch, rowY(grids[li].rows, d.cy), m.bodyDepth); // on the letter's top face
         piece.castShadow = true;
         piece.receiveShadow = true;
         group.add(piece);
@@ -895,11 +902,12 @@ function buildStudGeometry(m: Manifest): THREE.BufferGeometry {
   return geo;
 }
 
-export function buildStuds(geo: THREE.BufferGeometry, material: THREE.Material, cells: number[], pitch: number): THREE.InstancedMesh {
-  const studs = new THREE.InstancedMesh(geo, material, cells.length / 2);
+/** One instanced stud per centre (flat [x0, y0, ...] in mm). */
+export function buildStuds(geo: THREE.BufferGeometry, material: THREE.Material, centres: number[]): THREE.InstancedMesh {
+  const studs = new THREE.InstancedMesh(geo, material, centres.length / 2);
   const m = new THREE.Matrix4();
-  for (let k = 0; k < cells.length; k += 2) {
-    studs.setMatrixAt(k / 2, m.makeTranslation(cells[k] * pitch, cells[k + 1] * pitch, 0));
+  for (let k = 0; k < centres.length; k += 2) {
+    studs.setMatrixAt(k / 2, m.makeTranslation(centres[k], centres[k + 1], 0));
   }
   studs.computeBoundingBox();
   studs.computeBoundingSphere();

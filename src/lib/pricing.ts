@@ -27,7 +27,7 @@ export interface ItemConfig {
   text_colour?: string;
 }
 
-const SIZES: LetterSize[] = ['small', 'standard', 'statement'];
+const SIZES: LetterSize[] = ['standard', 'statement'];
 const SHAPES: SignShape[] = ['rectangle']; // the only plate door_sign.py prints
 const HEX = /^#[0-9a-f]{6}$/i;
 const MAX_QTY = 20;
@@ -43,6 +43,9 @@ export function priceItem(item: ItemConfig): Priced {
     // Same charset/limit as the builder (A–Z, 0–9, up to 12)
     if (!/^[A-Z0-9]{1,12}$/.test(item.custom_name)) return { ok: false, error: 'A name in your basket has unsupported characters' };
     const size = item.size as LetterSize;
+    if ((item.size as string) === 'small') {
+      return { ok: false, error: "The Small size is no longer available, so a name in your basket needs rebuilding in Standard or Premium" };
+    }
     if (!SIZES.includes(size)) return { ok: false, error: 'Missing letter size' };
     const addons: Addons = { dots: !!item.addons?.dots, giftBox: !!item.addons?.giftBox };
     const euros = priceLetters(item.custom_name.length, size) + addonCost(addons);
@@ -75,7 +78,9 @@ export function describeOptions(o: ItemOptions | null | undefined): string {
   if (!o) return '';
   if (o.kind === 'letters') {
     const extras = [o.addons.dots && 'Decorative dots', o.addons.giftBox && 'Gift box'].filter(Boolean);
-    return [SIZE_LABELS[o.size], ...extras].join(' · ');
+    // Orders placed before Small was retired keep their size name
+    const size = SIZE_LABELS[o.size] ?? ((o.size as string) === 'small' ? 'Small' : String(o.size));
+    return [size, ...extras].join(' · ');
   }
   const shape = o.shape[0].toUpperCase() + o.shape.slice(1);
   return `${shape} · plate ${o.plateColour} · text ${o.textColour}`;

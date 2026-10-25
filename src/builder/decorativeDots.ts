@@ -55,6 +55,30 @@ export function buildPieceGeometry(w: number, h: number, pitch: number): THREE.B
   return geo;
 }
 
+/**
+ * Stud centres (flat [x0, y0, ...] in mm) as grid cells for placePieces: columns are on the
+ * pitch grid, rows are numbered in order (letter_font.py centres rows inside each stroke, so
+ * they aren't always a whole pitch from 0). `rows` maps a row number back to its Y.
+ */
+export function studGrid(centres: number[], pitch: number): { cells: number[]; rows: number[] } {
+  const rows: number[] = [];
+  for (let k = 1; k < centres.length; k += 2) {
+    if (!rows.some((y) => Math.abs(y - centres[k]) < 0.5)) rows.push(centres[k]);
+  }
+  rows.sort((a, b) => a - b);
+  const cells: number[] = [];
+  for (let k = 0; k < centres.length; k += 2) {
+    cells.push(Math.round(centres[k] / pitch), rows.findIndex((y) => Math.abs(y - centres[k + 1]) < 0.5));
+  }
+  return { cells, rows };
+}
+
+/** Y in mm of a (possibly half) row number from studGrid. */
+export function rowY(rows: number[], j: number): number {
+  const lo = Math.floor(j), hi = Math.ceil(j);
+  return rows[lo] + (rows[hi] - rows[lo]) * (j - lo);
+}
+
 /** Glossy moulded-plastic look, so pieces read as LEGO next to the matte printed letters. */
 export function createPieceMaterial(hex: string): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.28, metalness: 0 });

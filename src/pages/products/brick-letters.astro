@@ -21,7 +21,7 @@ const productSchema = {
     "@type": "Offer",
     "url": "https://togblocks.com/products/brick-letters",
     "priceCurrency": "EUR",
-    "price": "5.99",
+    "price": "7.99",
     "priceValidUntil": "2027-12-31",
     "availability": "https://schema.org/InStock",
     "seller": { "@id": "https://togblocks.com/#organization" }
@@ -97,21 +97,16 @@ const productSchema = {
             <span class="eyebrow"><span class="stud-dot" style="color:var(--orange)" aria-hidden="true"></span> 3D Printed in Ireland</span>
             <h1 class="pdp-title">Brick Name Letters</h1>
             <div class="pdp-price">
-              <span class="price-tag" style="font-size:var(--fs-2xl)">from €5.99</span>
-              <span class="muted" style="font-size:var(--fs-sm)">3 sizes (12cm · 15cm · 18cm) · up to 20% off</span>
+              <span class="price-tag" style="font-size:var(--fs-2xl)">from €7.99</span>
+              <span class="muted" style="font-size:var(--fs-sm)">2 sizes (14cm · 18cm) · up to 20% off</span>
             </div>
 
             <!-- Size pricing chips -->
             <div class="size-price-row" aria-label="Size options">
-              <div class="sp-chip">
-                <span class="sp-name">Small</span>
-                <span class="sp-mm">12cm</span>
-                <span class="sp-val">€5.99<span class="sp-unit">/letter</span></span>
-              </div>
               <div class="sp-chip sp-chip--mid">
                 <span class="sp-badge">Popular</span>
-                <span class="sp-name">Medium</span>
-                <span class="sp-mm">15cm</span>
+                <span class="sp-name">Standard</span>
+                <span class="sp-mm">14cm</span>
                 <span class="sp-val">€7.99<span class="sp-unit">/letter</span></span>
               </div>
               <div class="sp-chip">
@@ -123,7 +118,7 @@ const productSchema = {
 
             <p class="pdp-desc">
               Chunky 3D letters built with standard stud spacing — nursery shelf, bedroom desk, cake topper.
-              Pick any size, any colour per letter. Order 3 or more and save up to 20%.
+              Pick either size, any colour per letter. Order 3 or more and save up to 20%.
             </p>
             <ul class="spec-list">
               <li>
@@ -136,7 +131,7 @@ const productSchema = {
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                3 sizes: Small (12cm) · Medium (15cm) · Premium (18cm)
+                2 sizes: Standard (14cm) · Premium (18cm)
               </li>
               <li>
                 <span class="si-ico" aria-hidden="true">
@@ -154,7 +149,11 @@ const productSchema = {
                 <span class="si-ico" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </span>
-                Ships within 3 working days · free over €60
+                Ships within 3 working days · free Irish delivery over €40
+              </li>
+              <li class="spec-warn">
+                <svg class="si-ico" width="22" height="22" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="#fff" stroke="#c8102e" stroke-width="3.5"/><text x="20" y="25" text-anchor="middle" font-size="13" font-weight="800" font-family="Arial,sans-serif" fill="#1f2937">0-3</text><path d="M8 32 32 8" stroke="#c8102e" stroke-width="3.5"/></svg>
+                <span><strong>Warning:</strong> not suitable for children under 3 years. Small parts (Decorative Dots add-on). Choking hazard.</span>
               </li>
             </ul>
             <a class="btn btn--cta btn--lg btn--block" href="/builder?product=letters" style="margin-top:8px">
@@ -242,37 +241,31 @@ const productSchema = {
         <div class="pricing-table">
           <div class="pt-head">
             <div></div>
-            <div>Small<br><small style="font-weight:400;opacity:.75">12cm</small></div>
-            <div>Medium<br><small style="font-weight:400;opacity:.75">15cm</small></div>
+            <div>Standard<br><small style="font-weight:400;opacity:.75">14cm</small></div>
             <div>Premium<br><small style="font-weight:400;opacity:.75">18cm</small></div>
           </div>
           <div class="pt-row">
             <div>1 letter</div>
-            <div>€5.99</div>
             <div>€7.99</div>
             <div>€9.99</div>
           </div>
           <div class="pt-row pt-row--disc">
             <div>2 letters <span class="disc-tag">5% off</span></div>
-            <div>€11.38</div>
             <div>€15.18</div>
             <div>€18.98</div>
           </div>
           <div class="pt-row pt-row--disc">
             <div>3 letters <span class="disc-tag">10% off</span></div>
-            <div>€16.17</div>
             <div>€21.57</div>
             <div>€26.97</div>
           </div>
           <div class="pt-row pt-row--disc">
             <div>4–6 letters <span class="disc-tag">15% off</span></div>
-            <div>from €20.37</div>
             <div>from €27.17</div>
             <div>from €33.97</div>
           </div>
           <div class="pt-row pt-row--disc pt-row--best">
             <div>7+ letters <span class="disc-tag disc-tag--best">20% off</span></div>
-            <div>from €33.54</div>
             <div>from €44.74</div>
             <div>from €55.94</div>
           </div>
@@ -304,7 +297,7 @@ const productSchema = {
           {[
             {
               q: "What sizes are available?",
-              a: "Three sizes: Small (12cm — perfect for cake toppers and small shelves), Medium (15cm — our most popular, great for nurseries and desks), and Premium (18cm — makes a real statement on a mantelpiece or bedroom wall)."
+              a: "Two sizes: Standard (14cm, our most popular, great for nurseries, shelves and desks) and Premium (18cm, bigger and bolder, with an extra row of studs on every stroke, for a mantelpiece or bedroom wall)."
             },
             {
               q: "What colours can I choose?",
@@ -320,7 +313,7 @@ const productSchema = {
             },
             {
               q: "How much is shipping?",
-              a: "Ireland: €4.95. UK: €7.95. EU: €8.95. Rest of world: €14.95. Orders over €60 ship free anywhere."
+              a: "Ireland: €4.95, free on orders over €40. UK and EU: €4.95. USA: €6.99. Anywhere else, email us and we'll quote."
             },
           ].map(({ q: question, a: answer }) => (
             <div class="faq-item">
@@ -356,7 +349,7 @@ const productSchema = {
 
 <script>
   import { track } from '../../scripts/track';
-  track('ViewContent', { id: 'BRICK-LETTERS', name: 'Brick Name Letters', value: 5.99 });
+  track('ViewContent', { id: 'BRICK-LETTERS', name: 'Brick Name Letters', value: 7.99 });
 </script>
 
 <style>
@@ -456,7 +449,7 @@ const productSchema = {
   border: 1.5px solid var(--line); background: #fff;
 }
 .pt-head, .pt-row {
-  display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr;
   gap: 0;
 }
 .pt-head {

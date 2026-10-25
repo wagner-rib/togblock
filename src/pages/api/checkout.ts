@@ -23,6 +23,7 @@ interface CheckoutBody {
   };
   email: string;
   notes?: string;
+  giftMessage?: string;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -33,7 +34,9 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: 'Invalid request body' }, 400);
   }
 
-  const { items, address, email, notes } = body;
+  const { items, address, email } = body;
+  const notes = cleanText(body.notes, 1000);
+  const giftMessage = cleanText(body.giftMessage, 200);
 
   if (!items?.length || !address?.country || !email) {
     return json({ error: 'Missing required fields' }, 400);
@@ -73,9 +76,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Create order
     const orderResult = await query<{ id: number }>(
-      `INSERT INTO orders (user_id, guest_email, address_id, subtotal, shipping_cost, total, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [user?.id ?? null, user ? null : email, addressId, subtotal, shipping, total, notes ?? null]
+      `INSERT INTO orders (user_id, guest_email, address_id, subtotal, shipping_cost, total, notes, gift_message)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      [user?.id ?? null, user ? null : email, addressId, subtotal, shipping, total, notes, giftMessage]
     );
     const orderId = orderResult.rows[0].id;
 
@@ -120,6 +123,13 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: 'Checkout failed, please try again' }, 500);
   }
 };
+
+/** Free text from the form: trimmed, control characters removed (newlines kept), capped. Empty -> null. */
+function cleanText(value: unknown, max: number): string | null {
+  if (typeof value !== 'string') return null;
+  const text = value.replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '').trim().slice(0, max);
+  return text || null;
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

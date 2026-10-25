@@ -68,20 +68,22 @@ export const PICKER = Object.values(COLOURS).map((c) => c.hex);
 
 // ── Pricing functions ────────────────────────────────────────────
 
-export type LetterSize = 'small' | 'standard' | 'statement';
+// Two sizes, matching letter_font.py: 'standard' = 144mm (4 stud rows per arm),
+// 'statement' = its 'large', 184mm (5 rows per arm), sold as Premium.
+export type LetterSize = 'standard' | 'statement';
 
-const SIZE_BASE: Record<LetterSize, number> = { small: 5.99, standard: 7.99, statement: 9.99 };
+const SIZE_BASE: Record<LetterSize, number> = { standard: 7.99, statement: 9.99 };
 export const SIZE_LABELS: Record<LetterSize, string> = {
-  small: 'Small', standard: 'Medium', statement: 'Premium',
+  standard: 'Standard', statement: 'Premium',
 };
 
 export const SIZE_MM: Record<LetterSize, number> = {
-  small: 12, standard: 15, statement: 18,
+  standard: 14, statement: 18,
 };
 
 // Pixel cell size for the builder preview (proportional to physical size)
 export const SIZE_CELL_PX: Record<LetterSize, number> = {
-  small: 14, standard: 18, statement: 22,
+  standard: 18, statement: 22,
 };
 
 export function priceLetters(n: number, size: LetterSize): number {
@@ -117,10 +119,3 @@ export function priceDoorSign(
   return p;
 }
 
-export function shippingEuros(
-  subtotal: number,
-  region: 'ie' | 'uk' | 'eu' | 'row' = 'ie',
-): number {
-  if (subtotal >= 60) return 0;
-  return { ie: 4.95, uk: 7.95, eu: 8.95, row: 14.95 }[region];
-}

@@ -31,9 +31,9 @@ export const POST: APIRoute = async ({ request }) => {
     // Fetch full order data for email
     const orderRes = await query<{
       id: number; guest_email: string | null; subtotal: number;
-      shipping_cost: number; total: number;
+      shipping_cost: number; total: number; notes: string | null; gift_message: string | null;
     }>(
-      'SELECT id, guest_email, subtotal, shipping_cost, total FROM orders WHERE id = $1',
+      'SELECT id, guest_email, subtotal, shipping_cost, total, notes, gift_message FROM orders WHERE id = $1',
       [orderId]
     );
     if (!orderRes.rows.length) return ok();
@@ -76,6 +76,8 @@ export const POST: APIRoute = async ({ request }) => {
           items:        itemsRes.rows,
           shippingCost: order.shipping_cost,
           total:        order.total,
+          giftMessage:  order.gift_message,
+          notes:        order.notes,
           address:      addrRes.rows[0],
         });
       } catch (e) {

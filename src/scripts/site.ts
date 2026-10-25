@@ -179,7 +179,7 @@ function renderCart(): void {
   }
 
   const total    = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
-  const shipping = total >= 60 ? 0 : 4.95;
+  const shipping = total >= 40 ? 0 : 4.95; // Ireland rate, as shippingCost() in lib/stripe.ts
 
   root.innerHTML = `
     <div class="cart-layout">
@@ -188,7 +188,7 @@ function renderCart(): void {
         <h2 style="font-size:var(--fs-lg);margin-bottom:16px">Summary</h2>
         <div class="summary-row"><span>Subtotal</span><span>€${total.toFixed(2)}</span></div>
         <div class="summary-row"><span>Shipping (Ireland)</span><span>${shipping === 0 ? '<span style="color:var(--green);font-weight:700">Free</span>' : `€${shipping.toFixed(2)}`}</span></div>
-        ${shipping > 0 ? `<p style="font-size:var(--fs-xs);color:var(--ink-60);margin:4px 0 0;text-align:right">Free delivery over €60</p>` : ''}
+        ${shipping > 0 ? `<p style="font-size:var(--fs-xs);color:var(--ink-60);margin:4px 0 0;text-align:right">Free delivery in Ireland over €40</p>` : ''}
         <div class="summary-row total"><span>Total</span><span>€${(total + shipping).toFixed(2)}</span></div>
         <a class="btn btn--cta btn--block btn--lg" href="/checkout" style="margin-top:20px;text-align:center;display:block">
           Checkout <span aria-hidden="true">→</span>
@@ -218,7 +218,7 @@ function renderCart(): void {
         </div>
         ${item.addons?.dots || item.addons?.giftBox ? `
         <div class="ci-addons">
-          ${item.addons.dots ? `<span class="ci-addon">🔵 Decorative Dots · Pack of 10 snap-on studs · <strong>+€3</strong></span>` : ''}
+          ${item.addons.dots ? `<span class="ci-addon">🔵 Decorative Dots · 10 snap-on brick pieces · Ages 3+, small parts · <strong>+€3</strong></span>` : ''}
           ${item.addons.giftBox ? `<span class="ci-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>` : ''}
         </div>` : ''}
         <div class="ci-actions">
@@ -267,7 +267,7 @@ function renderAboutBricks(): void {
     theme: 'irish',
     oneColour: null,
     brickSizePx: 22,
-    sizeLabel: 'Medium',
+    sizeLabel: 'Standard',
     letters: [
       { char: 'T', colour: '#169B62' },
       { char: 'Ó', colour: '#F58A3C' },

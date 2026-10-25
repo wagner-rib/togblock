@@ -33,6 +33,8 @@ interface OrderEmailData {
   items: OrderItem[];
   shippingCost: number;
   total: number;
+  giftMessage?: string | null;
+  notes?: string | null;
   address: {
     name: string; line1: string; line2?: string;
     city: string; county?: string; postcode?: string; country: string;
@@ -100,6 +102,14 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
           </tr>
         </tbody>
       </table>
+      ${data.giftMessage ? `
+      <h2 style="font-size:16px;font-weight:700;color:#111827;margin:28px 0 12px">Your gift message</h2>
+      <p style="color:#374151;line-height:1.6;margin:0;font-style:italic;white-space:pre-wrap">${escapeHtml(data.giftMessage)}</p>
+      <p style="color:#6b7280;font-size:13px;margin:6px 0 0">We'll print this on the card in the box. Spotted a typo? Reply to this email before we post it.</p>` : ''}
+      ${data.items.some((i) => i.options?.kind === 'letters' && i.options.addons?.dots) ? `
+      <p style="background:#fff7ed;border-radius:8px;padding:12px 14px;margin:24px 0 0;color:#7c2d12;font-size:13px;line-height:1.5">
+        <strong>Safety:</strong> Decorative Dots are small parts. Not suitable for children under 3 years. Choking hazard.
+      </p>` : ''}
       <h2 style="font-size:16px;font-weight:700;color:#111827;margin:28px 0 12px">Delivery address</h2>
       <p style="color:#374151;line-height:1.8;margin:0">${addressHtml}</p>
       <div style="text-align:center;margin:32px 0">
@@ -142,7 +152,9 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     subject: `New order ${ref} — ${data.customerName}`,
     html: `<p>New order from <strong>${escapeHtml(data.customerName)}</strong> (${escapeHtml(data.customerEmail)}).</p>
            <p>Total: ${money(data.total)}</p>
-           <p>Items: ${data.items.map(i => escapeHtml(i.custom_name)).join(', ')}</p>`,
+           <p>Items: ${data.items.map(i => escapeHtml(i.custom_name)).join(', ')}</p>
+           ${data.giftMessage ? `<p>Gift message: <em>${escapeHtml(data.giftMessage)}</em></p>` : ''}
+           ${data.notes ? `<p>Special instructions: <strong>${escapeHtml(data.notes)}</strong></p>` : ''}`,
   });
 }
 

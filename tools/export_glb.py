@@ -10,13 +10,15 @@ Convert letter_font.py STLs into Draco-compressed GLBs for the 3D builder previe
 Geometry stays in the STL's own frame: millimetres, Z-up, letter centred on
 X/Y, back face at Z=0. The browser tips the group to Y-up itself.
 
-Studs are split off: the GLB holds only the letter body (sliced at
-BODY_DEPTH and capped, so it keeps the STL's exact outline and keyhole), and
-the stud centres go in the mesh node's extras as STUD_PITCH grid steps
-({"studs": [i0, j0, i1, j1, ...]}, centre = (i, j) * pitch). The browser draws
-every stud from one smooth instanced shape, so studs stay round at any zoom
-instead of being decimated into polygons. Each centre is checked against the
-grid and each stud against STUD_DIAMETER before export.
+Full studs are split off: the GLB holds the letter body (sliced at BODY_DEPTH
+and capped, so it keeps the STL's exact outline and keyhole), and the stud
+centres go in the mesh node's extras in millimetres ({"studs": [x0, y0, x1, y1,
+...]}). letter_font.py centres stud rows inside each stroke, so rows are not
+always on a plain 8mm grid; columns are. The browser draws every full stud from
+one smooth instanced shape, so studs stay round at any zoom instead of being
+decimated into polygons. Edge-clipped studs (EDGE_CLIP_STUDS: part-discs cut by
+the letter outline) aren't round, so they stay in the body mesh as extruded
+outlines. Each full stud is checked against STUD_DIAMETER and the column grid.
 
 No normals are stored: the mesh stays welded so Draco's edgebreaker can pack it
 (~16 KB vs ~80 KB with split hard-edge normals). The browser rebuilds them with
@@ -53,7 +55,8 @@ DRACO_HELPER = os.path.join(TOOLS_DIR, 'draco.mjs')
 
 CHARS = [chr(c) for c in range(ord('A'), ord('Z') + 1)] + [str(d) for d in range(10)]
 
-MAX_TRIANGLES = 8000
+MAX_TRIANGLES = 8000          # letter body, after decimation
+MAX_CLIPPED_TRIANGLES = 6000  # edge-clipped studs, kept undecimated on top
 MAX_FILE_BYTES = 60 * 1024
 MAX_BOUNDS_DEVIATION_MM = 0.5
 MAX_STUD_ERROR_MM = 0.05   # off-grid distance / radius mismatch allowed for a detected stud
@@ -83,38 +86,65 @@ def draco(*args):
 
 
 def find_studs(src, params):
-    """Stud centres as (i, j) grid steps, from a cross-section through the middle of the studs."""
+    """From a cross-section through the middle of the studs: full stud centres in mm (sorted),
+    and the outlines of edge-clipped studs (shapely polygons in the letter's X/Y)."""
     pitch, body, radius = params['studPitch'], params['bodyDepth'], params['studDiameter'] / 2
-    section = src.section(plane_origin=[0, 0, body + params['studHeight'] / 2], plane_normal=[0, 0, 1])
+    z = body + params['studHeight'] / 2
+    section = src.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
     if section is None:
-        return [], ['no studs found']
-    planar, to_3d = section.to_2D()
-    polys = planar.polygons_closed
-    centres = trimesh.transform_points(
-        np.array([[*p.centroid.coords[0], 0.0] for p in polys]), to_3d)[:, :2]
-    grid = np.round(centres / pitch)
-    problems = []
-    off_grid = float(np.abs(centres - grid * pitch).max())
+        return [], [], ['no studs found']
+    # Explicit transform keeps the 2D coordinates in the letter's own X/Y
+    planar, _ = section.to_2D(to_2D=trimesh.transformations.translation_matrix([0, 0, -z]))
+    full, clipped, problems = [], [], []
+    for p in planar.polygons_closed:
+        minx, miny, maxx, maxy = p.bounds
+        r_area = float(np.sqrt(p.area / np.pi))
+        cx = p.centroid.x
+        # letter_font.py puts every column on the 8mm grid, so a disc that's off it was
+        # clipped by a hair and belongs with the clipped studs
+        round_disc = (abs(r_area - radius) <= MAX_STUD_ERROR_MM
+                      and abs((maxx - minx) / 2 - radius) <= MAX_STUD_ERROR_MM
+                      and abs((maxy - miny) / 2 - radius) <= MAX_STUD_ERROR_MM
+                      and abs(cx - round(cx / pitch) * pitch) <= MAX_STUD_ERROR_MM)
+        if round_disc:
+            full.append(p.centroid.coords[0])
+        else:
+            clipped.append(p)
+    if not full:
+        return [], clipped, ['no full studs found']
+    centres = np.array(full)
+    off_grid = float(np.abs(centres[:, 0] - np.round(centres[:, 0] / pitch) * pitch).max())
     if off_grid > MAX_STUD_ERROR_MM:
-        problems.append(f'stud {off_grid:.3f}mm off the {pitch}mm grid')
-    radii = np.sqrt(np.array([p.area for p in polys]) / np.pi)
-    if np.abs(radii - radius).max() > MAX_STUD_ERROR_MM:
-        problems.append(f'stud radius {radii.min():.3f}-{radii.max():.3f}mm, expected {radius}')
-    steps = sorted({(int(i), int(j)) for i, j in grid})  # sorted -> deterministic output
-    if len(steps) != len(polys):
-        problems.append(f'{len(polys) - len(steps)} duplicate stud cells')
-    return steps, problems
+        problems.append(f'stud column {off_grid:.3f}mm off the {pitch}mm grid')
+    studs = sorted({(round(float(x), 2), round(float(y), 2)) for x, y in centres})  # sorted -> deterministic
+    if len(studs) != len(full):
+        problems.append(f'{len(full) - len(studs)} duplicate studs')
+    return studs, clipped, problems
+
+
+def clipped_stud_mesh(polys, params):
+    """Edge-clipped studs as one mesh standing on the body's top face (outline simplified to ~0.1mm)."""
+    parts = []
+    for p in polys:
+        p = p.simplify(0.1, preserve_topology=True)
+        m = trimesh.creation.extrude_polygon(p, height=params['studHeight'])
+        m.apply_translation([0, 0, params['bodyDepth']])
+        parts.append(m)
+    return trimesh.util.concatenate(parts) if parts else None
 
 
 def export_letter(char, stl_path, glb_path, params):
     src = trimesh.load(stl_path, force='mesh')
     src_bounds = src.bounds.copy()
-    studs, problems = find_studs(src, params)
+    studs, clipped, problems = find_studs(src, params)
 
     mesh = src.slice_plane([0, 0, params['bodyDepth']], [0, 0, -1], cap=True)
     body_faces = len(mesh.faces)
     if len(mesh.faces) > MAX_TRIANGLES:
         mesh = mesh.simplify_quadric_decimation(face_count=MAX_TRIANGLES)
+    clip_mesh = clipped_stud_mesh(clipped, params)
+    if clip_mesh is not None:
+        mesh = trimesh.util.concatenate([mesh, clip_mesh])
 
     with tempfile.TemporaryDirectory() as tmp:
         plain = os.path.join(tmp, 'plain.glb')
@@ -123,15 +153,16 @@ def export_letter(char, stl_path, glb_path, params):
             f.write(trimesh.exchange.gltf.export_glb(
                 trimesh.Scene({f'letter_{char}': mesh}), include_normals=False))
         with open(extras, 'w') as f:
-            json.dump({'studs': [n for step in studs for n in step]}, f, separators=(',', ':'))
+            json.dump({'studs': [n for xy in studs for n in xy]}, f, separators=(',', ':'))
         draco('compress', plain, glb_path, extras)
 
     # Read the compressed file back (decoding Draco) and check it against the STL:
-    # body matches on X/Y and stops at BODY_DEPTH; studs on top reach the STL's full depth
+    # body matches on X/Y and stops at BODY_DEPTH (or the stud tops, with clipped studs);
+    # full studs on top reach the STL's full depth
     info = json.loads(draco('inspect', glb_path))
     glb_bounds = np.array([info['min'], info['max']])
     expected = src_bounds.copy()
-    expected[1, 2] = params['bodyDepth']
+    expected[1, 2] = params['bodyDepth'] + (params['studHeight'] if clipped else 0)
     deviation = max(float(np.abs(glb_bounds - expected).max()),
                     abs(params['bodyDepth'] + params['studHeight'] - src_bounds[1, 2]))
     if info['studs'] != len(studs):
@@ -147,6 +178,7 @@ def export_letter(char, stl_path, glb_path, params):
         'originY': round(float(miny), 2),
         'triangles': int(info['triangles']),
         'studs': len(studs),
+        'clippedStuds': len(clipped),
         'fileBytes': os.path.getsize(glb_path),
         '_sourceTriangles': body_faces,
         '_deviation': deviation,
@@ -163,6 +195,7 @@ def main():
     ap.add_argument('--only', default='', help='Characters to process, e.g. "A" or "ABC"')
     args = ap.parse_args()
 
+    args.out = os.path.abspath(args.out)  # the Draco helper runs from tools/
     stl_dir = os.path.join(args.src, 'letters', args.size)
     chars = [c.upper() for c in args.only] if args.only else CHARS
     os.makedirs(args.out, exist_ok=True)
@@ -184,12 +217,12 @@ def main():
         src_tri, dev, problems = r.pop('_sourceTriangles'), r.pop('_deviation'), r.pop('_problems')
         letters[char] = r
         print(f"{char}: {r['width']:.0f}×{r['height']:.0f}×{r['depth']}mm, "
-              f"body {r['triangles']} tri (from {src_tri}), {r['studs']} studs, "
+              f"body {r['triangles']} tri (from {src_tri}), {r['studs']}+{r['clippedStuds']} studs, "
               f"{r['fileBytes'] / 1024:.0f} KB, bounds Δ {dev:.3f}mm")
         failures += [f'{char}: {p}' for p in problems]
         if r['fileBytes'] > MAX_FILE_BYTES:
             failures.append(f"{char}: {r['fileBytes']} bytes > {MAX_FILE_BYTES}")
-        if r['triangles'] > MAX_TRIANGLES:
+        if r['triangles'] > MAX_TRIANGLES + MAX_CLIPPED_TRIANGLES:
             failures.append(f"{char}: {r['triangles']} triangles > {MAX_TRIANGLES}")
         if dev > MAX_BOUNDS_DEVIATION_MM:
             failures.append(f'{char}: bounds deviation {dev:.3f}mm > {MAX_BOUNDS_DEVIATION_MM}')

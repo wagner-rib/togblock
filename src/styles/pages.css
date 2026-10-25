@@ -162,3 +162,6 @@
 .legal .legal-toc { columns: 2; column-gap: 32px; padding-left: 20px; }
 @media (max-width: 560px) { .legal .legal-toc { columns: 1; } }
 .legal-btn { font: inherit; color: var(--green-deep); text-decoration: underline; background: none; border: 0; padding: 0; cursor: pointer; }
+
+/* Product-page safety warning row: the 0-3 symbol replaces the round tick */
+.spec-list .spec-warn .si-ico { background: none; border-radius: 0; width: 26px; height: 26px; }

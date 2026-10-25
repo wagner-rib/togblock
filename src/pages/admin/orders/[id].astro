@@ -18,10 +18,12 @@ const orderRes = await query<{
   tracking_carrier: string | null; admin_notes: string | null; review_requested_at: Date | null;
   has_review: boolean;
   guest_email: string | null; stripe_pi_id: string | null;
+  notes: string | null; gift_message: string | null;
   customer_name: string; customer_email: string | null; user_id: number | null;
 }>(`
   SELECT o.id, o.status, o.total, o.subtotal, o.shipping_cost, o.created_at, o.updated_at,
     o.tracking_number, o.tracking_carrier, o.admin_notes, o.guest_email, o.stripe_pi_id,
+    o.notes, o.gift_message,
     o.review_requested_at, EXISTS (SELECT 1 FROM reviews r WHERE r.order_id = o.id) AS has_review,
     COALESCE(u.name, o.guest_email, 'Guest') AS customer_name,
     COALESCE(u.email, o.guest_email)         AS customer_email,
@@ -444,6 +446,27 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
         </div>
       </div>
 
+      <!-- What the customer wrote at checkout -->
+      {(order.gift_message || order.notes) && (
+        <div class="adm-card section-card">
+          <div class="section-hd"><div class="section-title">💬 From the customer</div></div>
+          <div class="cust-msg">
+            {order.gift_message && (
+              <div>
+                <div class="cust-msg-label">Gift message · printed on the <a href={`/admin/orders/${order.id}/gift-card`}>gift card</a></div>
+                <p class="cust-msg-text">{order.gift_message}</p>
+              </div>
+            )}
+            {order.notes && (
+              <div>
+                <div class="cust-msg-label">Special instructions</div>
+                <p class="cust-msg-text">{order.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <!-- Delivery address -->
       {addr && (
         <div class="adm-card section-card">
@@ -708,6 +731,11 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
 .addr-name { font-weight: 700; font-size: 0.95rem; color: var(--ink); }
 .addr-line { font-size: 0.9rem; color: var(--ink-60); }
 .addr-country { font-weight: 700; font-size: 0.9rem; color: var(--ink); margin-top: 2px; }
+
+/* ── Customer's checkout messages ── */
+.cust-msg { padding: 14px 22px 18px; display: flex; flex-direction: column; gap: 12px; }
+.cust-msg-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-60); }
+.cust-msg-text { margin: 4px 0 0; white-space: pre-wrap; line-height: 1.5; font-size: var(--fs-sm); }
 
 /* ── Notes ── */
 .notes-body { padding: 16px 22px 20px; }

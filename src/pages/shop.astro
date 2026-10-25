@@ -4,14 +4,14 @@ import Base from '../layouts/Base.astro';
 
 <Base
   title="Shop — TógBlocks"
-  description="Choose your brick letter size and colours. Three sizes — Small €5.99, Medium €7.99, Premium €9.99 — with multi-letter discounts up to 20%."
+  description="Choose your brick letter size and colours. Two sizes, Standard €7.99 and Premium €9.99 per letter, with multi-letter discounts up to 20%."
   currentPage="/shop"
 >
   <div class="wrap">
     <div class="page-hero">
       <span class="eyebrow"><span class="stud-dot" style="color:var(--green)" aria-hidden="true"></span> Shop · options</span>
       <h1>Pick your perfect build</h1>
-      <p class="lead">Three sizes, 13 colours, multi-letter discounts. Use the builder to see your name live before you order.</p>
+      <p class="lead">Two sizes, 13 colours, multi-letter discounts. Use the builder to see your name live before you order.</p>
       <div style="margin-top:20px">
         <a class="btn btn--cta btn--lg" href="/builder">Open the builder <span aria-hidden="true">→</span></a>
       </div>
@@ -21,18 +21,8 @@ import Base from '../layouts/Base.astro';
   <!-- SIZES -->
   <section class="section-tight" aria-labelledby="sizes">
     <div class="wrap">
-      <div class="sec-head"><h2 id="sizes">Three letter sizes</h2><p>Same 3D brick construction, same 13 colour options — just a different scale.</p></div>
-      <div class="grid grid-3">
-        <div class="card size-card">
-          <div class="sc-vis" aria-hidden="true">
-            <span class="sc-brick" style="height:34px;background:var(--sage)"></span>
-            <span class="sc-brick" style="height:42px;background:var(--sage)"></span>
-            <span class="sc-brick" style="height:34px;background:var(--sage)"></span>
-          </div>
-          <h3>Small · <span style="color:var(--ink-60);font-size:.85em">12cm</span></h3>
-          <p class="muted">Compact and light — ideal for cake toppers, small shelves, and little hands.</p>
-          <p class="price-tag" style="margin-top:12px">€5.99/letter</p>
-        </div>
+      <div class="sec-head"><h2 id="sizes">Two letter sizes</h2><p>Same 3D brick construction, same 13 colour options — just a different scale.</p></div>
+      <div class="grid grid-2" style="max-width:760px;margin-inline:auto">
         <div class="card size-card" style="border:2px solid var(--green)">
           <span class="badge" style="margin-bottom:12px">Most popular</span>
           <div class="sc-vis" aria-hidden="true">
@@ -40,7 +30,7 @@ import Base from '../layouts/Base.astro';
             <span class="sc-brick" style="height:58px;background:var(--orange)"></span>
             <span class="sc-brick" style="height:48px;background:var(--orange)"></span>
           </div>
-          <h3>Medium · <span style="color:var(--ink-60);font-size:.85em">15cm</span></h3>
+          <h3>Standard · <span style="color:var(--ink-60);font-size:.85em">14cm</span></h3>
           <p class="muted">The sweet spot — great for nurseries, bedroom desks, and gifts. Snaps onto any standard baseplate.</p>
           <p class="price-tag" style="margin-top:12px">€7.99/letter</p>
         </div>
@@ -51,7 +41,7 @@ import Base from '../layouts/Base.astro';
             <span class="sc-brick" style="height:62px;background:var(--blue)"></span>
           </div>
           <h3>Premium · <span style="color:var(--ink-60);font-size:.85em">18cm</span></h3>
-          <p class="muted">Bold and commanding — makes a real impact on a mantelpiece or bedroom wall.</p>
+          <p class="muted">Bigger and bolder, with an extra row of studs on every stroke. Makes a real impact on a mantelpiece or bedroom wall.</p>
           <p class="price-tag" style="margin-top:12px">€9.99/letter</p>
         </div>
       </div>
@@ -68,7 +58,7 @@ import Base from '../layouts/Base.astro';
             <div class="dt-row dt-head">
               <span>Letter count</span>
               <span>Discount</span>
-              <span>Example (Medium)</span>
+              <span>Example (Standard)</span>
             </div>
             <div class="dt-row">
               <span>1 letter</span>
@@ -126,11 +116,12 @@ import Base from '../layouts/Base.astro';
         <div class="card">
           <h3 style="margin-bottom:14px">Shipping</h3>
           <div class="summary-row"><span>Ireland</span><span class="price-tag">€4.95 · 1–3 days</span></div>
-          <div class="summary-row"><span>UK</span><span class="price-tag">€7.95 · 3–5 days</span></div>
-          <div class="summary-row"><span>Europe</span><span class="price-tag">€8.95 · 4–7 days</span></div>
-          <div class="summary-row"><span>Rest of world</span><span class="price-tag">€14.95 · 7–14 days</span></div>
+          <div class="summary-row"><span>UK</span><span class="price-tag">€4.95 · 3–5 days</span></div>
+          <div class="summary-row"><span>Europe</span><span class="price-tag">€4.95 · 4–7 days</span></div>
+          <div class="summary-row"><span>USA</span><span class="price-tag">€6.99 · 5–10 days</span></div>
+          <div class="summary-row"><span>Rest of world</span><span class="price-tag">Email us for a quote</span></div>
           <div class="summary-row" style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px">
-            <span>Orders over €60</span><span class="price-tag" style="color:var(--green);font-weight:700">Free worldwide</span>
+            <span>Irish orders over €40</span><span class="price-tag" style="color:var(--green);font-weight:700">Free delivery</span>
           </div>
           <p class="field-hint" style="margin-top:12px">Tracked where available. Builds are boxed snugly so studs don't pop in transit.</p>
         </div>

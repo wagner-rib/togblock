@@ -21,6 +21,28 @@ export interface SignPreviewProps {
   viewMode: BuilderPreviewProps['viewMode'];
 }
 
+/**
+ * The glyph body without its edge-clipped studs: those are separate prisms standing on the
+ * body's top face (see tools/export_glb.py), and the sign's letters are smooth.
+ */
+function smoothBody(geo: THREE.BufferGeometry, bodyDepth: number): THREE.BufferGeometry {
+  const src = geo.index ? geo.toNonIndexed() : geo;
+  const pos = src.getAttribute('position'), nor = src.getAttribute('normal');
+  const keepPos: number[] = [], keepNor: number[] = [];
+  const cut = bodyDepth + 0.5; // stud prisms reach +1.8mm; Draco quantisation nudges the top face by ~0.002mm
+  for (let t = 0; t < pos.count; t += 3) {
+    if (pos.getZ(t) > cut || pos.getZ(t + 1) > cut || pos.getZ(t + 2) > cut) continue;
+    for (let v = t; v < t + 3; v++) {
+      keepPos.push(pos.getX(v), pos.getY(v), pos.getZ(v));
+      if (nor) keepNor.push(nor.getX(v), nor.getY(v), nor.getZ(v));
+    }
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(keepPos, 3));
+  if (nor) out.setAttribute('normal', new THREE.Float32BufferAttribute(keepNor, 3));
+  return out;
+}
+
 function plateGeometry(height: number): THREE.ExtrudeGeometry {
   const w = PLATE_WIDTH / 2, h = height / 2, r = PLATE_CORNER;
   const s = new THREE.Shape();
@@ -43,10 +65,11 @@ export class SignPreview extends BuilderPreview {
   private textMat: THREE.MeshStandardMaterial | null = null;
   private fade: { start: number } | null = null;
   private tints: { mat: THREE.MeshStandardMaterial; from: THREE.Color; to: THREE.Color; start: number }[] = [];
+  private smooth = new Map<string, THREE.BufferGeometry>(); // by char
 
   constructor(canvas: HTMLCanvasElement, props: SignPreviewProps, opts: { onReady?: () => void } = {}) {
     super(canvas, {
-      name: props.text, size: 'standard', theme: 'one', oneColour: props.textColour,
+      name: props.text, size: 'statement', theme: 'one', oneColour: props.textColour, // 184mm glyphs, scaled by layoutSign
       letterColours: {}, viewMode: props.viewMode,
     }, opts);
     this.sign = props;
@@ -87,7 +110,8 @@ export class SignPreview extends BuilderPreview {
     const plate = new THREE.Mesh(plateGeometry(layout.plateHeight), this.plateMat);
     plate.castShadow = plate.receiveShadow = true;
     // The shared stud shape stands on the letters' 18mm body; drop it onto the 6mm plate
-    const studs = buildStuds(this.studGeo, this.plateMat, studCells(layout, manifest.studPitch, manifest.studDiameter / 2), manifest.studPitch);
+    const cells = studCells(layout, manifest.studPitch, manifest.studDiameter / 2);
+    const studs = buildStuds(this.studGeo, this.plateMat, cells.map((n) => n * manifest.studPitch));
     const drop = new THREE.Matrix4().makeTranslation(0, 0, PLATE_THICKNESS - manifest.bodyDepth);
     const m = new THREE.Matrix4();
     for (let i = 0; i < studs.count; i++) {
@@ -100,7 +124,8 @@ export class SignPreview extends BuilderPreview {
 
     const s = layout.letterHeight / 184;
     for (const l of layout.letters) {
-      const letter = new THREE.Mesh(glyphs.get(l.char)!.body, this.textMat);
+      if (!this.smooth.has(l.char)) this.smooth.set(l.char, smoothBody(glyphs.get(l.char)!.body, manifest.bodyDepth));
+      const letter = new THREE.Mesh(this.smooth.get(l.char)!, this.textMat);
       letter.scale.set(s, s, LETTER_RELIEF / manifest.bodyDepth); // 18mm body → 6mm relief
       letter.position.set(l.x, 0, PLATE_THICKNESS);
       letter.castShadow = letter.receiveShadow = true;

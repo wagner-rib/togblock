@@ -17,8 +17,13 @@ const itemsRes = await query<{ custom_name: string; quantity: number; thumbnail_
     WHERE order_id = $1 AND product_type <> 'door-sign' ORDER BY id`,
   [orderId],
 );
-// One card per physical set: an item with quantity 2 gets two cards
-const cards = itemsRes.rows.flatMap((item) => Array.from({ length: Math.max(1, item.quantity) }, () => item));
+const giftRes = await query<{ gift_message: string | null }>('SELECT gift_message FROM orders WHERE id = $1', [orderId]);
+const giftMessage = giftRes.rows[0]?.gift_message ?? null;
+// One card per physical set: an item with quantity 2 gets two cards. A door-sign-only
+// order with a gift message still gets one card, for the message.
+const cards: { custom_name: string | null; thumbnail_id: string | null }[] =
+  itemsRes.rows.flatMap((item) => Array.from({ length: Math.max(1, item.quantity) }, () => item));
+if (!cards.length && giftMessage) cards.push({ custom_name: null, thumbnail_id: null });
 const ref = `#TB${String(orderId).padStart(5, '0')}`;
 ---
 
@@ -37,17 +42,19 @@ const ref = `#TB${String(orderId).padStart(5, '0')}`;
     <button type="button" onclick="window.print()">Print</button>
   </div>
 
-  {cards.length === 0 && <p class="gc-empty">This order has no brick-letter items, so there's no gift card to print.</p>}
+  {cards.length === 0 && <p class="gc-empty">This order has no brick-letter items or gift message, so there's no gift card to print.</p>}
 
   {cards.map((card) => (
     <section class="gc-card">
       <img class="gc-logo" src="/logo.svg" alt="TógBlocks" width="120" height="32" />
-      <div class="gc-for">Made for</div>
-      <div class="gc-name">{card.custom_name}</div>
-      {card.thumbnail_id
+      {card.custom_name && <div class="gc-for">Made for</div>}
+      {card.custom_name && <div class="gc-name">{card.custom_name}</div>}
+      {card.custom_name && (card.thumbnail_id
         ? <img class="gc-thumb" src={`/api/thumbnails/${card.thumbnail_id}`} width="512" height="512" alt="" />
-        : <div class="gc-thumb gc-thumb--none"></div>}
-      <p class="gc-line">Designed by you, printed for you,<br />one brick at a time in Ireland.</p>
+        : <div class="gc-thumb gc-thumb--none"></div>)}
+      {giftMessage
+        ? <p class={`gc-message${card.custom_name ? '' : ' gc-message--solo'}`}>{giftMessage}</p>
+        : <p class="gc-line">Designed by you, printed for you,<br />one brick at a time in Ireland.</p>}
       <div class="gc-foot">
         <span>togblocks.com</span>
         <span>{ref}</span>
@@ -80,6 +87,13 @@ const ref = `#TB${String(orderId).padStart(5, '0')}`;
     }
     .gc-thumb { width: 72mm; height: 72mm; border-radius: 4mm; background: #98b4b7; object-fit: cover; }
     .gc-line { margin: 5mm 0 0; font-size: 9.5pt; line-height: 1.45; color: #374151; }
+    /* Gift message (up to 200 characters): the preview shrinks to leave room for ~5 lines */
+    .gc-card:has(.gc-message) .gc-thumb { width: 56mm; height: 56mm; }
+    .gc-message {
+      margin: 4mm 0 0; max-width: 100%; font-size: 10.5pt; line-height: 1.45; color: #1d2230;
+      font-style: italic; white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .gc-message--solo { margin: auto 0; font-size: 14pt; }
     .gc-foot { margin-top: auto; width: 100%; display: flex; justify-content: space-between; font-size: 7.5pt; color: #9ca3af; }
     @media print {
       body { background: none; }
