@@ -105,7 +105,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
       ${data.giftMessage ? `
       <h2 style="font-size:16px;font-weight:700;color:#111827;margin:28px 0 12px">Your gift message</h2>
       <p style="color:#374151;line-height:1.6;margin:0;font-style:italic;white-space:pre-wrap">${escapeHtml(data.giftMessage)}</p>
-      <p style="color:#6b7280;font-size:13px;margin:6px 0 0">We'll print this on the card in the box. Spotted a typo? Reply to this email before we post it.</p>` : ''}
+      <p style="color:#6b7280;font-size:13px;margin:6px 0 0">We'll handwrite or print this on a card in the box. Spotted a typo? Reply to this email before we post it.</p>` : ''}
       ${data.items.some((i) => i.options?.kind === 'letters' && i.options.addons?.dots) ? `
       <p style="background:#fff7ed;border-radius:8px;padding:12px 14px;margin:24px 0 0;color:#7c2d12;font-size:13px;line-height:1.5">
         <strong>Safety:</strong> Decorative Dots are small parts. Not suitable for children under 3 years. Choking hazard.

@@ -453,7 +453,7 @@ const isClosed = order.status === 'cancelled' || order.status === 'refunded';
           <div class="cust-msg">
             {order.gift_message && (
               <div>
-                <div class="cust-msg-label">Gift message · printed on the <a href={`/admin/orders/${order.id}/gift-card`}>gift card</a></div>
+                <div class="cust-msg-label">Gift message · handwrite it, or print it on the <a href={`/admin/orders/${order.id}/gift-card`}>gift card</a></div>
                 <p class="cust-msg-text">{order.gift_message}</p>
               </div>
             )}

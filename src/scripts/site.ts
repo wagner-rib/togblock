@@ -219,7 +219,7 @@ function renderCart(): void {
         ${item.addons?.dots || item.addons?.giftBox ? `
         <div class="ci-addons">
           ${item.addons.dots ? `<span class="ci-addon">🔵 Decorative Dots · 10 snap-on brick pieces · Ages 3+, small parts · <strong>+€3</strong></span>` : ''}
-          ${item.addons.giftBox ? `<span class="ci-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>` : ''}
+          ${item.addons.giftBox ? `<span class="ci-addon">🎁 Premium Gift Box · Gift-ready packaging · <strong>+€4.95</strong></span>` : ''}
         </div>` : ''}
         <div class="ci-actions">
           <button class="ci-remove" data-remove="${item.id}">Remove</button>

@@ -177,7 +177,7 @@ export class NameBuilder {
                 </span>
                 <span class="ec-body">
                   <span class="ec-name">Premium Gift Box <span class="ec-rec" data-gift-rec hidden>Recommended</span></span>
-                  <span class="ec-desc">Name printed on the lid · gift-ready packaging</span>
+                  <span class="ec-desc">Gift-ready packaging, ready to give</span>
                 </span>
                 <span class="ec-price">+€4.95</span>
                 <span class="ec-toggle"><span class="ect-add">Add</span><span class="ect-added">✓ Added</span></span>

@@ -165,7 +165,7 @@ const countries = [
         <h2 class="co-section__title"><label for="co-gift">Gift message</label> <span class="optional">(optional, free)</span></h2>
         <textarea class="input" id="co-gift" name="gift_message" rows="3" maxlength="200"
                   placeholder="Happy 3rd birthday Ada! Love, Granny and Grandad xx"></textarea>
-        <p class="field-hint">We print it on the card that goes in the box. No prices are included. <span id="co-gift-count">0</span>/200</p>
+        <p class="field-hint">We'll handwrite or print it on a card in the box. No prices are included. <span id="co-gift-count">0</span>/200</p>
       </section>
 
       <!-- Notes -->
@@ -728,7 +728,7 @@ function renderSummary(country) {
         <div class="co-item-type">${isDoorSign(item) ? 'Door Sign' : 'Brick Letters'} &nbsp;·&nbsp; €${item.price ?? 0} each</div>
         ${item.addons?.dots || item.addons?.giftBox ? `<div class="co-item-addons">
           ${item.addons?.dots ? '<span class="co-item-addon">🔵 Decorative Dots · 10 snap-on brick pieces · Ages 3+, small parts · <strong>+€3</strong></span>' : ''}
-          ${item.addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Name printed on the lid · <strong>+€4.95</strong></span>' : ''}
+          ${item.addons?.giftBox ? '<span class="co-item-addon">🎁 Premium Gift Box · Gift-ready packaging · <strong>+€4.95</strong></span>' : ''}
         </div>` : ''}
         <div class="co-item-controls">
           <div class="co-qty-pill">
