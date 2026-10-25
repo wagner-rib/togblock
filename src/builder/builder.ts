@@ -141,7 +141,7 @@ export class NameBuilder {
               <button type="button" class="size-opt" data-size="statement" aria-pressed="false">
                 <span class="so-label">Premium</span>
                 <span class="so-dim">18cm</span>
-                <span class="so-price">€9.99/letter</span>
+                <span class="so-price">€8.99/letter</span>
               </button>
             </div>
           </div>

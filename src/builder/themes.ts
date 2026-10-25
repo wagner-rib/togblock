@@ -72,7 +72,7 @@ export const PICKER = Object.values(COLOURS).map((c) => c.hex);
 // 'statement' = its 'large', 184mm (5 rows per arm), sold as Premium.
 export type LetterSize = 'standard' | 'statement';
 
-const SIZE_BASE: Record<LetterSize, number> = { standard: 7.99, statement: 9.99 };
+const SIZE_BASE: Record<LetterSize, number> = { standard: 7.99, statement: 8.99 };
 export const SIZE_LABELS: Record<LetterSize, string> = {
   standard: 'Standard', statement: 'Premium',
 };
