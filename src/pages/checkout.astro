@@ -160,12 +160,17 @@ const countries = [
         </div>
       </section>
 
-      <!-- Gift message -->
+      <!-- Personalised note: the text box only appears when ticked -->
       <section class="co-section">
-        <h2 class="co-section__title"><label for="co-gift">Gift message</label> <span class="optional">(optional, free)</span></h2>
-        <textarea class="input" id="co-gift" name="gift_message" rows="3" maxlength="200"
-                  placeholder="Happy 3rd birthday Ada! Love, Granny and Grandad xx"></textarea>
-        <p class="field-hint">We'll handwrite or print it on a card in the box. No prices are included. <span id="co-gift-count">0</span>/200</p>
+        <label class="co-note-toggle">
+          <input type="checkbox" id="co-gift-on" aria-controls="co-gift-wrap" aria-expanded="false" />
+          <span><strong>Add a personalised note</strong> <span class="optional">(free)</span></span>
+        </label>
+        <div id="co-gift-wrap" hidden>
+          <textarea class="input" id="co-gift" name="gift_message" rows="3" maxlength="200" aria-label="Your personalised note"
+                    placeholder="Happy 3rd birthday Ada! Love, Granny and Grandad xx"></textarea>
+          <p class="field-hint">We'll handwrite or print it on a card in the box. No prices are included. <span id="co-gift-count">0</span>/200</p>
+        </div>
       </section>
 
       <!-- Notes -->
@@ -345,6 +350,9 @@ const countries = [
 }
 .req { color: #dc2626; }
 .optional { color: var(--ink-40); font-weight: 400; font-size: .85em; }
+.co-note-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: var(--fs-md); }
+.co-note-toggle input { width: 20px; height: 20px; accent-color: var(--blue, #1D4ED8); flex: none; }
+#co-gift-wrap { margin-top: 12px; }
 
 /* ── SHIPPING BADGE ───────────────────────────────────────── */
 .co-shipping-badge {
@@ -832,7 +840,7 @@ async function initStripe(country) {
           postcode: document.getElementById('co-postcode').value.trim() || undefined,
         },
         notes: document.getElementById('co-notes').value.trim() || undefined,
-        giftMessage: document.getElementById('co-gift').value.trim() || undefined,
+        giftMessage: (document.getElementById('co-gift-on').checked && document.getElementById('co-gift').value.trim()) || undefined,
       }),
     });
 
@@ -949,8 +957,15 @@ if (document.readyState === 'loading') {
     });
   }
 
-  // Gift message character counter
+  // Personalised note: tick to reveal the text box, plus a character counter
+  const giftOn = document.getElementById('co-gift-on') as HTMLInputElement | null;
+  const giftWrap = document.getElementById('co-gift-wrap');
   const giftBox = document.getElementById('co-gift') as HTMLTextAreaElement | null;
   const giftCount = document.getElementById('co-gift-count');
+  giftOn?.addEventListener('change', () => {
+    if (giftWrap) giftWrap.hidden = !giftOn.checked;
+    giftOn.setAttribute('aria-expanded', String(giftOn.checked));
+    if (giftOn.checked) giftBox?.focus();
+  });
   giftBox?.addEventListener('input', () => { if (giftCount) giftCount.textContent = String(giftBox.value.length); });
 </script>
